@@ -7,6 +7,16 @@ import (
 	"testing"
 )
 
+func TestInvalidBraces(t *testing.T) {
+	input := ")("
+	reader := bufio.NewReader(strings.NewReader(input))
+	result, err := Read(reader)
+
+	if err == nil {
+		t.Errorf("Expected an error, got result: '%s'", result)
+	}
+}
+
 func TestRead(t *testing.T) {
 	var testCases = []struct {
 		input    string
@@ -30,15 +40,5 @@ func TestRead(t *testing.T) {
 		if !reflect.DeepEqual(result, test.expected) {
 			t.Errorf("Experced: '%s' , got: '%s'", test.expected, result)
 		}
-	}
-}
-
-func TestInvalidBraces(t *testing.T) {
-	input := ")("
-	reader := bufio.NewReader(strings.NewReader(input))
-	result, err := Read(reader)
-
-	if err == nil {
-		t.Errorf("Expected an error, got result: '%s'", result)
 	}
 }

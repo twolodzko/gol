@@ -2,6 +2,7 @@ package repl
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"unicode"
@@ -17,15 +18,6 @@ func isBlockEnd(ch rune) bool {
 
 func isWhitespace(ch rune) bool {
 	return ch == ' ' || ch == '\n'
-}
-
-// ParsingError is thrown for invalid input when parsing the code
-type ParsingError struct {
-	msg string
-}
-
-func (e *ParsingError) Error() string {
-	return fmt.Sprintf("%s", e.msg)
 }
 
 // Read input from REPL
@@ -56,24 +48,24 @@ func Read(reader *bufio.Reader) (string, error) {
 				break
 			}
 
+			if openBlocks < 0 {
+				err = errors.New("missing open bracket")
+				break
+			}
+
 			if unicode.IsPrint(ch) {
 				input = append(input, ch)
 			} else if isWhitespace(ch) {
 				input = append(input, ' ')
 			} else {
-				err = &ParsingError{"Invalid character: " + fmt.Sprintf("%U", ch)}
-				break
-			}
-
-			if openBlocks < 0 {
-				err = &ParsingError{"Missing open bracket"}
+				err = fmt.Errorf("invalid character: %U", ch)
 				break
 			}
 		}
 	}
 
 	if openBlocks > 0 {
-		err = &ParsingError{"Missing closing bracket"}
+		err = errors.New("missing closing bracket")
 	}
 
 	return string(input), err

@@ -22,12 +22,18 @@ func main() {
 	for {
 		fmt.Printf("%s ", inputPrompt)
 
+	prompt:
 		input, err := repl.Read(reader)
 
 		if err != nil {
-			fmt.Printf("ERROR: %s\n", err)
+			fmt.Printf("ERROR: %s", err)
 		} else if len(input) > 0 {
-			fmt.Printf("%s %s\n", outputPrompt, input)
+			fmt.Printf("%s %s", outputPrompt, input)
+		} else {
+			// no dobule prompts for empty lines
+			goto prompt
 		}
+
+		fmt.Println()
 	}
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 
@@ -13,27 +12,23 @@ const (
 	outputPrompt string = "=>"
 )
 
-func main() {
-	reader := bufio.NewReader(os.Stdin)
+func print(msg string) {
+	fmt.Printf("%s %s\n", outputPrompt, msg)
+}
 
+func main() {
 	fmt.Println("Press ^C to exit.")
 	fmt.Println()
 
 	for {
 		fmt.Printf("%s ", inputPrompt)
 
-	prompt:
-		input, err := repl.Read(reader)
+		input, err := repl.Read(os.Stdin)
 
 		if err != nil {
-			fmt.Printf("ERROR: %s", err)
+			print(fmt.Sprintf("ERROR: %s", err))
 		} else if len(input) > 0 {
-			fmt.Printf("%s %s", outputPrompt, input)
-		} else {
-			// no dobule prompts for empty lines
-			goto prompt
+			print(input)
 		}
-
-		fmt.Println()
 	}
 }

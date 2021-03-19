@@ -21,13 +21,14 @@ func isWhitespace(ch rune) bool {
 }
 
 // Read input from REPL
-func Read(reader *bufio.Reader) (string, error) {
+func Read(in io.Reader) (string, error) {
 	var (
 		err        error = nil
 		readerErr  error
 		ch         rune
 		openBlocks int = 0
 	)
+	reader := bufio.NewReader(in)
 	input := []rune{}
 
 	for {
@@ -42,14 +43,14 @@ func Read(reader *bufio.Reader) (string, error) {
 				openBlocks--
 			}
 
-			// allow for breaking lines if
-			// any block is still open
-			if ch == '\n' && openBlocks == 0 {
+			if openBlocks < 0 {
+				err = errors.New("missing open bracket")
 				break
 			}
 
-			if openBlocks < 0 {
-				err = errors.New("missing open bracket")
+			// allow for breaking lines if
+			// any block is still open
+			if ch == '\n' && openBlocks == 0 {
 				break
 			}
 
@@ -63,6 +64,9 @@ func Read(reader *bufio.Reader) (string, error) {
 			}
 		}
 	}
+
+	// TODO needed or not?
+	// reader.Reset(in)
 
 	if openBlocks > 0 {
 		err = errors.New("missing closing bracket")

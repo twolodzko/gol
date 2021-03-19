@@ -7,13 +7,26 @@ import (
 	"testing"
 )
 
-func TestInvalidBraces(t *testing.T) {
-	input := ")("
-	reader := bufio.NewReader(strings.NewReader(input))
-	result, err := Read(reader)
+func TestInvalidInput(t *testing.T) {
+	var testCases = []struct {
+		input string
+	}{
+		{")"},
+		{"("},
+		{"(("},
+		{"))"},
+		{"())"},
+		{"(()"},
+		{"\u001B"},
+	}
 
-	if err == nil {
-		t.Errorf("Expected an error, got result: '%s'", result)
+	for _, test := range testCases {
+		reader := bufio.NewReader(strings.NewReader(test.input))
+		result, err := Read(reader)
+
+		if err == nil {
+			t.Errorf("expected an error, got result: '%s'", result)
+		}
 	}
 }
 
@@ -30,15 +43,15 @@ func TestRead(t *testing.T) {
 		{"(first) (second)", "(first) (second)"},
 	}
 
-	for _, test := range testCases {
-		reader := bufio.NewReader(strings.NewReader(test.input))
+	for _, tt := range testCases {
+		reader := bufio.NewReader(strings.NewReader(tt.input))
 		result, err := Read(reader)
 
 		if err != nil {
-			t.Errorf("Unexpected error: %s", err)
+			t.Errorf("unexpected error: %s", err)
 		}
-		if !reflect.DeepEqual(result, test.expected) {
-			t.Errorf("Experced: '%s' , got: '%s'", test.expected, result)
+		if !reflect.DeepEqual(result, tt.expected) {
+			t.Errorf("experted: '%s' , got: '%s'", tt.expected, result)
 		}
 	}
 }

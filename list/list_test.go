@@ -1,10 +1,10 @@
-package parser
+package list
 
 import (
 	"testing"
 )
 
-func Test_areListsSame(t *testing.T) {
+func TestAreSame(t *testing.T) {
 	var testCases = []struct {
 		x    List
 		y    List
@@ -19,7 +19,7 @@ func Test_areListsSame(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		same, err := areListsSame(tt.x, tt.y)
+		same, err := AreSame(tt.x, tt.y)
 
 		if same != tt.same {
 			t.Errorf("failed comparison for lists %v and %v", tt.x, tt.y)
@@ -42,8 +42,8 @@ func TestPush(t *testing.T) {
 	list := List{}
 	for _, tt := range testCases {
 		list.Push(tt.input)
-		if same, err := areListsSame(list, tt.expected); !same {
-			t.Errorf("experted: '%s', got: '%s'", tt.expected, list)
+		if same, err := AreSame(list, tt.expected); !same {
+			t.Errorf("expected: %v, got: %v", tt.expected, list)
 
 			if err != nil {
 				t.Errorf("%v", err)

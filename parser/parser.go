@@ -1,11 +1,13 @@
 package parser
 
-func Parse(str string) (List, error) {
-	var list List
+import "github.com/twolodzko/goal/list"
 
-	// for i, ch := range str {
+func Parse(str string) (list.List, error) {
+	var l list.List
 
-	// }
+	for _, ch := range str {
+		l.Push(ch)
+	}
 
-	return list, nil
+	return l, nil
 }

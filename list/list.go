@@ -1,4 +1,4 @@
-package parser
+package list
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ func NewList(objs ...interface{}) List {
 	return list
 }
 
-func areListsSame(x List, y List) (bool, error) {
+func AreSame(x List, y List) (bool, error) {
 	if len(x.list) != len(y.list) {
 		return false, fmt.Errorf("lengths of the lists differ %d vs %d", len(x.list), len(y.list))
 	}

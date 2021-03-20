@@ -51,7 +51,7 @@ func TestRead(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !reflect.DeepEqual(result, tt.expected) {
-			t.Errorf("experted: '%s' , got: '%s'", tt.expected, result)
+			t.Errorf("expected: '%s' , got: '%s'", tt.expected, result)
 		}
 	}
 }

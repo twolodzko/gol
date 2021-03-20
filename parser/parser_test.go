@@ -3,10 +3,10 @@ package parser
 // func TestParse(t *testing.T) {
 // 	var testCases = []struct {
 // 		input    string
-// 		expected List
+// 		expected list.List
 // 	}{
-// 		{"", List{}},
-// 		{"42", NewList(42)},
+// 		{"", list.List{}},
+// 		{"a", list.NewList("a")},
 // 	}
 
 // 	for _, tt := range testCases {
@@ -15,8 +15,9 @@ package parser
 // 		if err != nil {
 // 			t.Errorf("unexpected error: %s", err)
 // 		}
-// 		if !reflect.DeepEqual(result, tt.expected) {
-// 			t.Errorf("experted: '%s' , got: '%s'", tt.expected, result)
+
+// 		if same, _ := list.AreSame(result, tt.expected); !same {
+// 			t.Errorf("expected: %v, got: %s", tt.expected, result)
 // 		}
 // 	}
 // }

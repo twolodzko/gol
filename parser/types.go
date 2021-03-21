@@ -1,54 +1,25 @@
 package parser
 
 import (
-	"strconv"
-	"unicode"
+	"fmt"
 )
 
-func isBracket(ch rune) bool {
-	return ch == '(' || ch == ')'
-}
-
+// Symbol is a generic type for a named object
 type Symbol struct {
-	name string
+	Name string
 }
 
-func ParseSymbol(str string, pos int) (Symbol, int, error) {
-	var (
-		i  int
-		ch rune
-	)
-
-	// find the length of the sequence
-	for i, ch = range str[pos:] {
-		if ch == ' ' || isBracket(ch) {
-			i--
-			break
-		}
-	}
-
-	return Symbol{str[pos : pos+i+1]}, pos + i, nil
+// Print symbols unquoted, contrary to strings
+func (s Symbol) String() string {
+	return s.Name
 }
 
-func ParseInteger(str string, pos int) (int, int, error) {
-	var (
-		i  int
-		ch rune
-	)
+// String is a custom string type
+type String struct {
+	Characters string
+}
 
-	// find the length of the sequence
-	for i, ch = range str[pos:] {
-		if !(unicode.IsDigit(ch) || (i == 0 && ch == '-')) {
-			i--
-			break
-		}
-	}
-
-	out, err := strconv.Atoi(str[pos : pos+i+1])
-
-	if err != nil {
-		return 0, pos, err
-	}
-
-	return out, pos + i, nil
+// Print strings quoted
+func (s String) String() string {
+	return fmt.Sprintf("\"%s\"", s.Characters)
 }

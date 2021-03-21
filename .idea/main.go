@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 )
 
 type Symbol struct {
@@ -10,6 +9,9 @@ type Symbol struct {
 }
 
 func main() {
-	x := Symbol{"foo"}
-	fmt.Printf("%v\n", reflect.TypeOf(x))
+	s := "Zażółć gęślą jaźń"
+
+	for i, ch := range s {
+		fmt.Printf("%d %s\n", i, string(ch))
+	}
 }

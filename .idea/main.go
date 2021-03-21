@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type Symbol struct {
@@ -9,9 +10,8 @@ type Symbol struct {
 }
 
 func main() {
-	s := "Zażółć gęślą jaźń"
-
-	for i, ch := range s {
-		fmt.Printf("%d %s\n", i, string(ch))
+	for _, s := range []string{"3.1415", "-10", "0", "1e-5", "1.3e+5", ".223", "+.45"} {
+		f, err := strconv.ParseFloat(s, 64)
+		fmt.Printf("%v => %v (%v)\n", s, f, err)
 	}
 }

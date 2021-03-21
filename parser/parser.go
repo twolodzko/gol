@@ -9,7 +9,7 @@ import (
 )
 
 // Read element of a list as a string, without type conversion
-func parseRaw(reader *strings.Reader) (string, error) {
+func readWord(reader *strings.Reader) (string, error) {
 	elem := ""
 
 	for {
@@ -37,38 +37,15 @@ func parseRaw(reader *strings.Reader) (string, error) {
 	return elem, nil
 }
 
-// Read element of a list and convert type
-func parseElem(reader *strings.Reader) (interface{}, error) {
-	var elem interface{}
-
-	raw, err := parseRaw(reader)
+// Try parsing sting to an integer or a float
+func stringToNumber(str string) (num interface{}, err error) {
+	num, err = strconv.Atoi(str)
 
 	if err != nil {
-		return nil, err
+		num, err = strconv.ParseFloat(str, 64)
 	}
 
-	runes := []rune(raw)
-
-	if unicode.IsDigit(runes[0]) {
-		// number
-		elem, err = strconv.Atoi(raw)
-
-		if err != nil {
-			return 0, err
-		}
-	} else if runes[0] == '"' {
-		// string
-		if runes[len(runes)-1] == '"' {
-			elem = String{raw[1 : len(runes)-1]}
-		} else {
-			return String{}, errors.New("missing closing quotation sign")
-		}
-	} else {
-		// symbol
-		elem = Symbol{raw}
-	}
-
-	return elem, nil
+	return num, nil
 }
 
 // Read element of a list and convert type
@@ -130,7 +107,7 @@ func parseList(reader *strings.Reader) (List, error) {
 				return List{}, errors.New("missing opening bracket")
 			}
 		}
-		if ch == ' ' {
+		if unicode.IsSpace(ch) {
 			continue
 		}
 		if ch == ')' {
@@ -152,8 +129,28 @@ func parseList(reader *strings.Reader) (List, error) {
 			// string
 			elem, err = parseString(reader)
 		} else {
-			// symbol ???
-			elem, err = parseRaw(reader)
+			var raw string
+
+			raw, err = readWord(reader)
+
+			if raw == "+" || raw == "-" || raw == "." {
+				elem = Symbol{raw}
+			} else if ch == '.' || ch == '-' || ch == '+' || unicode.IsDigit(ch) {
+				// maybe a number
+				elem, err = stringToNumber(raw)
+
+				if err != nil {
+					// if it starts with a digit, it needs to be a number
+					if unicode.IsDigit(ch) {
+						return List{}, err
+					}
+					// symbol
+					elem = Symbol{raw}
+				}
+			} else {
+				// symbol
+				elem = Symbol{raw}
+			}
 		}
 
 		if err != nil {

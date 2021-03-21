@@ -7,33 +7,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func Test_parseElem(t *testing.T) {
-	var testCases = []struct {
-		input    string
-		expected interface{}
-	}{
-		{"foo", Symbol{"foo"}},
-		{"foo bar", Symbol{"foo"}},
-		{"baz)", Symbol{"baz"}},
-		{"baz(", Symbol{"baz"}},
-		{"\"bar\" baz", String{"bar"}},
-		{"2 (baz)", 2},
-	}
-
-	for _, tt := range testCases {
-		reader := strings.NewReader(tt.input)
-		result, err := parseElem(reader)
-
-		if result != tt.expected {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
-		}
-
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-	}
-}
-
 func Test_parseString(t *testing.T) {
 	var testCases = []struct {
 		input    string
@@ -41,7 +14,7 @@ func Test_parseString(t *testing.T) {
 	}{
 		{"\"\" foo bar", String{}},
 		{"\"Hello World!\" foo bar", String{"Hello World!"}},
-		//{"\"Hello \\\"Johnny\\\"!\"", String{"Hello \"Johnny\"!"}},
+		{"\"Hello \\\"Johnny\\\"!\"", String{"Hello \"Johnny\"!"}},
 	}
 
 	for _, tt := range testCases {
@@ -58,6 +31,46 @@ func Test_parseString(t *testing.T) {
 	}
 }
 
+func Test_stringToNumber(t *testing.T) {
+	var testCases = []struct {
+		input        string
+		expected     interface{}
+		expectedType string
+	}{
+		{"3.1415", 3.1415, "float"},
+		{"1e-5", 1e-5, "float"},
+		{"1.3e+5", 1.3e5, "float"},
+		{".223", 0.223, "float"},
+		{"+.45", 0.45, "float"},
+		{"+42", 42, "int"},
+	}
+
+	for _, tt := range testCases {
+		result, err := stringToNumber(tt.input)
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if result != tt.expected {
+			t.Errorf("expected %v (%T), got %v (%T)",
+				tt.expected, tt.expected, result, result,
+			)
+		}
+		switch result.(type) {
+		case int:
+			if tt.expectedType != "int" {
+				t.Errorf("unexpected type %T for %s", result, tt.input)
+			}
+		case float64:
+			if tt.expectedType != "float" {
+				t.Errorf("unexpected type %T for %s", result, tt.input)
+			}
+		default:
+			t.Errorf("unexpected type %T for %s", result, tt.input)
+		}
+	}
+}
+
 func Test_parseList(t *testing.T) {
 	var testCases = []struct {
 		input    string
@@ -65,10 +78,15 @@ func Test_parseList(t *testing.T) {
 	}{
 		{"", List{}},
 		{"()", List{}},
-		{"(a)", newList("a")},
-		{"(foo bar baz)", newList("foo", "bar", "baz")},
-		{"(foo (bar baz))", newList("foo", newList("bar", "baz"))},
+		{"(a)", newList(Symbol{"a"})},
+		{"(foo bar baz)", newList(Symbol{"foo"}, Symbol{"bar"}, Symbol{"baz"})},
+		{"(foo (bar baz))", newList(Symbol{"foo"}, newList(Symbol{"bar"}, Symbol{"baz"}))},
 		{"(foo 42 \"Hello World!\")", newList(Symbol{"foo"}, 42, String{"Hello World!"})},
+		{`((lambda (x y) 
+			   (+ x y))
+			12 6.17)`,
+			newList(newList(Symbol{"lambda"}, newList(Symbol{"x"}, Symbol{"y"}),
+				newList(Symbol{"+"}, Symbol{"x"}, Symbol{"y"})), 12, 6.17)},
 	}
 
 	for _, tt := range testCases {

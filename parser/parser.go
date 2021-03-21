@@ -23,6 +23,7 @@ func readWord(reader *strings.Reader) (string, error) {
 		}
 
 		if ch == ' ' || ch == ')' || ch == '(' {
+			// we went outside the word boundary, exit
 			err := reader.UnreadRune()
 
 			if err != nil {
@@ -95,6 +96,7 @@ func parseString(reader *strings.Reader) (String, error) {
 	return String{elem}, nil
 }
 
+// Parse a LISP list
 func parseList(reader *strings.Reader) (List, error) {
 	var (
 		elem interface{}
@@ -152,8 +154,7 @@ func parseList(reader *strings.Reader) (List, error) {
 				return List{}, err
 			}
 
-			switch {
-			case unicode.IsDigit(ch) || ch == '-' || ch == '+' || ch == '.':
+			if unicode.IsDigit(ch) || ch == '-' || ch == '+' || ch == '.' {
 				// try to parse it as a number
 				elem, err = stringToNumber(word)
 
@@ -162,12 +163,13 @@ func parseList(reader *strings.Reader) (List, error) {
 					if unicode.IsDigit(ch) {
 						return List{}, err
 					}
+
 					// otherwise, treat it as a symbol
 					elem = Symbol{word}
 					// it was not an error
 					err = nil
 				}
-			default:
+			} else {
 				// symbol
 				elem = Symbol{word}
 			}

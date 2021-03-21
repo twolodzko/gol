@@ -27,27 +27,9 @@ func (l List) String() string {
 	return s
 }
 
-func newList(objs ...interface{}) List {
-	var list List
+func newList(objs ...interface{}) (list List) {
 	for _, obj := range objs {
 		list.Push(obj)
 	}
 	return list
-}
-
-func areSame(x List, y List) (bool, error) {
-	if len(x.List) != len(y.List) {
-		return false, fmt.Errorf("lengths of the lists differ %d vs %d", len(x.List), len(y.List))
-	}
-
-	for i := range x.List {
-		xi, yi := x.List[i], y.List[i]
-		if xi != yi {
-			return false, fmt.Errorf(
-				"elements at position %d differ: %v (%T) vs %v (%T)", i, xi, xi, yi, yi,
-			)
-		}
-	}
-
-	return true, nil
 }

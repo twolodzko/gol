@@ -8,7 +8,7 @@ import (
 	"unicode"
 )
 
-// Read element of a list as a string, without type conversion
+// Read characters until word boundary
 func readWord(reader *strings.Reader) (string, error) {
 	elem := ""
 
@@ -26,7 +26,7 @@ func readWord(reader *strings.Reader) (string, error) {
 			err := reader.UnreadRune()
 
 			if err != nil {
-				elem = ""
+				return "", err
 			}
 			break
 		}
@@ -45,14 +45,24 @@ func stringToNumber(str string) (num interface{}, err error) {
 		num, err = strconv.ParseFloat(str, 64)
 	}
 
-	return num, nil
+	return num, err
 }
 
-// Read element of a list and convert type
+// Read a quoted string until the closing quotation sign
 func parseString(reader *strings.Reader) (String, error) {
 
 	elem := ""
-	firstIter := true
+	escaped := false
+
+	// check if it starts with "
+	ch, _, err := reader.ReadRune()
+
+	if err != nil {
+		return String{}, err
+	}
+	if ch != '"' {
+		return String{}, errors.New("missing opening quotation sign")
+	}
 
 	for {
 		ch, _, err := reader.ReadRune()
@@ -64,14 +74,19 @@ func parseString(reader *strings.Reader) (String, error) {
 			return String{}, err
 		}
 
-		if firstIter {
-			if ch != '"' {
-				return String{}, errors.New("missing opening quotation sign")
+		if !escaped {
+			// skip the escape sign, unless it was escaped \\
+			if ch == '\\' {
+				escaped = true
+				continue
 			}
-			firstIter = false
-			continue
-		} else if ch == '"' {
-			break
+			// end of string, unless it was escaped \"
+			if ch == '"' {
+				break
+			}
+		} else {
+			// at next char after the escape, always cancel the escape
+			escaped = false
 		}
 
 		elem += string(ch)
@@ -129,28 +144,34 @@ func parseList(reader *strings.Reader) (List, error) {
 			// string
 			elem, err = parseString(reader)
 		} else {
-			var raw string
+			var word string
 
-			raw, err = readWord(reader)
+			word, err = readWord(reader)
 
-			if raw == "+" || raw == "-" || raw == "." {
-				elem = Symbol{raw}
-			} else if ch == '.' || ch == '-' || ch == '+' || unicode.IsDigit(ch) {
-				// maybe a number
-				elem, err = stringToNumber(raw)
+			if err != nil {
+				return List{}, err
+			}
+
+			switch {
+			case unicode.IsDigit(ch) || ch == '-' || ch == '+' || ch == '.':
+				// try to parse it as a number
+				elem, err = stringToNumber(word)
 
 				if err != nil {
 					// if it starts with a digit, it needs to be a number
 					if unicode.IsDigit(ch) {
 						return List{}, err
 					}
-					// symbol
-					elem = Symbol{raw}
+					// otherwise, treat it as a symbol
+					elem = Symbol{word}
+					// it was not an error
+					err = nil
 				}
-			} else {
+			default:
 				// symbol
-				elem = Symbol{raw}
+				elem = Symbol{word}
 			}
+
 		}
 
 		if err != nil {

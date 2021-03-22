@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io"
 	"strconv"
-	"strings"
 	"unicode"
 )
 
@@ -17,7 +16,7 @@ func isListEnd(ch rune) bool {
 }
 
 // Read characters until word boundary
-func readWord(reader *strings.Reader) (string, error) {
+func readWord(reader *CodeReader) (string, error) {
 	word := []rune{}
 
 	for {
@@ -40,10 +39,6 @@ func readWord(reader *strings.Reader) (string, error) {
 			break
 		}
 
-		if !unicode.IsPrint(ch) {
-			continue
-		}
-
 		word = append(word, ch)
 	}
 
@@ -62,7 +57,7 @@ func stringToNumber(str string) (num interface{}, err error) {
 }
 
 // Read a quoted string until the closing quotation sign
-func parseString(reader *strings.Reader) (String, error) {
+func parseString(reader *CodeReader) (String, error) {
 
 	str := []rune{}
 	escaped := false
@@ -102,10 +97,6 @@ func parseString(reader *strings.Reader) (String, error) {
 			escaped = false
 		}
 
-		if !unicode.IsPrint(ch) {
-			continue
-		}
-
 		str = append(str, ch)
 	}
 
@@ -113,7 +104,7 @@ func parseString(reader *strings.Reader) (String, error) {
 }
 
 // Parse a LISP list
-func parseList(reader *strings.Reader) (List, error) {
+func parseList(reader *CodeReader) (List, error) {
 	var (
 		elem interface{}
 		err  error
@@ -140,7 +131,7 @@ func parseList(reader *strings.Reader) (List, error) {
 				return List{}, errors.New("missing opening bracket")
 			}
 		}
-		if unicode.IsSpace(ch) || !unicode.IsPrint(ch) {
+		if unicode.IsSpace(ch) {
 			continue
 		}
 		if isListEnd(ch) {

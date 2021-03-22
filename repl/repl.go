@@ -1,11 +1,11 @@
 package repl
 
 import (
-	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"unicode"
+
+	"github.com/twolodzko/goal/parser"
 )
 
 func isBlockStart(ch rune) bool {
@@ -16,44 +16,26 @@ func isBlockEnd(ch rune) bool {
 	return ch == ')'
 }
 
-func isCommentStart(ch rune) bool {
-	return ch == ';'
-}
-
 // Read input from REPL
 func Read(in io.Reader) (string, error) {
 	var (
-		err             error = nil
-		readerErr       error
-		ch              rune
-		openBlocksCount int  = 0
-		isCommented     bool = false
+		err             error
+		r               rune
+		openBlocksCount int = 0
 	)
-	reader := bufio.NewReader(in)
+	reader := parser.NewCodeReader(in)
 	input := []rune{}
 
 	for {
-		ch, _, readerErr = reader.ReadRune()
+		r, _, err = reader.ReadRune()
 
-		if readerErr == io.EOF {
+		if err == io.EOF {
+			err = nil
 			break
 		} else {
-			// after a comment ; ignore everything
-			// until end of the line \n
-			if isCommentStart(ch) {
-				isCommented = true
-				continue
-			}
-			if isCommented {
-				if ch == '\n' {
-					isCommented = false
-				}
-				continue
-			}
-
-			if isBlockStart(ch) {
+			if isBlockStart(r) {
 				openBlocksCount++
-			} else if isBlockEnd(ch) {
+			} else if isBlockEnd(r) {
 				openBlocksCount--
 			}
 
@@ -62,20 +44,12 @@ func Read(in io.Reader) (string, error) {
 				break
 			}
 
-			// allow for breaking lines
-			// if any block is still open
-			if ch == '\n' && openBlocksCount == 0 {
+			// break after the block is closed
+			if unicode.IsSpace(r) && openBlocksCount == 0 {
 				break
 			}
 
-			switch {
-			case unicode.IsPrint(ch):
-				input = append(input, ch)
-			case unicode.IsSpace(ch):
-				input = append(input, ' ')
-			default:
-				return "", fmt.Errorf("invalid character: %U", ch)
-			}
+			input = append(input, r)
 		}
 	}
 

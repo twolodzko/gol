@@ -24,3 +24,12 @@ func TestPush(t *testing.T) {
 		}
 	}
 }
+
+func TestString(t *testing.T) {
+	expected := "(foo \"bar\" 42)"
+	result := newList(Symbol{"foo"}, String{"bar"}, 42).String()
+
+	if result != expected {
+		t.Errorf("expected: %v, got: %v", expected, result)
+	}
+}

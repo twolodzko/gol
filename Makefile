@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := run
-.PHONY: test cov fmt clean run
+.PHONY: test cov fmt clean repl
 
 test:
 	go test ./...
@@ -14,5 +14,5 @@ fmt:
 clean:
 	rm -rf *.out *.html
 
-run:
+repl:
 	go run main.go

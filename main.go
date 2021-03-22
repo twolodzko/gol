@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/twolodzko/goal/repl"
@@ -13,7 +14,7 @@ const (
 )
 
 func print(msg string) {
-	fmt.Printf("%s%s\n", outputPrompt, msg)
+	io.WriteString(os.Stdout, fmt.Sprintf("%s%s\n", outputPrompt, msg))
 }
 
 func main() {

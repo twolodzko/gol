@@ -2,58 +2,67 @@ package parser
 
 import (
 	"bufio"
+	"io"
 	"unicode"
 )
 
+// CodeReader reads runes but ignores non-printable characters, repeated white characters, and code comments
 type CodeReader struct {
 	reader   *bufio.Reader
 	previous rune
 }
 
-func newCodeReader(r *bufio.Reader) CodeReader {
-	return CodeReader{r, rune(0)}
+// NewCodeReader initialize an instance of CodeReader
+func NewCodeReader(r io.Reader) CodeReader {
+	return CodeReader{bufio.NewReader(r), rune(0)}
 }
 
-func (r CodeReader) Read() (ch rune, err error) {
+func isCommentStart(ch rune) bool {
+	return ch == ';'
+}
+
+// ReadRune single rune
+func (cr *CodeReader) ReadRune() (r rune, size int, err error) {
 	isCommented := false
 
 	for {
-		ch, _, err = r.reader.ReadRune()
+		r, size, err = cr.reader.ReadRune()
 
 		if err != nil {
-			return ch, err
+			return r, size, err
 		}
 
 		// skip all the commented code
-		if ch == ';' {
+		if isCommentStart(r) {
 			isCommented = true
 			continue
 		}
 		if isCommented {
-			if ch == '\n' {
+			if r == '\n' {
 				isCommented = false
 			}
 			continue
 		}
 
-		if unicode.IsSpace(ch) {
+		if unicode.IsSpace(r) {
 			// unify and strip white characters
-			if unicode.IsSpace(r.previous) {
+			if unicode.IsSpace(cr.previous) {
 				continue
 			}
-			ch = ' '
-		} else if !unicode.IsPrint(ch) {
+			r = ' '
+		} else if !unicode.IsPrint(r) {
 			// skip other non-printable chars
 			continue
 		}
 
-		r.previous = ch
+		cr.previous = r
 		break
 	}
 
-	return ch, err
+	return r, size, err
 }
 
-func (r CodeReader) Unread() error {
-	return r.reader.UnreadRune()
+// UnreadRune the last read rune
+func (cr *CodeReader) UnreadRune() error {
+	return cr.reader.UnreadRune()
 }

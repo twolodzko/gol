@@ -17,7 +17,6 @@ func TestInvalidInput(t *testing.T) {
 		{"))"},
 		{"())"},
 		{"(()"},
-		{"\u001B"},
 	}
 
 	for _, test := range testCases {
@@ -40,8 +39,6 @@ func TestRead(t *testing.T) {
 		{"(word)\n\n\n", "(word)"},
 		{"(first\nsecond)", "(first second)"},
 		{"(first\t(second))", "(first (second))"},
-		{"(first) (second)", "(first) (second)"},
-		{"(first) (second)", "(first) (second)"},
 		{"; a comment\n(first ; ignore this\nsecond);last comment", "(first second)"},
 	}
 

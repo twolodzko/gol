@@ -12,15 +12,14 @@ func TestCodeReader(t *testing.T) {
 		input    string
 		expected rune
 	}{
-		{"x", 'x'},
-		{"  \n\n\t  x", 'x'},
-		{"; this is a comment\nx", 'x'},
+		{"ax", 'a'},
+		{"; this is a comment\nb", 'b'},
 	}
 
 	for _, tt := range testCases {
 		r := bufio.NewReader(strings.NewReader(tt.input))
-		reader := newCodeReader(r)
-		result, err := reader.Read()
+		reader := NewCodeReader(r)
+		result, _, err := reader.ReadRune()
 
 		if result != tt.expected {
 			t.Errorf("expected: '%v', got: '%v'", string(tt.expected), string(result))
@@ -32,15 +31,15 @@ func TestCodeReader(t *testing.T) {
 }
 
 func TestReadSequence(t *testing.T) {
-	input := ";; first comment\n((lambda (x y) ; second comment\n\t(+ x y))\n;; third comment\n42 13.6)"
+	input := ";; first comment\n((lambda (x y) ; second comment\n\t\u001B(+ x y))\n;; third comment\n42 13.6)"
 	expected := "((lambda (x y) (+ x y)) 42 13.6)"
 
 	r := bufio.NewReader(strings.NewReader(input))
-	reader := newCodeReader(r)
+	reader := NewCodeReader(r)
 	result := []rune{}
 
 	for {
-		ch, err := reader.Read()
+		ch, _, err := reader.ReadRune()
 
 		if err == io.EOF {
 			break

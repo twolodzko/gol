@@ -8,9 +8,17 @@ import (
 	"unicode"
 )
 
+func isListStart(ch rune) bool {
+	return ch == '('
+}
+
+func isListEnd(ch rune) bool {
+	return ch == ')'
+}
+
 // Read characters until word boundary
 func readWord(reader *strings.Reader) (string, error) {
-	elem := ""
+	word := []rune{}
 
 	for {
 		ch, _, err := reader.ReadRune()
@@ -22,7 +30,7 @@ func readWord(reader *strings.Reader) (string, error) {
 			return "", err
 		}
 
-		if ch == ' ' || ch == ')' || ch == '(' {
+		if unicode.IsSpace(ch) || isListEnd(ch) || isListStart(ch) {
 			// we went outside the word boundary, exit
 			err := reader.UnreadRune()
 
@@ -32,10 +40,10 @@ func readWord(reader *strings.Reader) (string, error) {
 			break
 		}
 
-		elem += string(ch)
+		word = append(word, ch)
 	}
 
-	return elem, nil
+	return string(word), nil
 }
 
 // Try parsing sting to an integer or a float
@@ -52,7 +60,7 @@ func stringToNumber(str string) (num interface{}, err error) {
 // Read a quoted string until the closing quotation sign
 func parseString(reader *strings.Reader) (String, error) {
 
-	elem := ""
+	str := []rune{}
 	escaped := false
 
 	// check if it starts with "
@@ -90,10 +98,10 @@ func parseString(reader *strings.Reader) (String, error) {
 			escaped = false
 		}
 
-		elem += string(ch)
+		str = append(str, ch)
 	}
 
-	return String{elem}, nil
+	return String{string(str)}, nil
 }
 
 // Parse a LISP list
@@ -117,7 +125,7 @@ func parseList(reader *strings.Reader) (List, error) {
 		}
 
 		if isFirstChar {
-			if ch == '(' {
+			if isListStart(ch) {
 				isFirstChar = false
 				continue
 			} else {
@@ -127,25 +135,24 @@ func parseList(reader *strings.Reader) (List, error) {
 		if unicode.IsSpace(ch) {
 			continue
 		}
-		if ch == ')' {
+		if isListEnd(ch) {
 			break
 		}
 
-		// ther's no PeekRune, so we used ReadRune instead
-		// we go one step back, so we start parsing from the current character
-		err := reader.UnreadRune()
-
+		err = reader.UnreadRune()
 		if err != nil {
 			return List{}, err
 		}
 
-		if ch == '(' {
+		switch {
+		case isListStart(ch):
 			// list
 			elem, err = parseList(reader)
-		} else if ch == '"' {
+		case ch == '"':
 			// string
 			elem, err = parseString(reader)
-		} else {
+		default:
+			// number or symbol
 			var word string
 
 			word, err = readWord(reader)
@@ -173,7 +180,6 @@ func parseList(reader *strings.Reader) (List, error) {
 				// symbol
 				elem = Symbol{word}
 			}
-
 		}
 
 		if err != nil {

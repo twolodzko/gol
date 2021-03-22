@@ -39,7 +39,7 @@ func TestReadSequence(t *testing.T) {
 	result := []rune{}
 
 	for {
-		ch, _, err := reader.ReadRune()
+		r, _, err := reader.ReadRune()
 
 		if err == io.EOF {
 			break
@@ -48,7 +48,7 @@ func TestReadSequence(t *testing.T) {
 			t.Errorf("unexpected error: %v", err)
 		}
 
-		result = append(result, ch)
+		result = append(result, r)
 	}
 
 	if string(result) != expected {

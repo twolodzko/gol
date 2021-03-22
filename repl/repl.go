@@ -8,12 +8,12 @@ import (
 	"github.com/twolodzko/goal/parser"
 )
 
-func isBlockStart(ch rune) bool {
-	return ch == '('
+func isBlockStart(r rune) bool {
+	return r == '('
 }
 
-func isBlockEnd(ch rune) bool {
-	return ch == ')'
+func isBlockEnd(r rune) bool {
+	return r == ')'
 }
 
 // Read input from REPL

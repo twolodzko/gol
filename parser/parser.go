@@ -7,12 +7,12 @@ import (
 	"unicode"
 )
 
-func isListStart(ch rune) bool {
-	return ch == '('
+func isListStart(r rune) bool {
+	return r == '('
 }
 
-func isListEnd(ch rune) bool {
-	return ch == ')'
+func isListEnd(r rune) bool {
+	return r == ')'
 }
 
 // Read characters until word boundary
@@ -20,7 +20,7 @@ func readWord(reader *CodeReader) (string, error) {
 	word := []rune{}
 
 	for {
-		ch, _, err := reader.ReadRune()
+		r, _, err := reader.ReadRune()
 
 		if err == io.EOF {
 			break
@@ -29,7 +29,7 @@ func readWord(reader *CodeReader) (string, error) {
 			return "", err
 		}
 
-		if unicode.IsSpace(ch) || isListEnd(ch) || isListStart(ch) {
+		if unicode.IsSpace(r) || isListEnd(r) || isListStart(r) {
 			// we went outside the word boundary, exit
 			err := reader.UnreadRune()
 
@@ -39,7 +39,7 @@ func readWord(reader *CodeReader) (string, error) {
 			break
 		}
 
-		word = append(word, ch)
+		word = append(word, r)
 	}
 
 	return string(word), nil
@@ -63,17 +63,17 @@ func parseString(reader *CodeReader) (String, error) {
 	escaped := false
 
 	// check if it starts with "
-	ch, _, err := reader.ReadRune()
+	r, _, err := reader.ReadRune()
 
 	if err != nil {
 		return String{}, err
 	}
-	if ch != '"' {
+	if r != '"' {
 		return String{}, errors.New("missing opening quotation sign")
 	}
 
 	for {
-		ch, _, err := reader.ReadRune()
+		r, _, err := reader.ReadRune()
 
 		if err == io.EOF {
 			return String{}, errors.New("missing closing quotation sign")
@@ -84,12 +84,12 @@ func parseString(reader *CodeReader) (String, error) {
 
 		if !escaped {
 			// skip the escape sign, unless it was escaped \\
-			if ch == '\\' {
+			if r == '\\' {
 				escaped = true
 				continue
 			}
 			// end of string, unless it was escaped \"
-			if ch == '"' {
+			if r == '"' {
 				break
 			}
 		} else {
@@ -97,7 +97,7 @@ func parseString(reader *CodeReader) (String, error) {
 			escaped = false
 		}
 
-		str = append(str, ch)
+		str = append(str, r)
 	}
 
 	return String{string(str)}, nil
@@ -108,13 +108,13 @@ func parseList(reader *CodeReader) (List, error) {
 	var (
 		elem interface{}
 		err  error
-		ch   rune
+		r    rune
 	)
 	list := List{}
 	isFirstChar := true
 
 	for {
-		ch, _, err = reader.ReadRune()
+		r, _, err = reader.ReadRune()
 
 		if err == io.EOF {
 			break
@@ -124,17 +124,17 @@ func parseList(reader *CodeReader) (List, error) {
 		}
 
 		if isFirstChar {
-			if isListStart(ch) {
+			if isListStart(r) {
 				isFirstChar = false
 				continue
 			} else {
 				return List{}, errors.New("missing opening bracket")
 			}
 		}
-		if unicode.IsSpace(ch) {
+		if unicode.IsSpace(r) {
 			continue
 		}
-		if isListEnd(ch) {
+		if isListEnd(r) {
 			break
 		}
 
@@ -144,10 +144,10 @@ func parseList(reader *CodeReader) (List, error) {
 		}
 
 		switch {
-		case isListStart(ch):
+		case isListStart(r):
 			// list
 			elem, err = parseList(reader)
-		case ch == '"':
+		case r == '"':
 			// string
 			elem, err = parseString(reader)
 		default:
@@ -160,13 +160,13 @@ func parseList(reader *CodeReader) (List, error) {
 				return List{}, err
 			}
 
-			if unicode.IsDigit(ch) || ch == '-' || ch == '+' || ch == '.' {
+			if unicode.IsDigit(r) || r == '-' || r == '+' || r == '.' {
 				// try to parse it as a number
 				elem, err = stringToNumber(word)
 
 				if err != nil {
 					// if it starts with a digit, it needs to be a number
-					if unicode.IsDigit(ch) {
+					if unicode.IsDigit(r) {
 						return List{}, err
 					}
 

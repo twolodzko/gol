@@ -21,7 +21,7 @@ func Test_parseString(t *testing.T) {
 
 	for _, tt := range testCases {
 		reader := NewCodeReader(strings.NewReader(tt.input))
-		result, err := parseString(&reader)
+		result, err := parseString(reader)
 
 		if result != tt.expected {
 			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
@@ -119,7 +119,7 @@ func Test_parseList(t *testing.T) {
 
 	for _, tt := range testCases {
 		reader := NewCodeReader(strings.NewReader(tt.input))
-		result, err := parseList(&reader)
+		result, err := parseList(reader)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)

@@ -13,8 +13,8 @@ type CodeReader struct {
 }
 
 // NewCodeReader initialize an instance of CodeReader
-func NewCodeReader(r io.Reader) CodeReader {
-	return CodeReader{bufio.NewReader(r), rune(0)}
+func NewCodeReader(r io.Reader) *CodeReader {
+	return &CodeReader{bufio.NewReader(r), rune(0)}
 }
 
 func isCommentStart(ch rune) bool {

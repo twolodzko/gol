@@ -39,8 +39,10 @@ func TestRead(t *testing.T) {
 		{"word", "word"},
 		{"(word)\n\n\n", "(word)"},
 		{"(first\nsecond)", "(first second)"},
-		{"(first (second))", "(first (second))"},
+		{"(first\t(second))", "(first (second))"},
 		{"(first) (second)", "(first) (second)"},
+		{"(first) (second)", "(first) (second)"},
+		{"; a comment\n(first ; ignore this\nsecond);last comment", "(first second)"},
 	}
 
 	for _, tt := range testCases {

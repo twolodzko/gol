@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	inputPrompt  string = ">"
-	outputPrompt string = "=>"
+	inputPrompt  string = ""
+	outputPrompt string = "; "
 )
 
 func print(msg string) {
-	fmt.Printf("%s %s\n", outputPrompt, msg)
+	fmt.Printf("%s%s\n", outputPrompt, msg)
 }
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	fmt.Println()
 
 	for {
-		fmt.Printf("%s ", inputPrompt)
+		fmt.Printf("%s", inputPrompt)
 
 		input, err := repl.Read(os.Stdin)
 

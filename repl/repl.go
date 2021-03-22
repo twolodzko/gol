@@ -22,7 +22,8 @@ func Read(in io.Reader) (string, error) {
 		err             error = nil
 		readerErr       error
 		ch              rune
-		openBlocksCount int = 0
+		openBlocksCount int  = 0
+		isCommented     bool = false
 	)
 	reader := bufio.NewReader(in)
 	input := []rune{}
@@ -33,6 +34,19 @@ func Read(in io.Reader) (string, error) {
 		if readerErr == io.EOF {
 			break
 		} else {
+			// after a comment ; ignore everything
+			// until end of the line \n
+			if ch == ';' {
+				isCommented = true
+				continue
+			}
+			if isCommented {
+				if ch == '\n' {
+					isCommented = false
+				}
+				continue
+			}
+
 			if isBlockStart(ch) {
 				openBlocksCount++
 			} else if isBlockEnd(ch) {

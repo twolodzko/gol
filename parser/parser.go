@@ -40,6 +40,10 @@ func readWord(reader *strings.Reader) (string, error) {
 			break
 		}
 
+		if !unicode.IsPrint(ch) {
+			continue
+		}
+
 		word = append(word, ch)
 	}
 
@@ -98,6 +102,10 @@ func parseString(reader *strings.Reader) (String, error) {
 			escaped = false
 		}
 
+		if !unicode.IsPrint(ch) {
+			continue
+		}
+
 		str = append(str, ch)
 	}
 
@@ -132,7 +140,7 @@ func parseList(reader *strings.Reader) (List, error) {
 				return List{}, errors.New("missing opening bracket")
 			}
 		}
-		if unicode.IsSpace(ch) {
+		if unicode.IsSpace(ch) || !unicode.IsPrint(ch) {
 			continue
 		}
 		if isListEnd(ch) {

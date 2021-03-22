@@ -16,6 +16,10 @@ func isBlockEnd(ch rune) bool {
 	return ch == ')'
 }
 
+func isCommentStart(ch rune) bool {
+	return ch == ';'
+}
+
 // Read input from REPL
 func Read(in io.Reader) (string, error) {
 	var (
@@ -36,7 +40,7 @@ func Read(in io.Reader) (string, error) {
 		} else {
 			// after a comment ; ignore everything
 			// until end of the line \n
-			if ch == ';' {
+			if isCommentStart(ch) {
 				isCommented = true
 				continue
 			}
@@ -64,13 +68,13 @@ func Read(in io.Reader) (string, error) {
 				break
 			}
 
-			if unicode.IsPrint(ch) {
+			switch {
+			case unicode.IsPrint(ch):
 				input = append(input, ch)
-			} else if unicode.IsSpace(ch) {
+			case unicode.IsSpace(ch):
 				input = append(input, ' ')
-			} else {
-				err = fmt.Errorf("invalid character: %U", ch)
-				break
+			default:
+				return "", fmt.Errorf("invalid character: %U", ch)
 			}
 		}
 	}

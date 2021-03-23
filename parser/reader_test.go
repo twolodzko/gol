@@ -54,3 +54,27 @@ func TestReadSequence(t *testing.T) {
 		t.Errorf("expected: '%s', got: '%s'", expected, string(result))
 	}
 }
+
+func TestPeekRune(t *testing.T) {
+	input := "你好，世界"
+	reader := NewCodeReader(strings.NewReader(input))
+
+	for i := 0; i <= 3; i++ {
+		r, err := reader.PeekRune()
+
+		if r != '你' {
+			t.Errorf("unexpected result: '%v'", string(r))
+		}
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+	}
+}
+
+func TestPeekRune_EmptyString(t *testing.T) {
+	reader := NewCodeReader(strings.NewReader(""))
+	_, err := reader.PeekRune()
+	if err != io.EOF {
+		t.Errorf("expected EOF error, got: %v", err)
+	}
+}

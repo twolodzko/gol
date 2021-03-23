@@ -48,6 +48,10 @@ func Read(in io.Reader) (s string, err error) {
 				openBlocksCount -= 1
 			}
 
+			if openBlocksCount < 0 {
+				return "", errors.New("missing opening bracket")
+			}
+
 			clean = append(clean, r)
 		}
 
@@ -58,10 +62,7 @@ func Read(in io.Reader) (s string, err error) {
 		}
 	}
 
-	switch {
-	case openBlocksCount < 0:
-		return "", errors.New("missing opening bracket")
-	case openBlocksCount > 0:
+	if openBlocksCount > 0 {
 		return "", errors.New("missing closing bracket")
 	}
 

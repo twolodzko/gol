@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/twolodzko/goal/repl"
 )
@@ -28,7 +29,7 @@ func main() {
 
 		if err != nil {
 			print(fmt.Sprintf("ERROR: %s", err))
-		} else if len(input) > 0 {
+		} else if len(strings.TrimSpace(input)) > 0 {
 			print(input)
 		}
 	}

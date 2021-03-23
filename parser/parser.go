@@ -103,15 +103,68 @@ func parseString(reader *CodeReader) (String, error) {
 	return String{string(str)}, nil
 }
 
+func parseNode(reader *CodeReader) (interface{}, error) {
+
+	r, err := reader.PeekRune()
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case isListStart(r):
+		// list
+		return parseList(reader)
+	case r == '"':
+		// string
+		return parseString(reader)
+	default:
+		// number or symbol
+		word, err := readWord(reader)
+
+		if err != nil {
+			return List{}, err
+		}
+
+		if unicode.IsDigit(r) || r == '-' || r == '+' || r == '.' {
+			// try to parse it as a number
+			elem, err := stringToNumber(word)
+
+			if err != nil {
+				// if it starts with a digit, it needs to be a number
+				if unicode.IsDigit(r) {
+					return nil, err
+				}
+
+				// otherwise, treat it as a symbol
+				return Symbol{word}, nil
+			}
+
+			return elem, nil
+		} else {
+			// symbol
+			return Symbol{word}, nil
+		}
+	}
+}
+
 // Parse a LISP list
 func parseList(reader *CodeReader) (List, error) {
 	var (
-		elem interface{}
-		err  error
 		r    rune
+		err  error
+		node interface{}
 	)
+
 	list := List{}
-	isFirstChar := true
+
+	r, _, err = reader.ReadRune()
+	if err != nil {
+		return List{}, err
+	}
+	if !isListStart(r) {
+		return List{}, errors.New("missing opening bracket")
+	}
 
 	for {
 		r, _, err = reader.ReadRune()
@@ -123,70 +176,28 @@ func parseList(reader *CodeReader) (List, error) {
 			return List{}, err
 		}
 
-		if isFirstChar {
-			if isListStart(r) {
-				isFirstChar = false
-				continue
-			} else {
-				return List{}, errors.New("missing opening bracket")
-			}
-		}
 		if unicode.IsSpace(r) {
 			continue
-		}
-		if isListEnd(r) {
+		} else if isListEnd(r) {
 			break
-		}
-
-		err = reader.UnreadRune()
-		if err != nil {
-			return List{}, err
-		}
-
-		switch {
-		case isListStart(r):
-			// list
-			elem, err = parseList(reader)
-		case r == '"':
-			// string
-			elem, err = parseString(reader)
-		default:
-			// number or symbol
-			var word string
-
-			word, err = readWord(reader)
-
+		} else {
+			err = reader.UnreadRune()
 			if err != nil {
 				return List{}, err
 			}
-
-			if unicode.IsDigit(r) || r == '-' || r == '+' || r == '.' {
-				// try to parse it as a number
-				elem, err = stringToNumber(word)
-
-				if err != nil {
-					// if it starts with a digit, it needs to be a number
-					if unicode.IsDigit(r) {
-						return List{}, err
-					}
-
-					// otherwise, treat it as a symbol
-					elem = Symbol{word}
-					// it was not an error
-					err = nil
-				}
-			} else {
-				// symbol
-				elem = Symbol{word}
-			}
 		}
 
+		node, err = parseNode(reader)
+
+		list.Push(node)
+
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
 			return List{}, err
 		}
-
-		list.Push(elem)
 	}
 
-	return list, nil
+	return list, err
 }

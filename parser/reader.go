@@ -66,3 +66,18 @@ func (cr *CodeReader) ReadRune() (r rune, size int, err error) {
 func (cr *CodeReader) UnreadRune() error {
 	return cr.reader.UnreadRune()
 }
+
+// PeekRune reads next rune without moving the head of the reader further
+func (cr *CodeReader) PeekRune() (r rune, err error) {
+	r, _, err = cr.ReadRune()
+	if err != nil {
+		return rune(0), err
+	}
+
+	err = cr.UnreadRune()
+	if err != nil {
+		return rune(0), err
+	}
+
+	return r, nil
+}

@@ -39,6 +39,9 @@ func TestRead(t *testing.T) {
 		{"(first\nsecond)", "(first second)"},
 		{"(first\t(second))", "(first (second))"},
 		{"(first ; ignore this\nsecond);last comment", "(first second)"},
+		// FIXME
+		// {"(\")\")", "(\")\")"},
+		// {"(\"first line\nnext line\"\nfoo)", "(\"first line\nnext line\" foo)"},
 	}
 
 	for _, tt := range testCases {

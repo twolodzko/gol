@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"io"
 	"strings"
 	"testing"
 
@@ -75,7 +76,7 @@ func Test_stringToNumber(t *testing.T) {
 	}
 }
 
-func Test_stringToNumber_invalid(t *testing.T) {
+func Test_stringToNumber_InvalidInputs(t *testing.T) {
 	var testCases = []struct {
 		input string
 	}{
@@ -102,15 +103,15 @@ func Test_parseList(t *testing.T) {
 		input    string
 		expected List
 	}{
-		{"", List{}},
 		{"()", List{}},
+		{"(1 2) (3 4)", newList(1, 2)},
+		{"(1 2 (3 4) 5)", newList(1, 2, newList(3, 4), 5)},
 		{"(a)", newList(Symbol{"a"})},
-		{"(foo bar baz)", newList(Symbol{"foo"}, Symbol{"bar"}, Symbol{"baz"})},
-		{"(foo (bar baz))", newList(Symbol{"foo"}, newList(Symbol{"bar"}, Symbol{"baz"}))},
 		{"(foo 42 \"Hello World!\" ())", newList(Symbol{"foo"}, 42, String{"Hello World!"}, List{})},
-		{"(/ 40 2)", newList(Symbol{"/"}, 40, 2)},
 		{"(+ -2 +2)", newList(Symbol{"+"}, -2, 2)},
-		{`((lambda (x y) 
+		{"(lambda (x y) (+ x y))", newList(Symbol{"lambda"}, newList(Symbol{"x"}, Symbol{"y"}),
+			newList(Symbol{"+"}, Symbol{"x"}, Symbol{"y"}))},
+		{`((lambda (x y)
 			   (+ x y))
 			12 6.17)`,
 			newList(newList(Symbol{"lambda"}, newList(Symbol{"x"}, Symbol{"y"}),
@@ -120,6 +121,42 @@ func Test_parseList(t *testing.T) {
 	for _, tt := range testCases {
 		reader := NewCodeReader(strings.NewReader(tt.input))
 		result, err := parseList(reader)
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+
+	reader := NewCodeReader(strings.NewReader(""))
+	result, err := parseList(reader)
+
+	if err != io.EOF {
+		t.Errorf("unexpected error: %s", err)
+	}
+	if !cmp.Equal(result, List{}) {
+		t.Errorf("unexpected result: %s (%T)", result, result)
+	}
+}
+
+func Test_parseNode(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected interface{}
+	}{
+		{"42", 42},
+		{`"Hello World!"`, String{"Hello World!"}},
+		{"+", Symbol{"+"}},
+		{"foo", Symbol{"foo"}},
+		{"(foo 42 \"bar\")", newList(Symbol{"foo"}, 42, String{"bar"})},
+	}
+
+	for _, tt := range testCases {
+		reader := NewCodeReader(strings.NewReader(tt.input))
+		result, err := parseNode(reader)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)

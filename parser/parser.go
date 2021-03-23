@@ -15,6 +15,10 @@ func isListEnd(r rune) bool {
 	return r == ')'
 }
 
+func isQuotationMark(r rune) bool {
+	return r == '"'
+}
+
 // Read characters until word boundary
 func readWord(reader *CodeReader) (string, error) {
 	word := []rune{}
@@ -56,11 +60,11 @@ func stringToNumber(str string) (num interface{}, err error) {
 	return num, err
 }
 
-// Read a quoted string until the closing quotation sign
+// Read a quoted string until the closing quotation mark
 func parseString(reader *CodeReader) (String, error) {
 
 	str := []rune{}
-	escaped := false
+	isEscaped := false
 
 	// check if it starts with "
 	r, _, err := reader.ReadRune()
@@ -68,33 +72,33 @@ func parseString(reader *CodeReader) (String, error) {
 	if err != nil {
 		return String{}, err
 	}
-	if r != '"' {
-		return String{}, errors.New("missing opening quotation sign")
+	if !isQuotationMark(r) {
+		return String{}, errors.New("missing opening quotation mark")
 	}
 
 	for {
 		r, _, err := reader.ReadRune()
 
 		if err == io.EOF {
-			return String{}, errors.New("missing closing quotation sign")
+			return String{}, errors.New("missing closing quotation mark")
 		}
 		if err != nil {
 			return String{}, err
 		}
 
-		if !escaped {
+		if !isEscaped {
 			// skip the escape sign, unless it was escaped \\
 			if r == '\\' {
-				escaped = true
+				isEscaped = true
 				continue
 			}
 			// end of string, unless it was escaped \"
-			if r == '"' {
+			if isQuotationMark(r) {
 				break
 			}
 		} else {
 			// at next char after the escape, always cancel the escape
-			escaped = false
+			isEscaped = false
 		}
 
 		str = append(str, r)
@@ -115,7 +119,7 @@ func parseNode(reader *CodeReader) (interface{}, error) {
 	case isListStart(r):
 		// list
 		return parseList(reader)
-	case r == '"':
+	case isQuotationMark(r):
 		// string
 		return parseString(reader)
 	default:

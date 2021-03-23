@@ -1,9 +1,10 @@
 package repl
 
 import (
+	"bufio"
 	"errors"
 	"io"
-	"unicode"
+	"strings"
 
 	"github.com/twolodzko/goal/parser"
 )
@@ -17,45 +18,52 @@ func isBlockEnd(r rune) bool {
 }
 
 // Read input from REPL
-func Read(in io.Reader) (string, error) {
-	var (
-		err             error
-		r               rune
-		openBlocksCount int = 0
-	)
-	reader := parser.NewCodeReader(in)
-	input := []rune{}
+func Read(in io.Reader) (s string, err error) {
+	reader := bufio.NewReader(in)
+	openBlocksCount := 0
 
 	for {
-		r, _, err = reader.ReadRune()
+		line, err := reader.ReadString('\n')
 
-		if err == io.EOF {
-			err = nil
+		if err != nil && err != io.EOF {
+			return "", err
+		}
+
+		cr := parser.NewCodeReader(strings.NewReader(line))
+		clean := []rune{}
+
+		for {
+			r, _, err := cr.ReadRune()
+
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return "", err
+			}
+
+			switch {
+			case r == '(':
+				openBlocksCount += 1
+			case r == ')':
+				openBlocksCount -= 1
+			}
+
+			clean = append(clean, r)
+		}
+
+		s += string(clean)
+
+		if err == io.EOF || openBlocksCount == 0 {
 			break
-		} else {
-			if isBlockStart(r) {
-				openBlocksCount++
-			} else if isBlockEnd(r) {
-				openBlocksCount--
-			}
-
-			if openBlocksCount < 0 {
-				err = errors.New("missing open bracket")
-				break
-			}
-
-			// break after the block is closed
-			if unicode.IsSpace(r) && openBlocksCount == 0 {
-				break
-			}
-
-			input = append(input, r)
 		}
 	}
 
-	if openBlocksCount > 0 {
-		err = errors.New("missing closing bracket")
+	switch {
+	case openBlocksCount < 0:
+		return "", errors.New("missing opening bracket")
+	case openBlocksCount > 0:
+		return "", errors.New("missing closing bracket")
 	}
 
-	return string(input), err
+	return s, err
 }

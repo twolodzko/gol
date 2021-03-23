@@ -19,12 +19,12 @@ func TestInvalidInput(t *testing.T) {
 		{"(()"},
 	}
 
-	for _, test := range testCases {
-		reader := bufio.NewReader(strings.NewReader(test.input))
+	for _, tt := range testCases {
+		reader := bufio.NewReader(strings.NewReader(tt.input))
 		result, err := Read(reader)
 
 		if err == nil {
-			t.Errorf("expected an error, got result: '%s'", result)
+			t.Errorf("for %s expected an error, got '%s'", tt.input, result)
 		}
 	}
 }
@@ -36,10 +36,9 @@ func TestRead(t *testing.T) {
 	}{
 		{"()", "()"},
 		{"word", "word"},
-		{"(word)\n\n\n", "(word)"},
 		{"(first\nsecond)", "(first second)"},
 		{"(first\t(second))", "(first (second))"},
-		{"; a comment\n(first ; ignore this\nsecond);last comment", "(first second)"},
+		{"(first ; ignore this\nsecond);last comment", "(first second)"},
 	}
 
 	for _, tt := range testCases {
@@ -50,7 +49,7 @@ func TestRead(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !reflect.DeepEqual(result, tt.expected) {
-			t.Errorf("expected: '%s' , got: '%s'", tt.expected, result)
+			t.Errorf("expected: '%s', got '%s'", tt.expected, result)
 		}
 	}
 }

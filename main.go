@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	inputPrompt  string = ""
-	outputPrompt string = "; "
+	inputPrompt  string = "> "
+	outputPrompt string = "=> "
 )
 
 func print(msg string) {

@@ -34,8 +34,7 @@ func TestReadSequence(t *testing.T) {
 	input := ";; first comment\n((lambda (x y) ; second comment\n\t\u001B(+ x y))\n;; third comment\n42 13.6)"
 	expected := "((lambda (x y) (+ x y)) 42 13.6)"
 
-	r := bufio.NewReader(strings.NewReader(input))
-	reader := NewCodeReader(r)
+	reader := NewCodeReader(strings.NewReader(input))
 	result := []rune{}
 
 	for {

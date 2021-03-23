@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func Test_parseString(t *testing.T) {
+func Test_readString(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected interface{}
@@ -21,8 +21,8 @@ func Test_parseString(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		reader := NewCodeReader(strings.NewReader(tt.input))
-		result, err := parseString(reader)
+		parser := newParser(strings.NewReader(tt.input))
+		result, err := parser.readString()
 
 		if result != tt.expected {
 			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
@@ -98,12 +98,46 @@ func Test_stringToNumber_InvalidInputs(t *testing.T) {
 	}
 }
 
-func Test_parseList(t *testing.T) {
+func Test_readWord(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected string
+	}{
+		{"foo ", "foo"},
+		{"bar)", "bar"},
+		{"42)", "42"},
+	}
+
+	for _, tt := range testCases {
+		parser := newParser(strings.NewReader(tt.input))
+		result, err := parser.readWord()
+
+		if err != nil && err != io.EOF {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+
+	parser := newParser(strings.NewReader("abc"))
+	result, err := parser.readWord()
+
+	if err != nil && err != io.EOF {
+		t.Errorf("unexpected error: %s", err)
+	}
+	if result != "abc" {
+		t.Errorf("unexpected result: %s", result)
+	}
+}
+
+func Test_readList(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected List
 	}{
 		{"()", List{}},
+		{"(1 2))", newList(1, 2)},
 		{"(1 2) (3 4)", newList(1, 2)},
 		{"(1 2 (3 4) 5)", newList(1, 2, newList(3, 4), 5)},
 		{"(a)", newList(Symbol{"a"})},
@@ -119,8 +153,8 @@ func Test_parseList(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		reader := NewCodeReader(strings.NewReader(tt.input))
-		result, err := parseList(reader)
+		parser := newParser(strings.NewReader(tt.input))
+		result, err := parser.readList()
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
@@ -130,19 +164,9 @@ func Test_parseList(t *testing.T) {
 			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
 		}
 	}
-
-	reader := NewCodeReader(strings.NewReader(""))
-	result, err := parseList(reader)
-
-	if err != io.EOF {
-		t.Errorf("unexpected error: %s", err)
-	}
-	if !cmp.Equal(result, List{}) {
-		t.Errorf("unexpected result: %s (%T)", result, result)
-	}
 }
 
-func Test_parseNode(t *testing.T) {
+func Test_readNode(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected interface{}
@@ -151,12 +175,13 @@ func Test_parseNode(t *testing.T) {
 		{`"Hello World!"`, String{"Hello World!"}},
 		{"+", Symbol{"+"}},
 		{"foo", Symbol{"foo"}},
+		{"bar ", Symbol{"bar"}},
 		{"(foo 42 \"bar\")", newList(Symbol{"foo"}, 42, String{"bar"})},
 	}
 
 	for _, tt := range testCases {
-		reader := NewCodeReader(strings.NewReader(tt.input))
-		result, err := parseNode(reader)
+		parser := newParser(strings.NewReader(tt.input))
+		result, err := parser.readNode()
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)

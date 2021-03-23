@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// List is a generic type for a list of objects of any kind
+// List is a generic type for a list
 type List struct {
 	List []interface{}
 }

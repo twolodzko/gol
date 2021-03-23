@@ -33,7 +33,7 @@ func Read(in io.Reader) (s string, err error) {
 		clean := []rune{}
 
 		for {
-			r, _, err := cr.ReadRune()
+			r, err := cr.ReadRune()
 
 			if err == io.EOF {
 				break
@@ -43,9 +43,9 @@ func Read(in io.Reader) (s string, err error) {
 
 			switch {
 			case r == '(':
-				openBlocksCount += 1
+				openBlocksCount++
 			case r == ')':
-				openBlocksCount -= 1
+				openBlocksCount--
 			}
 
 			if openBlocksCount < 0 {

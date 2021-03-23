@@ -19,65 +19,31 @@ func isQuotationMark(r rune) bool {
 	return r == '"'
 }
 
-// Read characters until word boundary
-func readWord(reader *CodeReader) (string, error) {
-	word := []rune{}
-
-	for {
-		r, _, err := reader.ReadRune()
-
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return "", err
-		}
-
-		if unicode.IsSpace(r) || isListEnd(r) || isListStart(r) {
-			// we went outside the word boundary, exit
-			err := reader.UnreadRune()
-
-			if err != nil {
-				return "", err
-			}
-			break
-		}
-
-		word = append(word, r)
-	}
-
-	return string(word), nil
+type Parser struct {
+	*CodeReader
 }
 
-// Try parsing sting to an integer or a float
-func stringToNumber(str string) (num interface{}, err error) {
-	num, err = strconv.Atoi(str)
-
-	if err != nil {
-		num, err = strconv.ParseFloat(str, 64)
-	}
-
-	return num, err
+func newParser(reader io.Reader) *Parser {
+	return &Parser{NewCodeReader(reader)}
 }
 
 // Read a quoted string until the closing quotation mark
-func parseString(reader *CodeReader) (String, error) {
+func (p *Parser) readString() (String, error) {
 
 	str := []rune{}
 	isEscaped := false
 
-	// check if it starts with "
-	r, _, err := reader.ReadRune()
-
+	r, err := p.ReadRune()
 	if err != nil {
 		return String{}, err
 	}
+
 	if !isQuotationMark(r) {
 		return String{}, errors.New("missing opening quotation mark")
 	}
 
 	for {
-		r, _, err := reader.ReadRune()
+		r, err = p.ReadRune()
 
 		if err == io.EOF {
 			return String{}, errors.New("missing closing quotation mark")
@@ -107,9 +73,82 @@ func parseString(reader *CodeReader) (String, error) {
 	return String{string(str)}, nil
 }
 
-func parseNode(reader *CodeReader) (interface{}, error) {
+func isWordBoundary(r rune) bool {
+	return unicode.IsSpace(r) || isListEnd(r) || isListStart(r)
+}
 
-	r, err := reader.PeekRune()
+// Read characters until word boundary
+func (p *Parser) readWord() (string, error) {
+	var (
+		r   rune
+		err error
+	)
+	word := []rune{}
+
+	for {
+		r, err = p.ReadRune()
+
+		if isWordBoundary(r) {
+			err = p.UnreadRune()
+			break
+		}
+		if err != nil {
+			break
+		}
+
+		word = append(word, r)
+	}
+
+	return string(word), err
+}
+
+func (p *Parser) readList() (list List, err error) {
+	var (
+		node interface{}
+		r    rune
+	)
+
+	r, err = p.ReadRune()
+
+	if err != nil {
+		return list, err
+	}
+	if !isListStart(r) {
+		return List{}, errors.New("missing list open bracket")
+	}
+
+	for {
+		r, err = p.ReadRune()
+
+		if err != nil {
+			break
+		}
+
+		if unicode.IsSpace(r) {
+			continue
+		} else if isListEnd(r) {
+			break
+		}
+
+		err := p.UnreadRune()
+		if err != nil {
+			break
+		}
+
+		node, err = p.readNode()
+
+		list.Push(node)
+
+		if err != nil {
+			break
+		}
+	}
+
+	return list, err
+}
+
+func (p *Parser) readNode() (interface{}, error) {
+	r, err := p.PeekRune()
 
 	if err != nil {
 		return nil, err
@@ -118,15 +157,15 @@ func parseNode(reader *CodeReader) (interface{}, error) {
 	switch {
 	case isListStart(r):
 		// list
-		return parseList(reader)
+		return p.readList()
 	case isQuotationMark(r):
 		// string
-		return parseString(reader)
+		return p.readString()
 	default:
 		// number or symbol
-		word, err := readWord(reader)
+		word, err := p.readWord()
 
-		if err != nil {
+		if err != nil && err != io.EOF {
 			return List{}, err
 		}
 
@@ -145,63 +184,20 @@ func parseNode(reader *CodeReader) (interface{}, error) {
 			}
 
 			return elem, nil
-		} else {
-			// symbol
-			return Symbol{word}, nil
 		}
+
+		// symbol
+		return Symbol{word}, nil
 	}
 }
 
-// Parse a LISP list
-func parseList(reader *CodeReader) (List, error) {
-	var (
-		r    rune
-		err  error
-		node interface{}
-	)
+// Try parsing sting to an integer or a float
+func stringToNumber(str string) (num interface{}, err error) {
+	num, err = strconv.Atoi(str)
 
-	list := List{}
-
-	r, _, err = reader.ReadRune()
 	if err != nil {
-		return List{}, err
-	}
-	if !isListStart(r) {
-		return List{}, errors.New("missing opening bracket")
+		num, err = strconv.ParseFloat(str, 64)
 	}
 
-	for {
-		r, _, err = reader.ReadRune()
-
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return List{}, err
-		}
-
-		if unicode.IsSpace(r) {
-			continue
-		} else if isListEnd(r) {
-			break
-		} else {
-			err = reader.UnreadRune()
-			if err != nil {
-				return List{}, err
-			}
-		}
-
-		node, err = parseNode(reader)
-
-		list.Push(node)
-
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return List{}, err
-		}
-	}
-
-	return list, err
+	return num, err
 }

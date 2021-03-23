@@ -3,8 +3,11 @@ package parser
 import (
 	"bufio"
 	"io"
-	"unicode"
 )
+
+func isCommentStart(r rune) bool {
+	return r == ';'
+}
 
 // CodeReader reads runes but ignores non-printable characters, repeated white characters, and code comments
 type CodeReader struct {
@@ -17,19 +20,15 @@ func NewCodeReader(r io.Reader) *CodeReader {
 	return &CodeReader{bufio.NewReader(r), rune(0)}
 }
 
-func isCommentStart(r rune) bool {
-	return r == ';'
-}
-
 // ReadRune single rune
-func (cr *CodeReader) ReadRune() (r rune, size int, err error) {
+func (cr *CodeReader) ReadRune() (r rune, err error) {
 	isCommented := false
 
 	for {
-		r, size, err = cr.reader.ReadRune()
+		r, _, err = cr.reader.ReadRune()
 
 		if err != nil {
-			return r, size, err
+			return r, err
 		}
 
 		// skip all the commented code
@@ -44,37 +43,32 @@ func (cr *CodeReader) ReadRune() (r rune, size int, err error) {
 			continue
 		}
 
-		if unicode.IsSpace(r) {
-			// unify and strip white characters
-			if unicode.IsSpace(cr.previous) {
-				continue
-			}
-			r = ' '
-		} else if !unicode.IsPrint(r) {
-			// skip other non-printable chars
-			continue
-		}
-
 		cr.previous = r
 		break
 	}
 
-	return r, size, err
+	return r, err
 }
 
-// UnreadRune the last read rune
+// UnreadRune moves the head of the reader one rune back
 func (cr *CodeReader) UnreadRune() error {
-	return cr.reader.UnreadRune()
+	err := cr.reader.UnreadRune()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // PeekRune reads next rune without moving the head of the reader further
 func (cr *CodeReader) PeekRune() (r rune, err error) {
-	r, _, err = cr.ReadRune()
+	r, err = cr.ReadRune()
 	if err != nil {
 		return rune(0), err
 	}
 
-	err = cr.UnreadRune()
+	err = cr.reader.UnreadRune()
 	if err != nil {
 		return rune(0), err
 	}

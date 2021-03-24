@@ -107,7 +107,7 @@ func (p *Parser) readWord() (string, error) {
 // readList reads the LISP-style list
 func (p *Parser) readList() (objects.List, error) {
 	var (
-		node interface{}
+		node objects.Object
 		err  error
 		list objects.List
 	)
@@ -156,7 +156,7 @@ func (p *Parser) readList() (objects.List, error) {
 }
 
 // ReadNext reads and parses the single element (atom, symbol, list)
-func (p *Parser) ReadNext() (interface{}, error) {
+func (p *Parser) ReadNext() (objects.Object, error) {
 	r := p.Head
 
 	switch {
@@ -197,7 +197,7 @@ func (p *Parser) ReadNext() (interface{}, error) {
 }
 
 // Try parsing sting to an integer or a float
-func stringToNumber(str string) (interface{}, error) {
+func stringToNumber(str string) (objects.Object, error) {
 	var (
 		err error
 		f   float64

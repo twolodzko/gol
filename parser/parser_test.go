@@ -12,7 +12,7 @@ import (
 func Test_stringToNumber(t *testing.T) {
 	var testCases = []struct {
 		input    string
-		expected interface{}
+		expected objects.Object
 	}{
 		{"3.1415", objects.Float{Val: 3.1415}},
 		{"1e-5", objects.Float{Val: 1e-5}},
@@ -41,7 +41,7 @@ func Test_stringToNumber(t *testing.T) {
 func Test_readString(t *testing.T) {
 	var testCases = []struct {
 		input    string
-		expected interface{}
+		expected objects.Object
 	}{
 		{`"" ignore me`, objects.String{}},
 		{`"Hello World!" not this`, objects.String{Val: "Hello World!"}},
@@ -69,7 +69,7 @@ func Test_readString(t *testing.T) {
 func Test_readString_WithEOF(t *testing.T) {
 	var testCases = []struct {
 		input    string
-		expected interface{}
+		expected objects.Object
 	}{
 		{`"Hello \"John\"!"`, objects.String{Val: `Hello "John"!`}},
 		{`"It\'s alive!"`, objects.String{Val: "It's alive!"}},
@@ -205,7 +205,7 @@ func Test_readList_WithEOF(t *testing.T) {
 func TestReadNext(t *testing.T) {
 	var testCases = []struct {
 		input    string
-		expected interface{}
+		expected objects.Object
 	}{
 		{"bar ", objects.Symbol{Name: "bar"}},
 		{"42)", objects.Int{Val: 42}},
@@ -233,7 +233,7 @@ func TestReadNext(t *testing.T) {
 func TestReadNext_WithEOF(t *testing.T) {
 	var testCases = []struct {
 		input    string
-		expected interface{}
+		expected objects.Object
 	}{
 		{"42", objects.Int{Val: 42}},
 		{`"Hello World!"`, objects.String{Val: "Hello World!"}},

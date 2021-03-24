@@ -8,7 +8,7 @@ import (
 
 func TestPush(t *testing.T) {
 	var testCases = []struct {
-		input    interface{}
+		input    Object
 		expected List
 	}{
 		{Int{42}, NewList(Int{42})},

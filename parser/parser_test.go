@@ -8,46 +8,19 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func Test_readString(t *testing.T) {
+func Test_stringToNumber(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected interface{}
 	}{
-		{`"" ignore me`, String{}},
-		{`"Hello World!" not this`, String{"Hello World!"}},
-		{`"Hello \"John\"!"`, String{"Hello \"John\"!"}},
-		{`"It\'s alive!"`, String{"It's alive!"}},
-		{`"To escape a char use \\" "ignore me"`, String{"To escape a char use \\"}},
-	}
-
-	for _, tt := range testCases {
-		parser := newParser(strings.NewReader(tt.input))
-		result, err := parser.readString()
-
-		if result != tt.expected {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
-		}
-
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-	}
-}
-
-func Test_stringToNumber(t *testing.T) {
-	var testCases = []struct {
-		input        string
-		expected     interface{}
-		expectedType string
-	}{
-		{"3.1415", 3.1415, "float"},
-		{"1e-5", 1e-5, "float"},
-		{"1.3e+5", 1.3e+5, "float"},
-		{"-.34e-5", -0.34e-5, "float"},
-		{".223", 0.223, "float"},
-		{"+.45", 0.45, "float"},
-		{"+42", 42, "int"},
-		{"0", 0, "int"},
+		{"3.1415", 3.1415},
+		{"1e-5", 1e-5},
+		{"1.3e+5", 1.3e+5},
+		{"-.34e-5", -0.34e-5},
+		{".223", 0.223},
+		{"+.45", 0.45},
+		{"+42", 42},
+		{"0", 0},
 	}
 
 	for _, tt := range testCases {
@@ -61,39 +34,60 @@ func Test_stringToNumber(t *testing.T) {
 				tt.expected, tt.expected, result, result,
 			)
 		}
-		switch result.(type) {
-		case int:
-			if tt.expectedType != "int" {
-				t.Errorf("unexpected type %T for %s", result, tt.input)
-			}
-		case float64:
-			if tt.expectedType != "float" {
-				t.Errorf("unexpected type %T for %s", result, tt.input)
-			}
-		default:
-			t.Errorf("unexpected type %T for %s", result, tt.input)
+	}
+}
+
+func Test_readString(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected interface{}
+	}{
+		{`"" ignore me`, String{}},
+		{`"Hello World!" not this`, String{"Hello World!"}},
+		{`"To escape a char use \\" "ignore me"`, String{"To escape a char use \\"}},
+	}
+
+	for _, tt := range testCases {
+		parser, err := NewParser(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+
+		result, err := parser.readString()
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if result != tt.expected {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
 		}
 	}
 }
 
-func Test_stringToNumber_InvalidInputs(t *testing.T) {
+func Test_readString_WithEOF(t *testing.T) {
 	var testCases = []struct {
-		input string
+		input    string
+		expected interface{}
 	}{
-		{"0x"},
-		{"+a"},
-		{"+"},
-		{"."},
-		{"1234x"},
-		{"1e"},
-		{"e+5"},
+		{`"Hello \"John\"!"`, String{`Hello "John"!`}},
+		{`"It\'s alive!"`, String{"It's alive!"}},
 	}
 
 	for _, tt := range testCases {
-		result, err := stringToNumber(tt.input)
+		parser, err := NewParser(strings.NewReader(tt.input))
 
-		if err == nil {
-			t.Errorf("for %s expected an error, got %v", tt.input, result)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+
+		result, err := parser.readString()
+
+		if err != io.EOF {
+			t.Errorf("expected EOF error, got: %v", err)
+		}
+		if result != tt.expected {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
 		}
 	}
 }
@@ -109,22 +103,34 @@ func Test_readWord(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		parser := newParser(strings.NewReader(tt.input))
+		parser, err := NewParser(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
 		result, err := parser.readWord()
 
-		if err != nil && err != io.EOF {
+		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
 			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
 		}
 	}
+}
 
-	parser := newParser(strings.NewReader("abc"))
+func Test_readWord_WithEOF(t *testing.T) {
+	parser, err := NewParser(strings.NewReader("abc"))
+
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+
 	result, err := parser.readWord()
 
-	if err != nil && err != io.EOF {
-		t.Errorf("unexpected error: %s", err)
+	if err != io.EOF {
+		t.Errorf("expected EOF error, got: %v", err)
 	}
 	if result != "abc" {
 		t.Errorf("unexpected result: %s", result)
@@ -136,12 +142,37 @@ func Test_readList(t *testing.T) {
 		input    string
 		expected List
 	}{
-		{"()", List{}},
 		{"(1 2))", newList(1, 2)},
 		{"(1 2) (3 4)", newList(1, 2)},
-		{"(1 2 (3 4) 5)", newList(1, 2, newList(3, 4), 5)},
+	}
+
+	for _, tt := range testCases {
+		parser, err := NewParser(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
+		result, err := parser.readList()
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
+func Test_readList_WithEOF(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected List
+	}{
+		{"()", List{}},
 		{"(a)", newList(Symbol{"a"})},
-		{"(foo 42 \"Hello World!\" ())", newList(Symbol{"foo"}, 42, String{"Hello World!"}, List{})},
+		{"(1 2 (3 4) 5)", newList(1, 2, newList(3, 4), 5)},
+		{`(foo 42 "Hello World!" ())`, newList(Symbol{"foo"}, 42, String{"Hello World!"}, List{})},
 		{"(+ -2 +2)", newList(Symbol{"+"}, -2, 2)},
 		{"(lambda (x y) (+ x y))", newList(Symbol{"lambda"}, newList(Symbol{"x"}, Symbol{"y"}),
 			newList(Symbol{"+"}, Symbol{"x"}, Symbol{"y"}))},
@@ -153,20 +184,52 @@ func Test_readList(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		parser := newParser(strings.NewReader(tt.input))
-		result, err := parser.readList()
+		parser, err := NewParser(strings.NewReader(tt.input))
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
 
+		result, err := parser.readList()
+
+		if err != io.EOF {
+			t.Errorf("unexpected error: %s", err)
+		}
 		if !cmp.Equal(result, tt.expected) {
 			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
 		}
 	}
 }
 
-func Test_readNode(t *testing.T) {
+func TestReadNext(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected interface{}
+	}{
+		{"bar ", Symbol{"bar"}},
+		{"42)", 42},
+		{`"Hello World!" `, String{"Hello World!"}},
+	}
+
+	for _, tt := range testCases {
+		parser, err := NewParser(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
+		result, err := parser.ReadNext()
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
+func TestReadNext_WithEOF(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected interface{}
@@ -175,18 +238,21 @@ func Test_readNode(t *testing.T) {
 		{`"Hello World!"`, String{"Hello World!"}},
 		{"+", Symbol{"+"}},
 		{"foo", Symbol{"foo"}},
-		{"bar ", Symbol{"bar"}},
-		{"(foo 42 \"bar\")", newList(Symbol{"foo"}, 42, String{"bar"})},
+		{`(foo 42 "bar")`, newList(Symbol{"foo"}, 42, String{"bar"})},
 	}
 
 	for _, tt := range testCases {
-		parser := newParser(strings.NewReader(tt.input))
-		result, err := parser.readNode()
+		parser, err := NewParser(strings.NewReader(tt.input))
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
 
+		result, err := parser.ReadNext()
+
+		if err != io.EOF {
+			t.Errorf("expected EOF error, got: %v", err)
+		}
 		if !cmp.Equal(result, tt.expected) {
 			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
 		}

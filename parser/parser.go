@@ -19,31 +19,30 @@ func isQuotationMark(r rune) bool {
 	return r == '"'
 }
 
+// Parser reads the code and parses it into the AST
 type Parser struct {
 	*CodeReader
 }
 
-func newParser(reader io.Reader) *Parser {
-	return &Parser{NewCodeReader(reader)}
+// NewParser initializes the Parser
+func NewParser(reader io.Reader) (*Parser, error) {
+	cr, err := NewCodeReader(reader)
+	return &Parser{cr}, err
 }
 
 // Read a quoted string until the closing quotation mark
 func (p *Parser) readString() (String, error) {
-
+	var err error
 	str := []rune{}
 	isEscaped := false
 
-	r, err := p.ReadRune()
-	if err != nil {
-		return String{}, err
-	}
-
-	if !isQuotationMark(r) {
+	if !isQuotationMark(p.Head) {
 		return String{}, errors.New("missing opening quotation mark")
 	}
 
 	for {
-		r, err = p.ReadRune()
+		err = p.NextRune()
+		r := p.Head
 
 		if err == io.EOF {
 			return String{}, errors.New("missing closing quotation mark")
@@ -60,6 +59,7 @@ func (p *Parser) readString() (String, error) {
 			}
 			// end of string, unless it was escaped \"
 			if isQuotationMark(r) {
+				err = p.NextRune()
 				break
 			}
 		} else {
@@ -70,7 +70,7 @@ func (p *Parser) readString() (String, error) {
 		str = append(str, r)
 	}
 
-	return String{string(str)}, nil
+	return String{string(str)}, err
 }
 
 func isWordBoundary(r rune) bool {
@@ -79,63 +79,67 @@ func isWordBoundary(r rune) bool {
 
 // Read characters until word boundary
 func (p *Parser) readWord() (string, error) {
-	var (
-		r   rune
-		err error
-	)
+	var err error
 	word := []rune{}
 
 	for {
-		r, err = p.ReadRune()
+		r := p.Head
 
 		if isWordBoundary(r) {
-			err = p.UnreadRune()
-			break
-		}
-		if err != nil {
 			break
 		}
 
 		word = append(word, r)
+
+		err = p.NextRune()
+
+		if err != nil {
+			break
+		}
 	}
 
 	return string(word), err
 }
 
+// readList reads the LISP-style list
 func (p *Parser) readList() (list List, err error) {
-	var (
-		node interface{}
-		r    rune
-	)
+	var node interface{}
 
-	r, err = p.ReadRune()
-
-	if err != nil {
-		return list, err
-	}
-	if !isListStart(r) {
+	if !isListStart(p.Head) {
 		return List{}, errors.New("missing list open bracket")
 	}
 
-	for {
-		r, err = p.ReadRune()
+	err = p.NextRune()
 
-		if err != nil {
-			break
-		}
+	if err != nil {
+		return List{}, err
+	}
+
+	for {
+		r := p.Head
+
+		// FIXME
+		// fmt.Println(string(r))
 
 		if unicode.IsSpace(r) {
+			err = p.NextRune()
+
+			if err != nil {
+				break
+			}
+
 			continue
 		} else if isListEnd(r) {
+			err = p.NextRune()
+
+			if err != nil {
+				break
+			}
+
 			break
 		}
 
-		err := p.UnreadRune()
-		if err != nil {
-			break
-		}
-
-		node, err = p.readNode()
+		node, err = p.ReadNext()
 
 		list.Push(node)
 
@@ -147,12 +151,9 @@ func (p *Parser) readList() (list List, err error) {
 	return list, err
 }
 
-func (p *Parser) readNode() (interface{}, error) {
-	r, err := p.PeekRune()
-
-	if err != nil {
-		return nil, err
-	}
+// ReadNext reads and parses the single element (atom, symbol, list)
+func (p *Parser) ReadNext() (interface{}, error) {
+	r := p.Head
 
 	switch {
 	case isListStart(r):
@@ -171,23 +172,23 @@ func (p *Parser) readNode() (interface{}, error) {
 
 		if unicode.IsDigit(r) || r == '-' || r == '+' || r == '.' {
 			// try to parse it as a number
-			elem, err := stringToNumber(word)
+			elem, numberParsingErr := stringToNumber(word)
 
-			if err != nil {
+			if numberParsingErr != nil {
 				// if it starts with a digit, it needs to be a number
 				if unicode.IsDigit(r) {
-					return nil, err
+					return nil, numberParsingErr
 				}
 
 				// otherwise, treat it as a symbol
-				return Symbol{word}, nil
+				return Symbol{word}, err
 			}
 
-			return elem, nil
+			return elem, err
 		}
 
 		// symbol
-		return Symbol{word}, nil
+		return Symbol{word}, err
 	}
 }
 

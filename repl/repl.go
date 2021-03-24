@@ -18,9 +18,11 @@ func isBlockEnd(r rune) bool {
 }
 
 // Read input from REPL
-func Read(in io.Reader) (s string, err error) {
+func Read(in io.Reader) (string, error) {
+	var err error
 	reader := bufio.NewReader(in)
 	openBlocksCount := 0
+	s := ""
 
 	for {
 		line, err := reader.ReadString('\n')
@@ -29,17 +31,16 @@ func Read(in io.Reader) (s string, err error) {
 			return "", err
 		}
 
-		cr := parser.NewCodeReader(strings.NewReader(line))
+		cr, err := parser.NewCodeReader(strings.NewReader(line))
+
+		if err != nil {
+			return "", err
+		}
+
 		clean := []rune{}
 
 		for {
-			r, err := cr.ReadRune()
-
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				return "", err
-			}
+			r := cr.Head
 
 			switch {
 			case r == '(':
@@ -53,6 +54,14 @@ func Read(in io.Reader) (s string, err error) {
 			}
 
 			clean = append(clean, r)
+
+			err = cr.NextRune()
+
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return "", err
+			}
 		}
 
 		s += string(clean)
@@ -64,6 +73,9 @@ func Read(in io.Reader) (s string, err error) {
 
 	if openBlocksCount > 0 {
 		return "", errors.New("missing closing bracket")
+	}
+	if err != nil && err != io.EOF {
+		return "", err
 	}
 
 	return s, err

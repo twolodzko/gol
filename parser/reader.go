@@ -11,24 +11,26 @@ func isCommentStart(r rune) bool {
 
 // CodeReader reads runes but ignores non-printable characters, repeated white characters, and code comments
 type CodeReader struct {
-	reader   *bufio.Reader
-	previous rune
+	*bufio.Reader
+	Head rune
 }
 
 // NewCodeReader initialize an instance of CodeReader
-func NewCodeReader(r io.Reader) *CodeReader {
-	return &CodeReader{bufio.NewReader(r), rune(0)}
+func NewCodeReader(r io.Reader) (*CodeReader, error) {
+	cr := &CodeReader{bufio.NewReader(r), rune(0)}
+	err := cr.NextRune()
+	return cr, err
 }
 
-// ReadRune single rune
-func (cr *CodeReader) ReadRune() (r rune, err error) {
+// NextRune moves the head of the reader one rune forward and saves the state in CodeReader.Head
+func (cr *CodeReader) NextRune() error {
 	isCommented := false
 
 	for {
-		r, _, err = cr.reader.ReadRune()
+		r, _, err := cr.ReadRune()
 
 		if err != nil {
-			return r, err
+			return err
 		}
 
 		// skip all the commented code
@@ -43,35 +45,9 @@ func (cr *CodeReader) ReadRune() (r rune, err error) {
 			continue
 		}
 
-		cr.previous = r
+		cr.Head = r
 		break
 	}
 
-	return r, err
-}
-
-// UnreadRune moves the head of the reader one rune back
-func (cr *CodeReader) UnreadRune() error {
-	err := cr.reader.UnreadRune()
-
-	if err != nil {
-		return err
-	}
-
 	return nil
-}
-
-// PeekRune reads next rune without moving the head of the reader further
-func (cr *CodeReader) PeekRune() (r rune, err error) {
-	r, err = cr.ReadRune()
-	if err != nil {
-		return rune(0), err
-	}
-
-	err = cr.reader.UnreadRune()
-	if err != nil {
-		return rune(0), err
-	}
-
-	return r, nil
 }

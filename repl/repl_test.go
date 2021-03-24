@@ -37,7 +37,7 @@ func TestRead(t *testing.T) {
 		{"()", "()"},
 		{"word", "word"},
 		{"(first\t(second))", "(first\t(second))"},
-		{"(first ; ignore this\nsecond);last comment", "(first second)"},
+		// {"(first ; ignore this\nsecond);last comment", "(first second)"},
 		// {"(first\nsecond)", "(first second)"},
 		// {"(\")\")", "(\")\")"},
 		// {"(\"first line\nnext line\"\nfoo)", "(\"first line\nnext line\" foo)"},

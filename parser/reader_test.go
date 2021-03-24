@@ -18,8 +18,8 @@ func TestCodeReader(t *testing.T) {
 
 	for _, tt := range testCases {
 		r := bufio.NewReader(strings.NewReader(tt.input))
-		reader := NewCodeReader(r)
-		result, err := reader.ReadRune()
+		reader, err := NewCodeReader(r)
+		result := reader.Head
 
 		if result != tt.expected {
 			t.Errorf("expected: '%v', got: '%v'", string(tt.expected), string(result))
@@ -34,11 +34,17 @@ func TestReadSequence(t *testing.T) {
 	input := ";; first comment\n(foo ; second comment\nbar)"
 	expected := "(foo bar)"
 
-	reader := NewCodeReader(strings.NewReader(input))
+	reader, err := NewCodeReader(strings.NewReader(input))
+
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
 	result := []rune{}
 
 	for {
-		r, err := reader.ReadRune()
+		result = append(result, reader.Head)
+		err := reader.NextRune()
 
 		if err == io.EOF {
 			break
@@ -46,8 +52,6 @@ func TestReadSequence(t *testing.T) {
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
-
-		result = append(result, r)
 	}
 
 	if string(result) != expected {
@@ -55,25 +59,8 @@ func TestReadSequence(t *testing.T) {
 	}
 }
 
-func TestPeekRune(t *testing.T) {
-	input := "你好，世界"
-	reader := NewCodeReader(strings.NewReader(input))
-
-	for i := 0; i <= 3; i++ {
-		r, err := reader.PeekRune()
-
-		if r != '你' {
-			t.Errorf("unexpected result: '%v'", string(r))
-		}
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-	}
-}
-
 func TestPeekRune_EmptyString(t *testing.T) {
-	reader := NewCodeReader(strings.NewReader(""))
-	_, err := reader.PeekRune()
+	_, err := NewCodeReader(strings.NewReader(""))
 	if err != io.EOF {
 		t.Errorf("expected EOF error, got: %v", err)
 	}

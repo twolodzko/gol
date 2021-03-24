@@ -1,4 +1,4 @@
-package parser
+package objects
 
 import (
 	"testing"
@@ -11,8 +11,8 @@ func TestPush(t *testing.T) {
 		input    interface{}
 		expected List
 	}{
-		{42, newList(42)},
-		{"abc", newList(42, "abc")},
+		{Int{42}, NewList(Int{42})},
+		{String{"abc"}, NewList(Int{42}, String{"abc"})},
 	}
 
 	list := List{}
@@ -26,8 +26,8 @@ func TestPush(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	expected := "(foo \"bar\" 42)"
-	result := newList(Symbol{"foo"}, String{"bar"}, 42).String()
+	expected := `(foo "bar" 42)`
+	result := NewList(Symbol{"foo"}, String{"bar"}, Int{42}).String()
 
 	if result != expected {
 		t.Errorf("expected: %v, got: %v", expected, result)

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/twolodzko/goal/objects"
 )
 
 func Test_stringToNumber(t *testing.T) {
@@ -13,14 +14,14 @@ func Test_stringToNumber(t *testing.T) {
 		input    string
 		expected interface{}
 	}{
-		{"3.1415", 3.1415},
-		{"1e-5", 1e-5},
-		{"1.3e+5", 1.3e+5},
-		{"-.34e-5", -0.34e-5},
-		{".223", 0.223},
-		{"+.45", 0.45},
-		{"+42", 42},
-		{"0", 0},
+		{"3.1415", objects.Float{Val: 3.1415}},
+		{"1e-5", objects.Float{Val: 1e-5}},
+		{"1.3e+5", objects.Float{Val: 1.3e+5}},
+		{"-.34e-5", objects.Float{Val: -0.34e-5}},
+		{".223", objects.Float{Val: 0.223}},
+		{"+.45", objects.Float{Val: 0.45}},
+		{"+42", objects.Int{Val: 42}},
+		{"0", objects.Int{Val: 0}},
 	}
 
 	for _, tt := range testCases {
@@ -42,9 +43,9 @@ func Test_readString(t *testing.T) {
 		input    string
 		expected interface{}
 	}{
-		{`"" ignore me`, String{}},
-		{`"Hello World!" not this`, String{"Hello World!"}},
-		{`"To escape a char use \\" "ignore me"`, String{"To escape a char use \\"}},
+		{`"" ignore me`, objects.String{}},
+		{`"Hello World!" not this`, objects.String{Val: "Hello World!"}},
+		{`"To escape a char use \\" "ignore me"`, objects.String{Val: "To escape a char use \\"}},
 	}
 
 	for _, tt := range testCases {
@@ -70,8 +71,8 @@ func Test_readString_WithEOF(t *testing.T) {
 		input    string
 		expected interface{}
 	}{
-		{`"Hello \"John\"!"`, String{`Hello "John"!`}},
-		{`"It\'s alive!"`, String{"It's alive!"}},
+		{`"Hello \"John\"!"`, objects.String{Val: `Hello "John"!`}},
+		{`"It\'s alive!"`, objects.String{Val: "It's alive!"}},
 	}
 
 	for _, tt := range testCases {
@@ -140,10 +141,10 @@ func Test_readWord_WithEOF(t *testing.T) {
 func Test_readList(t *testing.T) {
 	var testCases = []struct {
 		input    string
-		expected List
+		expected objects.List
 	}{
-		{"(1 2))", newList(1, 2)},
-		{"(1 2) (3 4)", newList(1, 2)},
+		{"(1 2))", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2})},
+		{"(1 2) (3 4)", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2})},
 	}
 
 	for _, tt := range testCases {
@@ -167,20 +168,20 @@ func Test_readList(t *testing.T) {
 func Test_readList_WithEOF(t *testing.T) {
 	var testCases = []struct {
 		input    string
-		expected List
+		expected objects.List
 	}{
-		{"()", List{}},
-		{"(a)", newList(Symbol{"a"})},
-		{"(1 2 (3 4) 5)", newList(1, 2, newList(3, 4), 5)},
-		{`(foo 42 "Hello World!" ())`, newList(Symbol{"foo"}, 42, String{"Hello World!"}, List{})},
-		{"(+ -2 +2)", newList(Symbol{"+"}, -2, 2)},
-		{"(lambda (x y) (+ x y))", newList(Symbol{"lambda"}, newList(Symbol{"x"}, Symbol{"y"}),
-			newList(Symbol{"+"}, Symbol{"x"}, Symbol{"y"}))},
+		{"()", objects.List{}},
+		{"(a)", objects.NewList(objects.Symbol{Name: "a"})},
+		{"(1 2 (3 4) 5)", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}, objects.NewList(objects.Int{Val: 3}, objects.Int{Val: 4}), objects.Int{Val: 5})},
+		{`(foo 42 "Hello World!" ())`, objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "Hello World!"}, objects.List{})},
+		{"(+ -2 +2)", objects.NewList(objects.Symbol{Name: "+"}, objects.Int{Val: -2}, objects.Int{Val: 2})},
+		{"(lambda (x y) (+ x y))", objects.NewList(objects.Symbol{Name: "lambda"}, objects.NewList(objects.Symbol{Name: "x"}, objects.Symbol{Name: "y"}),
+			objects.NewList(objects.Symbol{Name: "+"}, objects.Symbol{Name: "x"}, objects.Symbol{Name: "y"}))},
 		{`((lambda (x y)
 			   (+ x y))
 			12 6.17)`,
-			newList(newList(Symbol{"lambda"}, newList(Symbol{"x"}, Symbol{"y"}),
-				newList(Symbol{"+"}, Symbol{"x"}, Symbol{"y"})), 12, 6.17)},
+			objects.NewList(objects.NewList(objects.Symbol{Name: "lambda"}, objects.NewList(objects.Symbol{Name: "x"}, objects.Symbol{Name: "y"}),
+				objects.NewList(objects.Symbol{Name: "+"}, objects.Symbol{Name: "x"}, objects.Symbol{Name: "y"})), objects.Int{Val: 12}, objects.Float{Val: 6.17})},
 	}
 
 	for _, tt := range testCases {
@@ -206,9 +207,9 @@ func TestReadNext(t *testing.T) {
 		input    string
 		expected interface{}
 	}{
-		{"bar ", Symbol{"bar"}},
-		{"42)", 42},
-		{`"Hello World!" `, String{"Hello World!"}},
+		{"bar ", objects.Symbol{Name: "bar"}},
+		{"42)", objects.Int{Val: 42}},
+		{`"Hello World!" `, objects.String{Val: "Hello World!"}},
 	}
 
 	for _, tt := range testCases {
@@ -234,11 +235,11 @@ func TestReadNext_WithEOF(t *testing.T) {
 		input    string
 		expected interface{}
 	}{
-		{"42", 42},
-		{`"Hello World!"`, String{"Hello World!"}},
-		{"+", Symbol{"+"}},
-		{"foo", Symbol{"foo"}},
-		{`(foo 42 "bar")`, newList(Symbol{"foo"}, 42, String{"bar"})},
+		{"42", objects.Int{Val: 42}},
+		{`"Hello World!"`, objects.String{Val: "Hello World!"}},
+		{"+", objects.Symbol{Name: "+"}},
+		{"foo", objects.Symbol{Name: "foo"}},
+		{`(foo 42 "bar")`, objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})},
 	}
 
 	for _, tt := range testCases {

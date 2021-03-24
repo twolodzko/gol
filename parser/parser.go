@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"unicode"
 
+	"github.com/twolodzko/goal/objects"
 	"github.com/twolodzko/goal/reader"
 )
 
@@ -33,13 +34,13 @@ func NewParser(r io.Reader) (*Parser, error) {
 }
 
 // Read a quoted string until the closing quotation mark
-func (p *Parser) readString() (String, error) {
+func (p *Parser) readString() (objects.String, error) {
 	var err error
 	str := []rune{}
 	isEscaped := false
 
 	if !isQuotationMark(p.Head) {
-		return String{}, errors.New("missing opening quotation mark")
+		return objects.String{}, errors.New("missing opening quotation mark")
 	}
 
 	for {
@@ -47,10 +48,10 @@ func (p *Parser) readString() (String, error) {
 		r := p.Head
 
 		if err == io.EOF {
-			return String{}, errors.New("missing closing quotation mark")
+			return objects.String{}, errors.New("missing closing quotation mark")
 		}
 		if err != nil {
-			return String{}, err
+			return objects.String{}, err
 		}
 
 		if !isEscaped {
@@ -72,7 +73,7 @@ func (p *Parser) readString() (String, error) {
 		str = append(str, r)
 	}
 
-	return String{string(str)}, err
+	return objects.String{Val: string(str)}, err
 }
 
 func isWordBoundary(r rune) bool {
@@ -104,24 +105,25 @@ func (p *Parser) readWord() (string, error) {
 }
 
 // readList reads the LISP-style list
-func (p *Parser) readList() (list List, err error) {
-	var node interface{}
+func (p *Parser) readList() (objects.List, error) {
+	var (
+		node interface{}
+		err  error
+		list objects.List
+	)
 
 	if !isListStart(p.Head) {
-		return List{}, errors.New("missing list open bracket")
+		return objects.List{}, errors.New("missing list open bracket")
 	}
 
 	err = p.NextRune()
 
 	if err != nil {
-		return List{}, err
+		return objects.List{}, err
 	}
 
 	for {
 		r := p.Head
-
-		// FIXME
-		// fmt.Println(string(r))
 
 		if unicode.IsSpace(r) {
 			err = p.NextRune()
@@ -169,7 +171,7 @@ func (p *Parser) ReadNext() (interface{}, error) {
 		word, err := p.readWord()
 
 		if err != nil && err != io.EOF {
-			return List{}, err
+			return objects.List{}, err
 		}
 
 		if unicode.IsDigit(r) || r == '-' || r == '+' || r == '.' {
@@ -183,24 +185,38 @@ func (p *Parser) ReadNext() (interface{}, error) {
 				}
 
 				// otherwise, treat it as a symbol
-				return Symbol{word}, err
+				return objects.Symbol{Name: word}, err
 			}
 
 			return elem, err
 		}
 
 		// symbol
-		return Symbol{word}, err
+		return objects.Symbol{Name: word}, err
 	}
 }
 
 // Try parsing sting to an integer or a float
-func stringToNumber(str string) (num interface{}, err error) {
-	num, err = strconv.Atoi(str)
+func stringToNumber(str string) (interface{}, error) {
+	var (
+		err error
+		f   float64
+		i   int
+	)
 
-	if err != nil {
-		num, err = strconv.ParseFloat(str, 64)
+	// try parsing as an int
+	i, err = strconv.Atoi(str)
+
+	if err == nil {
+		return objects.Int{Val: i}, err
 	}
 
-	return num, err
+	// try parsing as a float
+	f, err = strconv.ParseFloat(str, 64)
+
+	if err == nil {
+		return objects.Float{Val: f}, err
+	}
+
+	return nil, err
 }

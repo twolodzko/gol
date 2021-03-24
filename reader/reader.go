@@ -1,4 +1,4 @@
-package parser
+package reader
 
 import (
 	"bufio"
@@ -9,7 +9,7 @@ func isCommentStart(r rune) bool {
 	return r == ';'
 }
 
-// CodeReader reads runes but ignores non-printable characters, repeated white characters, and code comments
+// CodeReader reads runes but ignores code comments
 type CodeReader struct {
 	*bufio.Reader
 	Head rune

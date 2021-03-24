@@ -5,6 +5,8 @@ import (
 	"io"
 	"strconv"
 	"unicode"
+
+	"github.com/twolodzko/goal/reader"
 )
 
 func isListStart(r rune) bool {
@@ -21,12 +23,12 @@ func isQuotationMark(r rune) bool {
 
 // Parser reads the code and parses it into the AST
 type Parser struct {
-	*CodeReader
+	*reader.CodeReader
 }
 
 // NewParser initializes the Parser
-func NewParser(reader io.Reader) (*Parser, error) {
-	cr, err := NewCodeReader(reader)
+func NewParser(r io.Reader) (*Parser, error) {
+	cr, err := reader.NewCodeReader(r)
 	return &Parser{cr}, err
 }
 

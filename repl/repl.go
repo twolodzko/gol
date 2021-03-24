@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/twolodzko/goal/parser"
+	"github.com/twolodzko/goal/reader"
 )
 
 func isBlockStart(r rune) bool {
@@ -20,18 +20,18 @@ func isBlockEnd(r rune) bool {
 // Read input from REPL
 func Read(in io.Reader) (string, error) {
 	var err error
-	reader := bufio.NewReader(in)
+	lineReader := bufio.NewReader(in)
 	openBlocksCount := 0
 	s := ""
 
 	for {
-		line, err := reader.ReadString('\n')
+		line, err := lineReader.ReadString('\n')
 
 		if err != nil && err != io.EOF {
 			return "", err
 		}
 
-		cr, err := parser.NewCodeReader(strings.NewReader(line))
+		cr, err := reader.NewCodeReader(strings.NewReader(line))
 
 		if err != nil {
 			return "", err

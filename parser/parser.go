@@ -10,16 +10,20 @@ import (
 	"github.com/twolodzko/goal/reader"
 )
 
-func isListStart(r rune) bool {
+func IsListStart(r rune) bool {
 	return r == '('
 }
 
-func isListEnd(r rune) bool {
+func IsListEnd(r rune) bool {
 	return r == ')'
 }
 
 func isQuotationMark(r rune) bool {
 	return r == '"'
+}
+
+func isWordBoundary(r rune) bool {
+	return unicode.IsSpace(r) || IsListEnd(r) || IsListStart(r)
 }
 
 // Parser reads the code and parses it into the AST
@@ -35,9 +39,11 @@ func NewParser(r io.Reader) (*Parser, error) {
 
 // Read a quoted string until the closing quotation mark
 func (p *Parser) readString() (objects.String, error) {
-	var err error
-	str := []rune{}
-	isEscaped := false
+	var (
+		err       error
+		str       []rune
+		isEscaped bool = false
+	)
 
 	if !isQuotationMark(p.Head) {
 		return objects.String{}, errors.New("missing opening quotation mark")
@@ -76,14 +82,12 @@ func (p *Parser) readString() (objects.String, error) {
 	return objects.String{Val: string(str)}, err
 }
 
-func isWordBoundary(r rune) bool {
-	return unicode.IsSpace(r) || isListEnd(r) || isListStart(r)
-}
-
 // Read characters until word boundary
 func (p *Parser) readWord() (string, error) {
-	var err error
-	word := []rune{}
+	var (
+		err  error
+		word []rune
+	)
 
 	for {
 		r := p.Head
@@ -107,13 +111,12 @@ func (p *Parser) readWord() (string, error) {
 // readList reads the LISP-style list
 func (p *Parser) readList() (objects.List, error) {
 	var (
-		node objects.Object
+		list []objects.Object
 		err  error
-		list objects.List
 	)
 
-	if !isListStart(p.Head) {
-		return objects.List{}, errors.New("missing list open bracket")
+	if !IsListStart(p.Head) {
+		return objects.List{}, errors.New("missing opening bracket")
 	}
 
 	err = p.NextRune()
@@ -122,78 +125,101 @@ func (p *Parser) readList() (objects.List, error) {
 		return objects.List{}, err
 	}
 
+	list, err = p.Parse()
+
+	if err != nil && err != io.EOF {
+		return objects.List{}, err
+	}
+	if !IsListEnd(p.Head) {
+		return objects.List{}, errors.New("missing closing bracket")
+	}
+
+	err = p.NextRune()
+
+	if err != nil && err != io.EOF {
+		return objects.List{}, err
+	}
+
+	return objects.List{Val: list}, err
+}
+
+// readObject reads and parses the single element (atom, symbol, list)
+func (p *Parser) readObject() (objects.Object, error) {
 	for {
 		r := p.Head
 
 		if unicode.IsSpace(r) {
-			err = p.NextRune()
+			err := p.NextRune()
 
 			if err != nil {
-				break
+				return nil, err
 			}
-
 			continue
-		} else if isListEnd(r) {
-			err = p.NextRune()
+		}
 
-			if err != nil {
-				break
+		switch {
+		case IsListStart(r):
+			// list
+			return p.readList()
+		case isQuotationMark(r):
+			// string
+			return p.readString()
+		default:
+			// number or symbol
+			word, err := p.readWord()
+
+			if err != nil && err != io.EOF {
+				return objects.List{}, err
 			}
 
-			break
-		}
+			if unicode.IsDigit(r) || r == '-' || r == '+' || r == '.' {
+				// try to parse it as a number
+				elem, numberParsingErr := stringToNumber(word)
 
-		node, err = p.ReadNext()
+				if numberParsingErr != nil {
+					// if it starts with a digit, it needs to be a number
+					if unicode.IsDigit(r) {
+						return nil, numberParsingErr
+					}
 
-		list.Push(node)
-
-		if err != nil {
-			break
-		}
-	}
-
-	return list, err
-}
-
-// ReadNext reads and parses the single element (atom, symbol, list)
-func (p *Parser) ReadNext() (objects.Object, error) {
-	r := p.Head
-
-	switch {
-	case isListStart(r):
-		// list
-		return p.readList()
-	case isQuotationMark(r):
-		// string
-		return p.readString()
-	default:
-		// number or symbol
-		word, err := p.readWord()
-
-		if err != nil && err != io.EOF {
-			return objects.List{}, err
-		}
-
-		if unicode.IsDigit(r) || r == '-' || r == '+' || r == '.' {
-			// try to parse it as a number
-			elem, numberParsingErr := stringToNumber(word)
-
-			if numberParsingErr != nil {
-				// if it starts with a digit, it needs to be a number
-				if unicode.IsDigit(r) {
-					return nil, numberParsingErr
+					// otherwise, treat it as a symbol
+					return objects.Symbol{Name: word}, err
 				}
 
-				// otherwise, treat it as a symbol
-				return objects.Symbol{Name: word}, err
+				return elem, err
 			}
 
-			return elem, err
+			// symbol
+			return objects.Symbol{Name: word}, err
+		}
+	}
+}
+
+// Read and parse the script, return list of expressions to evaluate
+func (p *Parser) Parse() ([]objects.Object, error) {
+	var (
+		expr []objects.Object
+		err  error
+		obj  objects.Object
+	)
+
+	for {
+		obj, err = p.readObject()
+
+		if err != nil && err != io.EOF {
+			break
 		}
 
-		// symbol
-		return objects.Symbol{Name: word}, err
+		if obj != nil {
+			expr = append(expr, obj)
+		}
+
+		if err == io.EOF || IsListEnd(p.Head) {
+			break
+		}
 	}
+
+	return expr, err
 }
 
 // Try parsing sting to an integer or a float

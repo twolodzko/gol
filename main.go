@@ -15,7 +15,7 @@ const (
 )
 
 func print(msg string) {
-	io.WriteString(os.Stdout, fmt.Sprintf("%s%s\n", outputPrompt, msg))
+	io.WriteString(os.Stdout, fmt.Sprintf("%s%s", outputPrompt, msg))
 }
 
 func main() {
@@ -25,12 +25,12 @@ func main() {
 	for {
 		fmt.Printf("%s", inputPrompt)
 
-		input, err := repl.Read(os.Stdin)
+		out, err := repl.Repl(os.Stdin)
 
 		if err != nil {
-			print(fmt.Sprintf("ERROR: %s", err))
-		} else if len(strings.TrimSpace(input)) > 0 {
-			print(input)
+			print(fmt.Sprintf("ERROR: %s\n", err))
+		} else if len(strings.TrimSpace(out)) > 0 {
+			print(out)
 		}
 	}
 }

@@ -46,31 +46,6 @@ func Test_readString(t *testing.T) {
 		{`"" ignore me`, objects.String{}},
 		{`"Hello World!" not this`, objects.String{Val: "Hello World!"}},
 		{`"To escape a char use \\" "ignore me"`, objects.String{Val: "To escape a char use \\"}},
-	}
-
-	for _, tt := range testCases {
-		parser, err := NewParser(strings.NewReader(tt.input))
-
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-
-		result, err := parser.readString()
-
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-		if result != tt.expected {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
-		}
-	}
-}
-
-func Test_readString_WithEOF(t *testing.T) {
-	var testCases = []struct {
-		input    string
-		expected objects.Object
-	}{
 		{`"Hello \"John\"!"`, objects.String{Val: `Hello "John"!`}},
 		{`"It\'s alive!"`, objects.String{Val: "It's alive!"}},
 	}
@@ -84,11 +59,11 @@ func Test_readString_WithEOF(t *testing.T) {
 
 		result, err := parser.readString()
 
-		if err != io.EOF {
-			t.Errorf("expected EOF error, got: %v", err)
+		if err != nil && err != io.EOF {
+			t.Errorf("unexpected error: %v", err)
 		}
 		if result != tt.expected {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+			t.Errorf("expected: %v (%T), got: %v (%T)", tt.expected, tt.expected, result, result)
 		}
 	}
 }
@@ -101,6 +76,7 @@ func Test_readWord(t *testing.T) {
 		{"foo ", "foo"},
 		{"bar)", "bar"},
 		{"42)", "42"},
+		{"baz", "baz"},
 	}
 
 	for _, tt := range testCases {
@@ -112,29 +88,12 @@ func Test_readWord(t *testing.T) {
 
 		result, err := parser.readWord()
 
-		if err != nil {
+		if err != nil && err != io.EOF {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+			t.Errorf("expected: %v (%T), got: %v (%T)", tt.expected, tt.expected, result, result)
 		}
-	}
-}
-
-func Test_readWord_WithEOF(t *testing.T) {
-	parser, err := NewParser(strings.NewReader("abc"))
-
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	}
-
-	result, err := parser.readWord()
-
-	if err != io.EOF {
-		t.Errorf("expected EOF error, got: %v", err)
-	}
-	if result != "abc" {
-		t.Errorf("unexpected result: %s", result)
 	}
 }
 
@@ -144,32 +103,8 @@ func Test_readList(t *testing.T) {
 		expected objects.List
 	}{
 		{"(1 2))", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2})},
+		{"((1 2))", objects.NewList(objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}))},
 		{"(1 2) (3 4)", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2})},
-	}
-
-	for _, tt := range testCases {
-		parser, err := NewParser(strings.NewReader(tt.input))
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-
-		result, err := parser.readList()
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
-		}
-	}
-}
-
-func Test_readList_WithEOF(t *testing.T) {
-	var testCases = []struct {
-		input    string
-		expected objects.List
-	}{
 		{"()", objects.List{}},
 		{"(a)", objects.NewList(objects.Symbol{Name: "a"})},
 		{"(1 2 (3 4) 5)", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}, objects.NewList(objects.Int{Val: 3}, objects.Int{Val: 4}), objects.Int{Val: 5})},
@@ -193,23 +128,27 @@ func Test_readList_WithEOF(t *testing.T) {
 
 		result, err := parser.readList()
 
-		if err != io.EOF {
+		if err != nil && err != io.EOF {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+			t.Errorf("expected: %v (%T), got: %v (%T)", tt.expected, tt.expected, result, result)
 		}
 	}
 }
 
-func TestReadNext(t *testing.T) {
+func Test_readList_FailOnMissingBrakcets(t *testing.T) {
 	var testCases = []struct {
-		input    string
-		expected objects.Object
+		input string
 	}{
-		{"bar ", objects.Symbol{Name: "bar"}},
-		{"42)", objects.Int{Val: 42}},
-		{`"Hello World!" `, objects.String{Val: "Hello World!"}},
+		{"(1 2"},
+		{"(1 2 "},
+		{"(1 2\n"},
+		{`(1 2 (3 4)`},
+		{"(1 2 ((3 4)) 5"},
+		{`(1 2 ")"`},
+		{"1 2)"},
+		{`"(" 1 2)`},
 	}
 
 	for _, tt := range testCases {
@@ -219,18 +158,57 @@ func TestReadNext(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := parser.ReadNext()
+		result, err := parser.readList()
 
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+		if err == nil || err == io.EOF {
+			t.Errorf("expected an error, got result: %v", result)
 		}
 	}
 }
 
-func TestReadNext_WithEOF(t *testing.T) {
+func TestNewParser_EmptyString(t *testing.T) {
+	_, err := NewParser(strings.NewReader(""))
+
+	if err != io.EOF {
+		t.Errorf("expected EOF error")
+	}
+}
+
+func Test_readObject(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected objects.Object
+	}{
+		{"bar ", objects.Symbol{Name: "bar"}},
+		{"baz\n", objects.Symbol{Name: "baz"}},
+		{"42)", objects.Int{Val: 42}},
+		{`"Hello World!" `, objects.String{Val: "Hello World!"}},
+		{"42", objects.Int{Val: 42}},
+		{"+", objects.Symbol{Name: "+"}},
+		{" \n\t bar", objects.Symbol{Name: "bar"}},
+		{`(foo 42 "bar")`, objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})},
+		{"  \n\t(\nfoo \n\n42\t\"bar\")", objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})},
+	}
+
+	for _, tt := range testCases {
+		parser, err := NewParser(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
+		result, err := parser.readObject()
+
+		if err != nil && err != io.EOF {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %v (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
+func Test_readObject_WithEOF(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected objects.Object
@@ -238,8 +216,7 @@ func TestReadNext_WithEOF(t *testing.T) {
 		{"42", objects.Int{Val: 42}},
 		{`"Hello World!"`, objects.String{Val: "Hello World!"}},
 		{"+", objects.Symbol{Name: "+"}},
-		{"foo", objects.Symbol{Name: "foo"}},
-		{`(foo 42 "bar")`, objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})},
+		{"  \n\t(\nfoo \n\n42\t\"bar\")", objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})},
 	}
 
 	for _, tt := range testCases {
@@ -249,10 +226,74 @@ func TestReadNext_WithEOF(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := parser.ReadNext()
+		result, err := parser.readObject()
 
 		if err != io.EOF {
 			t.Errorf("expected EOF error, got: %v", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %v (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
+func Test_readObject_EmptyInput(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected objects.Object
+	}{
+		{" ", nil},
+		{"\n\n\t \n", nil},
+	}
+
+	for _, tt := range testCases {
+		parser, err := NewParser(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
+		result, err := parser.readObject()
+
+		if err != io.EOF {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %v (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
+func TestParse(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected []objects.Object
+	}{
+		{" ", nil},
+		{"\n", nil},
+		{"bar ", []objects.Object{objects.Symbol{Name: "bar"}}},
+		{"foo bar\n", []objects.Object{objects.Symbol{Name: "foo"}, objects.Symbol{Name: "bar"}}},
+		// FIXME
+		// {"42)", []objects.Object{objects.Int{Val: 42}}},
+		{`"Hello World!" `, []objects.Object{objects.String{Val: "Hello World!"}}},
+		{"42", []objects.Object{objects.Int{Val: 42}}},
+		{" \n\t bar", []objects.Object{objects.Symbol{Name: "bar"}}},
+		{"((1 2))", []objects.Object{objects.NewList(objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}))}},
+		{`(foo 42 "bar")`, []objects.Object{objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})}},
+		{"  \n\t(\nfoo \n\n42\t\"bar\")", []objects.Object{objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})}},
+	}
+
+	for _, tt := range testCases {
+		parser, err := NewParser(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
+		result, err := parser.Parse()
+
+		if err != nil && err != io.EOF {
+			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
 			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)

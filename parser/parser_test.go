@@ -102,10 +102,10 @@ func Test_readList(t *testing.T) {
 		input    string
 		expected objects.List
 	}{
+		{"()", objects.List{}},
 		{"(1 2))", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2})},
 		{"((1 2))", objects.NewList(objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}))},
 		{"(1 2) (3 4)", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2})},
-		{"()", objects.List{}},
 		{"(a)", objects.NewList(objects.Symbol{Name: "a"})},
 		{"(1 2 (3 4) 5)", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}, objects.NewList(objects.Int{Val: 3}, objects.Int{Val: 4}), objects.Int{Val: 5})},
 		{`(foo 42 "Hello World!" ())`, objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "Hello World!"}, objects.List{})},
@@ -145,6 +145,7 @@ func Test_readList_FailOnMissingBrakcets(t *testing.T) {
 		{"(1 2 "},
 		{"(1 2\n"},
 		{`(1 2 (3 4)`},
+		{`((1)`},
 		{"(1 2 ((3 4)) 5"},
 		{`(1 2 ")"`},
 		{"1 2)"},
@@ -161,7 +162,7 @@ func Test_readList_FailOnMissingBrakcets(t *testing.T) {
 		result, err := parser.readList()
 
 		if err == nil || err == io.EOF {
-			t.Errorf("expected an error, got result: %v", result)
+			t.Errorf("for '%s' expected an error, got result: %v (error=%v)", tt.input, result, err)
 		}
 	}
 }

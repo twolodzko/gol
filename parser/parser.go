@@ -121,24 +121,20 @@ func (p *Parser) readList() (objects.List, error) {
 
 	err = p.NextRune()
 
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return objects.List{}, err
 	}
 
 	list, err = p.Parse()
 
-	if err != nil && err != io.EOF {
-		return objects.List{}, err
-	}
 	if !IsListEnd(p.Head) {
 		return objects.List{}, errors.New("missing closing bracket")
 	}
-
-	err = p.NextRune()
-
-	if err != nil && err != io.EOF {
+	if err != nil {
 		return objects.List{}, err
 	}
+
+	err = p.NextRune()
 
 	return objects.List{Val: list}, err
 }
@@ -195,7 +191,7 @@ func (p *Parser) readObject() (objects.Object, error) {
 	}
 }
 
-// Read and parse the script, return list of expressions to evaluate
+// Parse the script, return list of expressions to evaluate
 func (p *Parser) Parse() ([]objects.Object, error) {
 	var (
 		expr []objects.Object
@@ -214,7 +210,7 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 			expr = append(expr, obj)
 		}
 
-		if err == io.EOF || IsListEnd(p.Head) {
+		if err != nil || IsListEnd(p.Head) {
 			break
 		}
 	}

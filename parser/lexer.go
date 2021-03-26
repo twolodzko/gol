@@ -1,4 +1,4 @@
-package lexer
+package parser
 
 import "unicode"
 
@@ -10,10 +10,14 @@ func IsListEnd(r rune) bool {
 	return r == ')'
 }
 
-func IsQuotationMark(r rune) bool {
+func isQuotationMark(r rune) bool {
 	return r == '"'
 }
 
-func IsWordBoundary(r rune) bool {
+func isWordBoundary(r rune) bool {
 	return unicode.IsSpace(r) || IsListEnd(r) || IsListStart(r)
+}
+
+func isCommentStart(r rune) bool {
+	return r == ';'
 }

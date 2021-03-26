@@ -1,4 +1,4 @@
-package lexer
+package parser
 
 import "testing"
 
@@ -18,7 +18,7 @@ func Test_isWordBoundary(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		result := IsWordBoundary(tt.input)
+		result := isWordBoundary(tt.input)
 		if result != tt.expected {
 			t.Errorf("for %q expected %v, got: %v", tt.input, tt.expected, result)
 		}

@@ -6,9 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/twolodzko/goal/lexer"
 	"github.com/twolodzko/goal/parser"
-	"github.com/twolodzko/goal/reader"
 )
 
 // Read the input allowing for opened lists to continiue on new lines
@@ -28,7 +26,7 @@ func Read(in io.Reader) (string, error) {
 			return "", err
 		}
 
-		cr, err := reader.NewCodeReader(strings.NewReader(line))
+		cr, err := parser.NewCodeReader(strings.NewReader(line))
 
 		if err != nil {
 			return "", err
@@ -48,9 +46,9 @@ func Read(in io.Reader) (string, error) {
 					isQuoted = false
 				}
 			// handling list
-			case lexer.IsListStart(r):
+			case parser.IsListStart(r):
 				openBlocksCount++
-			case lexer.IsListEnd(r):
+			case parser.IsListEnd(r):
 				openBlocksCount--
 
 				if openBlocksCount < 0 {

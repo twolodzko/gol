@@ -1,4 +1,4 @@
-package reader
+package parser
 
 import (
 	"bufio"
@@ -6,10 +6,6 @@ import (
 	"io"
 	"unicode"
 )
-
-func isCommentStart(r rune) bool {
-	return r == ';'
-}
 
 // CodeReader reads runes but ignores code comments
 type CodeReader struct {

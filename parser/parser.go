@@ -6,19 +6,17 @@ import (
 	"strconv"
 	"unicode"
 
-	"github.com/twolodzko/goal/lexer"
 	"github.com/twolodzko/goal/objects"
-	"github.com/twolodzko/goal/reader"
 )
 
 // Parser reads the code and parses it into the AST
 type Parser struct {
-	*reader.CodeReader
+	*CodeReader
 }
 
 // NewParser initializes the Parser
 func NewParser(r io.Reader) (*Parser, error) {
-	cr, err := reader.NewCodeReader(r)
+	cr, err := NewCodeReader(r)
 	return &Parser{cr}, err
 }
 
@@ -30,7 +28,7 @@ func (p *Parser) readString() (objects.String, error) {
 		isEscaped bool = false
 	)
 
-	if !lexer.IsQuotationMark(p.Head) {
+	if !isQuotationMark(p.Head) {
 		return objects.String{}, errors.New("missing opening quotation mark")
 	}
 
@@ -52,7 +50,7 @@ func (p *Parser) readString() (objects.String, error) {
 				continue
 			}
 			// end of string, unless it was escaped \"
-			if lexer.IsQuotationMark(r) {
+			if isQuotationMark(r) {
 				err = p.NextRune()
 				break
 			}
@@ -77,7 +75,7 @@ func (p *Parser) readWord() (string, error) {
 	for {
 		r := p.Head
 
-		if lexer.IsWordBoundary(r) {
+		if isWordBoundary(r) {
 			break
 		}
 
@@ -100,7 +98,7 @@ func (p *Parser) readList() (objects.List, error) {
 		err  error
 	)
 
-	if !lexer.IsListStart(p.Head) {
+	if !IsListStart(p.Head) {
 		return objects.List{}, errors.New("missing opening bracket")
 	}
 
@@ -115,7 +113,7 @@ func (p *Parser) readList() (objects.List, error) {
 	switch {
 	case err != nil && err != io.EOF:
 		return objects.List{}, err
-	case !lexer.IsListEnd(p.Head):
+	case !IsListEnd(p.Head):
 		return objects.List{}, errors.New("missing closing bracket")
 	default:
 		// if err == io.EOF, reading next rune will throw io.EOF again
@@ -139,12 +137,12 @@ func (p *Parser) readObject() (objects.Object, error) {
 		}
 
 		switch {
-		case lexer.IsListStart(r):
+		case IsListStart(r):
 			// list
 			return p.readList()
-		case lexer.IsListEnd(r):
+		case IsListEnd(r):
 			return nil, nil
-		case lexer.IsQuotationMark(r):
+		case isQuotationMark(r):
 			// string
 			return p.readString()
 		default:
@@ -197,7 +195,7 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 			expr = append(expr, obj)
 		}
 
-		if err != nil || lexer.IsListEnd(p.Head) {
+		if err != nil || IsListEnd(p.Head) {
 			break
 		}
 	}

@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := test
-.PHONY: test cov fmt clean repl
+.PHONY: test cov cyclo fmt clean repl
 
 test:
 	go test ./...
@@ -7,6 +7,9 @@ test:
 cov:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
+
+cyclo:
+	gocyclo -over 3 .
 
 fmt:
 	go fmt ./...

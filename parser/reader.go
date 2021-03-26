@@ -31,7 +31,7 @@ func (cr *CodeReader) NextRune() error {
 			cr.Head = r
 			return err
 		}
-		if !unicode.IsPrint(r) && !unicode.IsSpace(r) {
+		if !isValidRune(r) {
 			cr.Head = r
 			return fmt.Errorf("invalid character: %q", r)
 		}

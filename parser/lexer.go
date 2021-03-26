@@ -21,3 +21,11 @@ func isWordBoundary(r rune) bool {
 func isCommentStart(r rune) bool {
 	return r == ';'
 }
+
+func isNumberStart(r rune) bool {
+	return unicode.IsDigit(r) || r == '-' || r == '+' || r == '.'
+}
+
+func isValidRune(r rune) bool {
+	return unicode.IsPrint(r) || unicode.IsSpace(r)
+}

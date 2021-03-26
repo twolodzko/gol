@@ -149,32 +149,33 @@ func (p *Parser) readObject() (objects.Object, error) {
 		case isQuotationMark(r):
 			// string
 			return p.readString()
-		default:
-			// number or symbol
+		case isNumberStart(r):
+			// maybe a number
 			word, err := p.readWord()
 
 			if IsReaderError(err) {
 				return nil, err
 			}
 
-			if unicode.IsDigit(r) || r == '-' || r == '+' || r == '.' {
-				// try to parse it as a number
-				elem, numberParsingErr := stringToNumber(word)
+			elem, numberParsingErr := stringToNumber(word)
 
-				if numberParsingErr != nil {
-					// if it starts with a digit, it needs to be a number
-					if unicode.IsDigit(r) {
-						return nil, numberParsingErr
-					}
-
-					// otherwise, treat it as a symbol
-					return objects.Symbol{Name: word}, err
-				}
-
+			switch {
+			case numberParsingErr == nil:
 				return elem, err
+			// symbols cannot start with a digit
+			case unicode.IsDigit(r):
+				return nil, errors.New("not a number")
+			default:
+				return objects.Symbol{Name: word}, err
+			}
+		default:
+			// symbol
+			word, err := p.readWord()
+
+			if IsReaderError(err) {
+				return nil, err
 			}
 
-			// symbol
 			return objects.Symbol{Name: word}, err
 		}
 	}

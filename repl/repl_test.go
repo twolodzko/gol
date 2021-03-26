@@ -10,23 +10,21 @@ import (
 )
 
 func TestInvalidInput(t *testing.T) {
-	var testCases = []struct {
-		input string
-	}{
-		{")"},
-		{"("},
-		{"(("},
-		{"))"},
-		{"())"},
-		{"(()"},
+	var testCases = []string{
+		")",
+		"(",
+		"((",
+		"))",
+		"())",
+		"(()",
 	}
 
-	for _, tt := range testCases {
-		reader := NewReader(strings.NewReader(tt.input))
+	for _, input := range testCases {
+		reader := NewReader(strings.NewReader(input))
 		result, err := reader.Read()
 
 		if err == nil {
-			t.Errorf("for %s expected an error, got '%s'", tt.input, result)
+			t.Errorf("for %s expected an error, got '%s'", input, result)
 		}
 	}
 }

@@ -22,7 +22,7 @@ func Read(in io.Reader) (string, error) {
 	for {
 		line, err := lineReader.ReadString('\n')
 
-		if err != nil && err != io.EOF {
+		if parser.IsReaderError(err) {
 			return "", err
 		}
 
@@ -77,7 +77,7 @@ func Read(in io.Reader) (string, error) {
 	if openBlocksCount > 0 {
 		return "", errors.New("missing closing bracket")
 	}
-	if err != nil && err != io.EOF {
+	if parser.IsReaderError(err) {
 		return "", err
 	}
 

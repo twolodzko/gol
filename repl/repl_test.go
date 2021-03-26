@@ -2,10 +2,11 @@ package repl
 
 import (
 	"bufio"
-	"io"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/twolodzko/goal/parser"
 )
 
 func TestInvalidInput(t *testing.T) {
@@ -52,7 +53,7 @@ func TestRepl(t *testing.T) {
 		reader := bufio.NewReader(strings.NewReader(tt.input))
 		result, err := Repl(reader)
 
-		if err != nil && err != io.EOF {
+		if parser.IsReaderError(err) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !reflect.DeepEqual(result, tt.expected+"\n") {

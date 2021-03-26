@@ -9,6 +9,10 @@ import (
 	"github.com/twolodzko/goal/objects"
 )
 
+func IsReaderError(err error) bool {
+	return err != nil && err != io.EOF
+}
+
 // Parser reads the code and parses it into the AST
 type Parser struct {
 	*CodeReader
@@ -104,14 +108,14 @@ func (p *Parser) readList() (objects.List, error) {
 
 	err = p.NextRune()
 
-	if err != nil && err != io.EOF {
+	if IsReaderError(err) {
 		return objects.List{}, err
 	}
 
 	list, err = p.Parse()
 
 	switch {
-	case err != nil && err != io.EOF:
+	case IsReaderError(err):
 		return objects.List{}, err
 	case !IsListEnd(p.Head):
 		return objects.List{}, errors.New("missing closing bracket")
@@ -149,7 +153,7 @@ func (p *Parser) readObject() (objects.Object, error) {
 			// number or symbol
 			word, err := p.readWord()
 
-			if err != nil && err != io.EOF {
+			if IsReaderError(err) {
 				return nil, err
 			}
 
@@ -187,7 +191,7 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 	for {
 		obj, err = p.readObject()
 
-		if err != nil && err != io.EOF {
+		if IsReaderError(err) {
 			break
 		}
 

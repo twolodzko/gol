@@ -59,11 +59,35 @@ func Test_readString(t *testing.T) {
 
 		result, err := parser.readString()
 
-		if err != nil && err != io.EOF {
+		if IsReaderError(err) {
 			t.Errorf("unexpected error: %v", err)
 		}
 		if result != tt.expected {
 			t.Errorf("expected: %v (%T), got: %v (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
+func Test_readString_InvalidInput(t *testing.T) {
+	var testCases = []string{
+		`Hello World!"`,
+		`"Hello World!`,
+		"\"Hello World!\n",
+		"\n\"Hello World!",
+		"Hello World!\n\t\"",
+	}
+
+	for _, input := range testCases {
+		parser, err := NewParser(strings.NewReader(input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+
+		result, err := parser.readString()
+
+		if err == nil || err == io.EOF {
+			t.Errorf("expected an error, got: %v", result)
 		}
 	}
 }
@@ -88,7 +112,7 @@ func Test_readWord(t *testing.T) {
 
 		result, err := parser.readWord()
 
-		if err != nil && err != io.EOF {
+		if IsReaderError(err) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
@@ -129,7 +153,7 @@ func Test_readList(t *testing.T) {
 
 		result, err := parser.readList()
 
-		if err != nil && err != io.EOF {
+		if IsReaderError(err) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
@@ -139,22 +163,20 @@ func Test_readList(t *testing.T) {
 }
 
 func Test_readList_FailOnMissingBrakcets(t *testing.T) {
-	var testCases = []struct {
-		input string
-	}{
-		{"(1 2"},
-		{"(1 2 "},
-		{"(1 2\n"},
-		{`(1 2 (3 4)`},
-		{`((1)`},
-		{"(1 2 ((3 4)) 5"},
-		{`(1 2 ")"`},
-		{"1 2)"},
-		{`"(" 1 2)`},
+	var testCases = []string{
+		"(1 2",
+		"(1 2 ",
+		"(1 2\n",
+		`(1 2 (3 4)`,
+		`((1)`,
+		"(1 2 ((3 4)) 5",
+		`(1 2 ")"`,
+		"1 2)",
+		`"(" 1 2)`,
 	}
 
-	for _, tt := range testCases {
-		parser, err := NewParser(strings.NewReader(tt.input))
+	for _, input := range testCases {
+		parser, err := NewParser(strings.NewReader(input))
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
@@ -163,7 +185,7 @@ func Test_readList_FailOnMissingBrakcets(t *testing.T) {
 		result, err := parser.readList()
 
 		if err == nil || err == io.EOF {
-			t.Errorf("for '%s' expected an error, got result: %v (error=%v)", tt.input, result, err)
+			t.Errorf("for '%s' expected an error, got result: %v (error=%v)", input, result, err)
 		}
 	}
 }
@@ -201,7 +223,7 @@ func Test_readObject(t *testing.T) {
 
 		result, err := parser.readObject()
 
-		if err != nil && err != io.EOF {
+		if IsReaderError(err) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
@@ -293,7 +315,7 @@ func TestParse(t *testing.T) {
 
 		result, err := parser.Parse()
 
-		if err != nil && err != io.EOF {
+		if IsReaderError(err) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {

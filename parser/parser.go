@@ -38,23 +38,22 @@ func (p *Parser) readString() (objects.String, error) {
 
 	for {
 		err = p.NextRune()
-		r := p.Head
 
-		if err == io.EOF {
-			return objects.String{}, errors.New("missing closing quotation mark")
-		}
 		if err != nil {
+			if err == io.EOF {
+				err = errors.New("missing closing quotation mark")
+			}
 			break
 		}
 
 		if !isEscaped {
 			// skip the escape sign, unless it was escaped \\
-			if r == '\\' {
+			if p.Head == '\\' {
 				isEscaped = true
 				continue
 			}
 			// end of string, unless it was escaped \"
-			if IsQuotationMark(r) {
+			if IsQuotationMark(p.Head) {
 				err = p.NextRune()
 				break
 			}
@@ -63,7 +62,7 @@ func (p *Parser) readString() (objects.String, error) {
 			isEscaped = false
 		}
 
-		str = append(str, r)
+		str = append(str, p.Head)
 	}
 
 	return objects.String{Val: string(str)}, err
@@ -77,13 +76,11 @@ func (p *Parser) readWord() (string, error) {
 	)
 
 	for {
-		r := p.Head
-
-		if isWordBoundary(r) {
+		if isWordBoundary(p.Head) {
 			break
 		}
 
-		runes = append(runes, r)
+		runes = append(runes, p.Head)
 
 		err = p.NextRune()
 
@@ -120,10 +117,42 @@ func (p *Parser) readList() (objects.List, error) {
 	case !IsListEnd(p.Head):
 		return objects.List{}, errors.New("missing closing bracket")
 	default:
-		// if err == io.EOF, reading next rune will throw io.EOF again
+		// if err == io.EOF reading next rune will throw io.EOF again
 		err = p.NextRune()
 		return objects.List{Val: list}, err
 	}
+}
+
+func (p *Parser) tryParsingNumber() (objects.Object, error) {
+
+	head := p.Head
+	word, err := p.readWord()
+
+	if IsReaderError(err) {
+		return nil, err
+	}
+
+	elem, numberParsingErr := stringToNumber(word)
+
+	switch {
+	case numberParsingErr == nil:
+		return elem, err
+	// symbols cannot start with a digit
+	case unicode.IsDigit(head):
+		return nil, errors.New("not a number")
+	default:
+		return objects.Symbol{Name: word}, err
+	}
+}
+
+func (p *Parser) readSymbol() (objects.Object, error) {
+	word, err := p.readWord()
+
+	if IsReaderError(err) {
+		return nil, err
+	}
+
+	return objects.Symbol{Name: word}, err
 }
 
 // readObject reads and parses the single element (atom, symbol, list)
@@ -131,52 +160,21 @@ func (p *Parser) readObject() (objects.Object, error) {
 	for {
 		r := p.Head
 
-		if unicode.IsSpace(r) {
-			err := p.NextRune()
-
-			if err != nil {
+		switch {
+		case unicode.IsSpace(r):
+			if err := p.NextRune(); err != nil {
 				return nil, err
 			}
-			continue
-		}
-
-		switch {
 		case IsListStart(r):
-			// list
 			return p.readList()
 		case IsListEnd(r):
 			return nil, nil
 		case IsQuotationMark(r):
-			// string
 			return p.readString()
 		case isNumberStart(r):
-			// maybe a number
-			word, err := p.readWord()
-
-			if IsReaderError(err) {
-				return nil, err
-			}
-
-			elem, numberParsingErr := stringToNumber(word)
-
-			switch {
-			case numberParsingErr == nil:
-				return elem, err
-			// symbols cannot start with a digit
-			case unicode.IsDigit(r):
-				return nil, errors.New("not a number")
-			default:
-				return objects.Symbol{Name: word}, err
-			}
+			return p.tryParsingNumber()
 		default:
-			// symbol
-			word, err := p.readWord()
-
-			if IsReaderError(err) {
-				return nil, err
-			}
-
-			return objects.Symbol{Name: word}, err
+			return p.readSymbol()
 		}
 	}
 }

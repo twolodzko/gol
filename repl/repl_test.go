@@ -34,6 +34,7 @@ func TestRepl(t *testing.T) {
 		expected string
 	}{
 		{"()", "()"},
+		{`(\)`, `(\)`},
 		{"()\n", "()"},
 		{"word", "word"},
 		{"(first\t(second))", "(first (second))"},
@@ -44,6 +45,8 @@ func TestRepl(t *testing.T) {
 		{`(")")`, `(")")`},
 		{"(1;)\n2)", "(1 2)"},
 		{`("\")")`, `("")")`},
+		// FIXME
+		// {"(\"\\ )\n\")", "(\"\\ )\n\")"},
 	}
 
 	for _, tt := range testCases {

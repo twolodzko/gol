@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := test
-.PHONY: test cov cyclo fmt clean repl
+.PHONY: test cov cycl cogn fmt clean repl
 
 test:
 	go test ./...
@@ -8,8 +8,13 @@ cov:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
-cyclo:
-	gocyclo -over 3 .
+cycl:
+	# go get github.com/fzipp/gocyclo/cmd/gocyclo
+	gocyclo -top 10 .
+
+cogn:
+	# go get github.com/uudashr/gocognit/cmd/gocognit
+	gocognit -top 10 .
 
 fmt:
 	go fmt ./...

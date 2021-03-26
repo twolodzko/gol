@@ -20,30 +20,27 @@ func (reader *Reader) shouldStop(line string) bool {
 
 	for _, r := range line {
 
-		if r == '\\' {
-			escaped = true
-			continue
-		}
-
 		switch {
+		// string - wait till closing the quote
+		case reader.isQuoted && r == '\\':
+			escaped = !escaped
+		case reader.isQuoted && escaped:
+			escaped = false
+		case parser.IsQuotationMark(r):
+			reader.isQuoted = !reader.isQuoted
 		// comment - ignore rest of the line
 		case parser.IsCommentStart(r):
 			return false
-		// string - wait till closing the quote
-		case parser.IsQuotationMark(r) && !escaped:
-			reader.isQuoted = !reader.isQuoted
 		// list - wait till closing brace
-		case parser.IsListStart(r) && !escaped:
+		case parser.IsListStart(r):
 			reader.openBlocksCount++
-		case parser.IsListEnd(r) && !escaped:
+		case parser.IsListEnd(r):
 			reader.openBlocksCount--
 
 			if reader.openBlocksCount <= 0 {
 				return true
 			}
 		}
-
-		escaped = false
 	}
 
 	return reader.openBlocksCount == 0

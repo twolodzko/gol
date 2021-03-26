@@ -43,8 +43,7 @@ func TestRepl(t *testing.T) {
 		{"(\"first line\nnext line\"\nfoo)", "(\"first line\nnext line\" foo)"},
 		{`(")")`, `(")")`},
 		{"(1;)\n2)", "(1 2)"},
-		// FIXME
-		// {`("\")")`, `("\")")`},
+		{`("\")")`, `("")")`},
 	}
 
 	for _, tt := range testCases {

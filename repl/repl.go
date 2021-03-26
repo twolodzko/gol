@@ -9,63 +9,73 @@ import (
 	"github.com/twolodzko/goal/parser"
 )
 
+type Reader struct {
+	*bufio.Reader
+	openBlocksCount int
+	isQuoted        bool
+}
+
+func (reader *Reader) shouldStop(line string) bool {
+	var escaped bool
+
+	for _, r := range line {
+
+		if r == '\\' {
+			escaped = true
+			continue
+		}
+
+		switch {
+		// comment - ignore rest of the line
+		case parser.IsCommentStart(r):
+			return false
+		// string - wait till closing the quote
+		case parser.IsQuotationMark(r) && !escaped:
+			reader.isQuoted = !reader.isQuoted
+		// list - wait till closing brace
+		case parser.IsListStart(r) && !escaped:
+			reader.openBlocksCount++
+		case parser.IsListEnd(r) && !escaped:
+			reader.openBlocksCount--
+
+			if reader.openBlocksCount <= 0 {
+				return true
+			}
+		}
+
+		escaped = false
+	}
+
+	return reader.openBlocksCount == 0
+}
+
 func Read(in io.Reader) (string, error) {
 	var (
-		err             error
-		out             string
-		openBlocksCount int
-		isQuoted        bool = false
+		err       error
+		out, line string
 	)
 
-	reader := bufio.NewReader(in)
+	reader := Reader{bufio.NewReader(in), 0, false}
 
 	for {
-	next:
-		line, err := reader.ReadString('\n')
+		line, err = reader.ReadString('\n')
 
 		if parser.IsReaderError(err) {
-			return line, err
+			return out, err
 		}
 
 		out += line
 
-		var prev rune
-
-		for _, r := range line {
-			if r == ';' {
-				prev = '\x00'
-				goto next
-			}
-
-			switch {
-			// handling string
-			case !isQuoted && r == '"' && prev != '\\':
-				isQuoted = true
-			case isQuoted:
-				if r == '"' {
-					isQuoted = false
-				}
-			// handling list
-			case parser.IsListStart(r):
-				openBlocksCount++
-			case parser.IsListEnd(r):
-				openBlocksCount--
-
-				if openBlocksCount < 0 {
-					return "", errors.New("missing opening bracket")
-				}
-			}
-
-			prev = r
-		}
-
-		if err == io.EOF || openBlocksCount == 0 {
+		if reader.shouldStop(line) || err == io.EOF {
 			break
 		}
 	}
 
-	if openBlocksCount > 0 {
-		return out, errors.New("missing closing bracket")
+	switch {
+	case reader.openBlocksCount > 0:
+		err = errors.New("missing closing bracket")
+	case reader.openBlocksCount < 0:
+		err = errors.New("missing opening bracket")
 	}
 
 	return out, err
@@ -80,7 +90,7 @@ func Repl(in io.Reader) (string, error) {
 
 	p, err := parser.NewParser(strings.NewReader(s))
 
-	if err != nil {
+	if parser.IsReaderError(err) {
 		return "", err
 	}
 

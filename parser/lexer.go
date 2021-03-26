@@ -10,7 +10,7 @@ func IsListEnd(r rune) bool {
 	return r == ')'
 }
 
-func isQuotationMark(r rune) bool {
+func IsQuotationMark(r rune) bool {
 	return r == '"'
 }
 
@@ -18,7 +18,7 @@ func isWordBoundary(r rune) bool {
 	return unicode.IsSpace(r) || IsListEnd(r) || IsListStart(r)
 }
 
-func isCommentStart(r rune) bool {
+func IsCommentStart(r rune) bool {
 	return r == ';'
 }
 

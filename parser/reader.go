@@ -37,7 +37,7 @@ func (cr *CodeReader) NextRune() error {
 		}
 
 		// skip all the commented code
-		if isCommentStart(r) {
+		if IsCommentStart(r) {
 			isCommented = true
 			continue
 		}

@@ -32,7 +32,7 @@ func (p *Parser) readString() (objects.String, error) {
 		isEscaped bool = false
 	)
 
-	if !isQuotationMark(p.Head) {
+	if !IsQuotationMark(p.Head) {
 		return objects.String{}, errors.New("missing opening quotation mark")
 	}
 
@@ -54,7 +54,7 @@ func (p *Parser) readString() (objects.String, error) {
 				continue
 			}
 			// end of string, unless it was escaped \"
-			if isQuotationMark(r) {
+			if IsQuotationMark(r) {
 				err = p.NextRune()
 				break
 			}
@@ -146,7 +146,7 @@ func (p *Parser) readObject() (objects.Object, error) {
 			return p.readList()
 		case IsListEnd(r):
 			return nil, nil
-		case isQuotationMark(r):
+		case IsQuotationMark(r):
 			// string
 			return p.readString()
 		case isNumberStart(r):

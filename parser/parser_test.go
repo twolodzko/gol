@@ -162,7 +162,7 @@ func Test_readList(t *testing.T) {
 	}
 }
 
-func Test_readList_FailOnMissingBrakcets(t *testing.T) {
+func Test_readList_FailOnMissingBrackets(t *testing.T) {
 	var testCases = []string{
 		"(1 2",
 		"(1 2 ",
@@ -206,7 +206,7 @@ func Test_readObject(t *testing.T) {
 		{"bar ", objects.Symbol{Name: "bar"}},
 		{"baz\n", objects.Symbol{Name: "baz"}},
 		{"42)", objects.Int{Val: 42}},
-		{`"Hello World!" `, objects.String{Val: "Hello World!"}},
+		{`"Hello World!"`, objects.String{Val: "Hello World!"}},
 		{"42", objects.Int{Val: 42}},
 		{"+", objects.Symbol{Name: "+"}},
 		{" \n\t bar", objects.Symbol{Name: "bar"}},

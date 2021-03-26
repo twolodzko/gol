@@ -9,82 +9,19 @@ import (
 	"github.com/twolodzko/goal/parser"
 )
 
-type Reader struct {
-	*bufio.Reader
-	openBlocksCount int
-	isQuoted        bool
-}
-
-func NewReader(in io.Reader) *Reader {
-	return &Reader{bufio.NewReader(in), 0, false}
-}
-
-func (read *Reader) processLine(line string) (string, error) {
+func Read(in io.Reader) (string, error) {
 	var (
-		runes []rune
-		err   error
-		cr    *parser.CodeReader
+		err             error
+		out             string
+		openBlocksCount int
+		isQuoted        bool = false
 	)
 
-	cr, err = parser.NewCodeReader(strings.NewReader(line))
-
-	if err != nil {
-		return "", err
-	}
+	reader := bufio.NewReader(in)
 
 	for {
-		head := cr.Head
-
-		switch {
-		// handling string
-		case !read.isQuoted && head == '"':
-			read.isQuoted = true
-		case read.isQuoted:
-			if head == '"' {
-				read.isQuoted = false
-			}
-		// handling list
-		case parser.IsListStart(head):
-			read.openBlocksCount++
-		case parser.IsListEnd(head):
-			read.openBlocksCount--
-
-			if read.openBlocksCount < 0 {
-				return "", errors.New("missing opening bracket")
-			}
-		}
-
-		runes = append(runes, head)
-
-		err = cr.NextRune()
-
-		if err == io.EOF {
-			return string(runes), nil
-		} else if err != nil {
-			return string(runes), err
-		}
-	}
-}
-
-func (read *Reader) nextLine() (string, error) {
-	line, err := read.ReadString('\n')
-
-	if parser.IsReaderError(err) {
-		return "", err
-	}
-
-	return read.processLine(line)
-}
-
-// Read the input allowing for opened lists to continiue on new lines
-func (read *Reader) Read() (string, error) {
-	var (
-		err error
-		out string
-	)
-
-	for {
-		line, err := read.nextLine()
+	next:
+		line, err := reader.ReadString('\n')
 
 		if parser.IsReaderError(err) {
 			return line, err
@@ -92,12 +29,42 @@ func (read *Reader) Read() (string, error) {
 
 		out += line
 
-		if err == io.EOF || read.openBlocksCount == 0 {
+		var prev rune
+
+		for _, r := range line {
+			if r == ';' {
+				prev = '\x00'
+				goto next
+			}
+
+			switch {
+			// handling string
+			case !isQuoted && r == '"' && prev != '\\':
+				isQuoted = true
+			case isQuoted:
+				if r == '"' {
+					isQuoted = false
+				}
+			// handling list
+			case parser.IsListStart(r):
+				openBlocksCount++
+			case parser.IsListEnd(r):
+				openBlocksCount--
+
+				if openBlocksCount < 0 {
+					return "", errors.New("missing opening bracket")
+				}
+			}
+
+			prev = r
+		}
+
+		if err == io.EOF || openBlocksCount == 0 {
 			break
 		}
 	}
 
-	if read.openBlocksCount > 0 {
+	if openBlocksCount > 0 {
 		return out, errors.New("missing closing bracket")
 	}
 
@@ -105,8 +72,7 @@ func (read *Reader) Read() (string, error) {
 }
 
 func Repl(in io.Reader) (string, error) {
-	reader := NewReader(in)
-	s, err := reader.Read()
+	s, err := Read(in)
 
 	if parser.IsReaderError(err) {
 		return "", err

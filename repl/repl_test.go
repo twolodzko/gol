@@ -20,8 +20,7 @@ func TestInvalidInput(t *testing.T) {
 	}
 
 	for _, input := range testCases {
-		reader := NewReader(strings.NewReader(input))
-		result, err := reader.Read()
+		result, err := Read(strings.NewReader(input))
 
 		if err == nil {
 			t.Errorf("for %s expected an error, got '%s'", input, result)
@@ -38,8 +37,7 @@ func TestRepl(t *testing.T) {
 		{"()\n", "()"},
 		{"word", "word"},
 		{"(first\t(second))", "(first (second))"},
-		// FIXME
-		// {"(1 2\n; comment\n 3)", "(1 2 3)"},
+		{"(1 2\n; comment\n 3)", "(1 2 3)"},
 		{"(first ; ignore this\nsecond);last comment", "(first second)"},
 		{"(first\nsecond)", "(first second)"},
 		{"(\"first line\nnext line\"\nfoo)", "(\"first line\nnext line\" foo)"},

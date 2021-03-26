@@ -9,85 +9,106 @@ import (
 	"github.com/twolodzko/goal/parser"
 )
 
-// Read the input allowing for opened lists to continiue on new lines
-func Read(in io.Reader) (string, error) {
+type Reader struct {
+	*bufio.Reader
+	openBlocksCount int
+	isQuoted        bool
+}
+
+func NewReader(in io.Reader) *Reader {
+	return &Reader{bufio.NewReader(in), 0, false}
+}
+
+func (read *Reader) processLine(line string) (string, error) {
 	var (
-		err             error
-		s               string
-		openBlocksCount int
-		isQuoted        bool
+		runes []rune
+		err   error
+		cr    *parser.CodeReader
 	)
-	lineReader := bufio.NewReader(in)
+
+	cr, err = parser.NewCodeReader(strings.NewReader(line))
+
+	if err != nil {
+		return "", err
+	}
 
 	for {
-		line, err := lineReader.ReadString('\n')
+		head := cr.Head
 
-		if parser.IsReaderError(err) {
-			return "", err
-		}
-
-		cr, err := parser.NewCodeReader(strings.NewReader(line))
-
-		if err != nil {
-			return "", err
-		}
-
-		runes := []rune{}
-
-		for {
-			r := cr.Head
-
-			switch {
-			// handling string
-			case !isQuoted && r == '"':
-				isQuoted = true
-			case isQuoted:
-				if r == '"' {
-					isQuoted = false
-				}
-			// handling list
-			case parser.IsListStart(r):
-				openBlocksCount++
-			case parser.IsListEnd(r):
-				openBlocksCount--
-
-				if openBlocksCount < 0 {
-					return "", errors.New("missing opening bracket")
-				}
+		switch {
+		// handling string
+		case !read.isQuoted && head == '"':
+			read.isQuoted = true
+		case read.isQuoted:
+			if head == '"' {
+				read.isQuoted = false
 			}
+		// handling list
+		case parser.IsListStart(head):
+			read.openBlocksCount++
+		case parser.IsListEnd(head):
+			read.openBlocksCount--
 
-			runes = append(runes, r)
-
-			codeReaderError := cr.NextRune()
-
-			if codeReaderError == io.EOF {
-				break
-			} else if codeReaderError != nil {
-				return "", codeReaderError
+			if read.openBlocksCount < 0 {
+				return "", errors.New("missing opening bracket")
 			}
 		}
 
-		s += string(runes)
+		runes = append(runes, head)
 
-		if err == io.EOF || openBlocksCount == 0 {
-			break
+		err = cr.NextRune()
+
+		if err == io.EOF {
+			return string(runes), nil
+		} else if err != nil {
+			return string(runes), err
 		}
 	}
+}
 
-	if openBlocksCount > 0 {
-		return "", errors.New("missing closing bracket")
-	}
+func (read *Reader) nextLine() (string, error) {
+	line, err := read.ReadString('\n')
+
 	if parser.IsReaderError(err) {
 		return "", err
 	}
 
-	return s, err
+	return read.processLine(line)
+}
+
+// Read the input allowing for opened lists to continiue on new lines
+func (read *Reader) Read() (string, error) {
+	var (
+		err error
+		out string
+	)
+
+	for {
+		line, err := read.nextLine()
+
+		if parser.IsReaderError(err) {
+			return line, err
+		}
+
+		out += line
+
+		if err == io.EOF || read.openBlocksCount == 0 {
+			break
+		}
+	}
+
+	if read.openBlocksCount > 0 {
+		return out, errors.New("missing closing bracket")
+	}
+
+	return out, err
 }
 
 func Repl(in io.Reader) (string, error) {
-	s, err := Read(in)
+	reader := NewReader(in)
+	s, err := reader.Read()
 
-	if err != nil {
+	if parser.IsReaderError(err) {
 		return "", err
 	}
 
@@ -99,7 +120,7 @@ func Repl(in io.Reader) (string, error) {
 
 	expr, err := p.Parse()
 
-	if err != io.EOF {
+	if parser.IsReaderError(err) {
 		return "", err
 	}
 

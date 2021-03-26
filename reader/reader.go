@@ -2,7 +2,9 @@ package reader
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"unicode"
 )
 
 func isCommentStart(r rune) bool {
@@ -30,7 +32,12 @@ func (cr *CodeReader) NextRune() error {
 		r, _, err := cr.ReadRune()
 
 		if err != nil {
+			cr.Head = r
 			return err
+		}
+		if !unicode.IsPrint(r) && !unicode.IsSpace(r) {
+			cr.Head = r
+			return fmt.Errorf("invalid character: %q", r)
 		}
 
 		// skip all the commented code
@@ -40,6 +47,10 @@ func (cr *CodeReader) NextRune() error {
 		}
 		if isCommented {
 			if r == '\n' {
+				if unicode.IsPrint(cr.Head) && cr.Head != ' ' {
+					cr.Head = ' '
+					break
+				}
 				isCommented = false
 			}
 			continue

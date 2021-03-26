@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := run
+.DEFAULT_GOAL := test
 .PHONY: test cov fmt clean repl
 
 test:

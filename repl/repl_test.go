@@ -42,8 +42,10 @@ func TestRepl(t *testing.T) {
 		{"(first ; ignore this\nsecond);last comment", "(first second)"},
 		{"(first\nsecond)", "(first second)"},
 		{"(\"first line\nnext line\"\nfoo)", "(\"first line\nnext line\" foo)"},
+		{`(")")`, `(")")`},
+		{"(1;)\n2)", "(1 2)"},
 		// FIXME
-		// {`(")")`, `(")")`},
+		// {`("\")")`, `("\")")`},
 	}
 
 	for _, tt := range testCases {

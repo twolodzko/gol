@@ -6,25 +6,10 @@ import (
 	"strconv"
 	"unicode"
 
+	"github.com/twolodzko/goal/lexer"
 	"github.com/twolodzko/goal/objects"
 	"github.com/twolodzko/goal/reader"
 )
-
-func IsListStart(r rune) bool {
-	return r == '('
-}
-
-func IsListEnd(r rune) bool {
-	return r == ')'
-}
-
-func isQuotationMark(r rune) bool {
-	return r == '"'
-}
-
-func isWordBoundary(r rune) bool {
-	return unicode.IsSpace(r) || IsListEnd(r) || IsListStart(r)
-}
 
 // Parser reads the code and parses it into the AST
 type Parser struct {
@@ -45,7 +30,7 @@ func (p *Parser) readString() (objects.String, error) {
 		isEscaped bool = false
 	)
 
-	if !isQuotationMark(p.Head) {
+	if !lexer.IsQuotationMark(p.Head) {
 		return objects.String{}, errors.New("missing opening quotation mark")
 	}
 
@@ -57,7 +42,7 @@ func (p *Parser) readString() (objects.String, error) {
 			return objects.String{}, errors.New("missing closing quotation mark")
 		}
 		if err != nil {
-			return objects.String{}, err
+			break
 		}
 
 		if !isEscaped {
@@ -67,7 +52,7 @@ func (p *Parser) readString() (objects.String, error) {
 				continue
 			}
 			// end of string, unless it was escaped \"
-			if isQuotationMark(r) {
+			if lexer.IsQuotationMark(r) {
 				err = p.NextRune()
 				break
 			}
@@ -85,18 +70,18 @@ func (p *Parser) readString() (objects.String, error) {
 // Read characters until word boundary
 func (p *Parser) readWord() (string, error) {
 	var (
-		err  error
-		word []rune
+		err   error
+		runes []rune
 	)
 
 	for {
 		r := p.Head
 
-		if isWordBoundary(r) {
+		if lexer.IsWordBoundary(r) {
 			break
 		}
 
-		word = append(word, r)
+		runes = append(runes, r)
 
 		err = p.NextRune()
 
@@ -105,7 +90,7 @@ func (p *Parser) readWord() (string, error) {
 		}
 	}
 
-	return string(word), err
+	return string(runes), err
 }
 
 // readList reads the LISP-style list
@@ -115,7 +100,7 @@ func (p *Parser) readList() (objects.List, error) {
 		err  error
 	)
 
-	if !IsListStart(p.Head) {
+	if !lexer.IsListStart(p.Head) {
 		return objects.List{}, errors.New("missing opening bracket")
 	}
 
@@ -127,16 +112,16 @@ func (p *Parser) readList() (objects.List, error) {
 
 	list, err = p.Parse()
 
-	if !IsListEnd(p.Head) {
-		return objects.List{}, errors.New("missing closing bracket")
-	}
-	if err != nil {
+	switch {
+	case err != nil && err != io.EOF:
 		return objects.List{}, err
+	case !lexer.IsListEnd(p.Head):
+		return objects.List{}, errors.New("missing closing bracket")
+	default:
+		// if err == io.EOF, reading next rune will throw io.EOF again
+		err = p.NextRune()
+		return objects.List{Val: list}, err
 	}
-
-	err = p.NextRune()
-
-	return objects.List{Val: list}, err
 }
 
 // readObject reads and parses the single element (atom, symbol, list)
@@ -154,10 +139,12 @@ func (p *Parser) readObject() (objects.Object, error) {
 		}
 
 		switch {
-		case IsListStart(r):
+		case lexer.IsListStart(r):
 			// list
 			return p.readList()
-		case isQuotationMark(r):
+		case lexer.IsListEnd(r):
+			return nil, nil
+		case lexer.IsQuotationMark(r):
 			// string
 			return p.readString()
 		default:
@@ -165,7 +152,7 @@ func (p *Parser) readObject() (objects.Object, error) {
 			word, err := p.readWord()
 
 			if err != nil && err != io.EOF {
-				return objects.List{}, err
+				return nil, err
 			}
 
 			if unicode.IsDigit(r) || r == '-' || r == '+' || r == '.' {
@@ -210,9 +197,13 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 			expr = append(expr, obj)
 		}
 
-		if err != nil || IsListEnd(p.Head) {
+		if err != nil || lexer.IsListEnd(p.Head) {
 			break
 		}
+	}
+
+	if len(expr) == 0 {
+		return nil, err
 	}
 
 	return expr, err

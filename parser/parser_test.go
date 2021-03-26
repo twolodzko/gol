@@ -107,6 +107,7 @@ func Test_readList(t *testing.T) {
 		{"((1 2))", objects.NewList(objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}))},
 		{"(1 2) (3 4)", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2})},
 		{"(a)", objects.NewList(objects.Symbol{Name: "a"})},
+		{`(")")`, objects.NewList(objects.String{Val: ")"})},
 		{"(1 2 (3 4) 5)", objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}, objects.NewList(objects.Int{Val: 3}, objects.Int{Val: 4}), objects.Int{Val: 5})},
 		{`(foo 42 "Hello World!" ())`, objects.NewList(objects.Symbol{Name: "foo"}, objects.Int{Val: 42}, objects.String{Val: "Hello World!"}, objects.List{})},
 		{"(+ -2 +2)", objects.NewList(objects.Symbol{Name: "+"}, objects.Int{Val: -2}, objects.Int{Val: 2})},
@@ -132,7 +133,7 @@ func Test_readList(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("expected: %v (%T), got: %v (%T)", tt.expected, tt.expected, result, result)
+			t.Errorf("expected: %v (%T), got: %v (%T) %q %T", tt.expected, tt.expected, result, result, result.Val[0], result.Val[0])
 		}
 	}
 }
@@ -274,8 +275,7 @@ func TestParse(t *testing.T) {
 		{"\n", nil},
 		{"bar ", []objects.Object{objects.Symbol{Name: "bar"}}},
 		{"foo bar\n", []objects.Object{objects.Symbol{Name: "foo"}, objects.Symbol{Name: "bar"}}},
-		// FIXME
-		// {"42)", []objects.Object{objects.Int{Val: 42}}},
+		{"42)", []objects.Object{objects.Int{Val: 42}}},
 		{`"Hello World!" `, []objects.Object{objects.String{Val: "Hello World!"}}},
 		{"42", []objects.Object{objects.Int{Val: 42}}},
 		{" \n\t bar", []objects.Object{objects.Symbol{Name: "bar"}}},

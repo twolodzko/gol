@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/twolodzko/goal/lexer"
 	"github.com/twolodzko/goal/parser"
 	"github.com/twolodzko/goal/reader"
 )
@@ -16,6 +17,7 @@ func Read(in io.Reader) (string, error) {
 		err             error
 		s               string
 		openBlocksCount int
+		isQuoted        bool
 	)
 	lineReader := bufio.NewReader(in)
 
@@ -38,14 +40,22 @@ func Read(in io.Reader) (string, error) {
 			r := cr.Head
 
 			switch {
-			case parser.IsListStart(r):
+			// handling string
+			case !isQuoted && r == '"':
+				isQuoted = true
+			case isQuoted:
+				if r == '"' {
+					isQuoted = false
+				}
+			// handling list
+			case lexer.IsListStart(r):
 				openBlocksCount++
-			case parser.IsListEnd(r):
+			case lexer.IsListEnd(r):
 				openBlocksCount--
-			}
 
-			if openBlocksCount < 0 {
-				return "", errors.New("missing opening bracket")
+				if openBlocksCount < 0 {
+					return "", errors.New("missing opening bracket")
+				}
 			}
 
 			runes = append(runes, r)

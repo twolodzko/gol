@@ -22,8 +22,6 @@ func NewCodeReader(r io.Reader) (*CodeReader, error) {
 
 // NextRune moves the head of the reader one rune forward and saves the state in CodeReader.Head
 func (cr *CodeReader) NextRune() error {
-	isCommented := false
-
 	for {
 		r, _, err := cr.ReadRune()
 
@@ -32,28 +30,37 @@ func (cr *CodeReader) NextRune() error {
 			return err
 		}
 		if !isValidRune(r) {
-			cr.Head = r
 			return fmt.Errorf("invalid character: %q", r)
 		}
-
-		// skip all the commented code
 		if IsCommentStart(r) {
-			isCommented = true
-			continue
-		}
-		if isCommented {
-			if r == '\n' {
-				if unicode.IsPrint(cr.Head) && cr.Head != ' ' {
-					cr.Head = ' '
-					break
-				}
-				isCommented = false
+			err := cr.skipLine()
+
+			if err != nil {
+				return err
 			}
+			if unicode.IsPrint(cr.Head) && cr.Head != ' ' {
+				cr.Head = ' '
+				return nil
+			}
+
 			continue
 		}
 
 		cr.Head = r
-		break
+		return nil
+	}
+}
+
+func (cr *CodeReader) skipLine() error {
+	for {
+		r, _, err := cr.ReadRune()
+
+		if err != nil {
+			return err
+		}
+		if r == '\n' {
+			break
+		}
 	}
 
 	return nil

@@ -198,7 +198,7 @@ func TestNewParser_EmptyString(t *testing.T) {
 	}
 }
 
-func Test_readObject(t *testing.T) {
+func Test_nextObject(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected objects.Object
@@ -221,7 +221,7 @@ func Test_readObject(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := parser.readObject()
+		result, err := parser.nextObject()
 
 		if IsReaderError(err) {
 			t.Errorf("unexpected error: %s", err)
@@ -232,7 +232,7 @@ func Test_readObject(t *testing.T) {
 	}
 }
 
-func Test_readObject_WithEOF(t *testing.T) {
+func Test_nextObject_WithEOF(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected objects.Object
@@ -250,7 +250,7 @@ func Test_readObject_WithEOF(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := parser.readObject()
+		result, err := parser.nextObject()
 
 		if err != io.EOF {
 			t.Errorf("expected EOF error, got: %v", err)
@@ -261,7 +261,7 @@ func Test_readObject_WithEOF(t *testing.T) {
 	}
 }
 
-func Test_readObject_EmptyInput(t *testing.T) {
+func Test_nextObject_EmptyInput(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected objects.Object
@@ -277,7 +277,7 @@ func Test_readObject_EmptyInput(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := parser.readObject()
+		result, err := parser.nextObject()
 
 		if err != io.EOF {
 			t.Errorf("unexpected error: %s", err)

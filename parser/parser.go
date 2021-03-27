@@ -24,6 +24,58 @@ func NewParser(r io.Reader) (*Parser, error) {
 	return &Parser{cr}, err
 }
 
+// Parse the script, return list of expressions to evaluate
+func (p *Parser) Parse() ([]objects.Object, error) {
+	var (
+		expr []objects.Object
+		err  error
+		obj  objects.Object
+	)
+
+	for {
+		obj, err = p.nextObject()
+
+		if IsReaderError(err) {
+			break
+		}
+		if obj != nil {
+			expr = append(expr, obj)
+		}
+		if err != nil || IsListEnd(p.Head) {
+			break
+		}
+	}
+
+	if len(expr) == 0 {
+		return nil, err
+	}
+
+	return expr, err
+}
+
+// nextObject reads and parses the single element (atom, symbol, list)
+func (p *Parser) nextObject() (objects.Object, error) {
+
+	if err := p.skipWhitespace(); err != nil {
+		return nil, err
+	}
+
+	r := p.Head
+
+	switch {
+	case IsListStart(r):
+		return p.readList()
+	case IsListEnd(r):
+		return nil, nil
+	case IsQuotationMark(r):
+		return p.readString()
+	case isNumberStart(r):
+		return p.parseNumberOrSymbol()
+	default:
+		return p.readSymbol()
+	}
+}
+
 // Read a quoted string until the closing quotation mark
 func (p *Parser) readString() (objects.String, error) {
 	var (
@@ -57,10 +109,9 @@ func (p *Parser) readString() (objects.String, error) {
 				err = p.NextRune()
 				break
 			}
-		} else {
-			// at next char after the escape, always cancel the escape
-			isEscaped = false
 		}
+
+		isEscaped = false
 
 		str = append(str, p.Head)
 	}
@@ -123,7 +174,7 @@ func (p *Parser) readList() (objects.List, error) {
 	}
 }
 
-func (p *Parser) tryParsingNumber() (objects.Object, error) {
+func (p *Parser) parseNumberOrSymbol() (objects.Object, error) {
 
 	head := p.Head
 	word, err := p.readWord()
@@ -155,59 +206,18 @@ func (p *Parser) readSymbol() (objects.Object, error) {
 	return objects.Symbol{Name: word}, err
 }
 
-// readObject reads and parses the single element (atom, symbol, list)
-func (p *Parser) readObject() (objects.Object, error) {
+func (p *Parser) skipWhitespace() error {
 	for {
 		r := p.Head
 
-		switch {
-		case unicode.IsSpace(r):
-			if err := p.NextRune(); err != nil {
-				return nil, err
-			}
-		case IsListStart(r):
-			return p.readList()
-		case IsListEnd(r):
-			return nil, nil
-		case IsQuotationMark(r):
-			return p.readString()
-		case isNumberStart(r):
-			return p.tryParsingNumber()
-		default:
-			return p.readSymbol()
+		if !unicode.IsSpace(r) {
+			return nil
+		}
+
+		if err := p.NextRune(); err != nil {
+			return err
 		}
 	}
-}
-
-// Parse the script, return list of expressions to evaluate
-func (p *Parser) Parse() ([]objects.Object, error) {
-	var (
-		expr []objects.Object
-		err  error
-		obj  objects.Object
-	)
-
-	for {
-		obj, err = p.readObject()
-
-		if IsReaderError(err) {
-			break
-		}
-
-		if obj != nil {
-			expr = append(expr, obj)
-		}
-
-		if err != nil || IsListEnd(p.Head) {
-			break
-		}
-	}
-
-	if len(expr) == 0 {
-		return nil, err
-	}
-
-	return expr, err
 }
 
 // Try parsing sting to an integer or a float

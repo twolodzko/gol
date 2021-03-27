@@ -16,16 +16,13 @@ type Reader struct {
 }
 
 func (reader *Reader) shouldStop(line string) bool {
-	var escaped bool
-
 	for _, r := range line {
 
+		if r == '\\' {
+			continue
+		}
+
 		switch {
-		// string - wait till closing the quote
-		case reader.isQuoted && r == '\\':
-			escaped = !escaped
-		case reader.isQuoted && escaped:
-			escaped = false
 		case parser.IsQuotationMark(r):
 			reader.isQuoted = !reader.isQuoted
 		// comment - ignore rest of the line

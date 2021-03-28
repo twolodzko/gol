@@ -14,10 +14,8 @@ type CodeReader struct {
 }
 
 // NewCodeReader initialize an instance of CodeReader
-func NewCodeReader(r io.Reader) (*CodeReader, error) {
-	cr := &CodeReader{bufio.NewReader(r), rune(0)}
-	err := cr.NextRune()
-	return cr, err
+func NewCodeReader(r io.Reader) *CodeReader {
+	return &CodeReader{bufio.NewReader(r), rune(0)}
 }
 
 // NextRune moves the head of the reader one rune forward and saves the state in CodeReader.Head
@@ -59,9 +57,7 @@ func (cr *CodeReader) skipLine() error {
 			return err
 		}
 		if r == '\n' {
-			break
+			return nil
 		}
 	}
-
-	return nil
 }

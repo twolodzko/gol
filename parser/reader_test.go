@@ -18,7 +18,8 @@ func TestCodeReader(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		reader, err := NewCodeReader(strings.NewReader(tt.input))
+		reader := NewCodeReader(strings.NewReader(tt.input))
+		err := reader.NextRune()
 		result := reader.Head
 
 		if result != tt.expected {
@@ -27,15 +28,6 @@ func TestCodeReader(t *testing.T) {
 		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
-	}
-}
-
-func TestCodeReader_InvalidInput(t *testing.T) {
-	input := "\x00abc"
-	reader, err := NewCodeReader(strings.NewReader(input))
-
-	if err == nil {
-		t.Errorf("expected error, got: %q", reader.Head)
 	}
 }
 
@@ -67,15 +59,17 @@ func TestReadSequence(t *testing.T) {
 		{'\x00', io.EOF},
 	}
 
-	cr, err = NewCodeReader(strings.NewReader(input))
-
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
+	cr = NewCodeReader(strings.NewReader(input))
 
 	var runes []rune
 
 	for i, tt := range testCases {
+		err = cr.NextRune()
+
+		if err != nil {
+			break
+		}
+
 		result := cr.Head
 
 		fmt.Printf("%q %s\n", result, err)
@@ -84,23 +78,12 @@ func TestReadSequence(t *testing.T) {
 			t.Errorf("at step %d expected %q, got: %q (%v)", i, tt.expected, result, err)
 		}
 
-		if err == nil {
-			runes = append(runes, result)
-		}
-
-		err = cr.NextRune()
+		runes = append(runes, result)
 	}
 
 	expected := "(foo bar 42)"
 	result := string(runes)
 	if result != expected {
 		t.Errorf("expected '%s' (%d chars), got: '%s' (%d chars)", expected, len(expected), result, len(result))
-	}
-}
-
-func TestNewCodeReader_EmptyString(t *testing.T) {
-	_, err := NewCodeReader(strings.NewReader(""))
-	if err != io.EOF {
-		t.Errorf("expected EOF error, got: %v", err)
 	}
 }

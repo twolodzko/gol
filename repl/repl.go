@@ -3,6 +3,7 @@ package repl
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -82,23 +83,15 @@ func Repl(in io.Reader) (string, error) {
 		return "", err
 	}
 
-	p, err := parser.NewParser(strings.NewReader(s))
+	l := parser.NewLexer(strings.NewReader(s))
+
+	expr, err := l.Tokenize()
 
 	if parser.IsReaderError(err) {
 		return "", err
 	}
 
-	expr, err := p.Parse()
-
-	if parser.IsReaderError(err) {
-		return "", err
-	}
-
-	out := ""
-	for _, obj := range expr {
-		out += obj.String()
-		out += "\n"
-	}
+	out := fmt.Sprintf("%v\n", expr)
 
 	return out, nil
 }

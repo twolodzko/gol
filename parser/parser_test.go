@@ -26,6 +26,7 @@ func TestParse(t *testing.T) {
 		{`(foo 42 "bar")`, []objects.Object{objects.NewList(objects.Symbol{Val: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})}},
 		{"  \n\t(\nfoo \n\n42\t\"bar\")", []objects.Object{objects.NewList(objects.Symbol{Val: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})}},
 		{"(1 2) (3 4)", []objects.Object{objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}), objects.NewList(objects.Int{Val: 3}, objects.Int{Val: 4})}},
+		{"(1 2)\n\n(3\n4)", []objects.Object{objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}), objects.NewList(objects.Int{Val: 3}, objects.Int{Val: 4})}},
 	}
 
 	for _, tt := range testCases {

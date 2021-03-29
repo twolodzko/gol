@@ -27,12 +27,7 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		lexer := NewLexer(strings.NewReader(tt.input))
-		tokens, _ := lexer.Tokenize()
-
-		parser := NewParser(tokens)
-
-		result, err := parser.Parse()
+		result, err := Parse(strings.NewReader(tt.input))
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)

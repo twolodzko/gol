@@ -2,11 +2,31 @@ package parser
 
 import (
 	"errors"
+	"io"
 	"strconv"
 
 	"github.com/twolodzko/goal/objects"
 	"github.com/twolodzko/goal/token"
 )
+
+func Parse(r io.Reader) ([]objects.Object, error) {
+	lexer := NewLexer(r)
+	tokens, err := lexer.Tokenize()
+
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
+
+	parser := NewParser(tokens)
+
+	parsed, err := parser.Parse()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return parsed, nil
+}
 
 type Parser struct {
 	tokens  []token.Token

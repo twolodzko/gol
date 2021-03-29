@@ -83,15 +83,7 @@ func Repl(in io.Reader) (string, error) {
 		return "", err
 	}
 
-	l := parser.NewLexer(strings.NewReader(s))
-	tokens, err := l.Tokenize()
-
-	if err != nil && err != io.EOF {
-		return "", err
-	}
-
-	p := parser.NewParser(tokens)
-	parsed, err := p.Parse()
+	parsed, err := parser.Parse(strings.NewReader(s))
 
 	if err != nil {
 		return "", err

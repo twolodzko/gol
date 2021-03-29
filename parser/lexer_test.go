@@ -33,7 +33,6 @@ func Test_isWordBoundary(t *testing.T) {
 }
 
 func TestLexer(t *testing.T) {
-	var l *Lexer
 	var testCases = []struct {
 		input    string
 		expected []token.Token
@@ -88,10 +87,10 @@ func TestLexer(t *testing.T) {
 			},
 		},
 		{
-			"3.1415 1e-5 1.3e+5 -.34e-5 .223 +.45 +42 0",
+			"3.1415 1e5 1.3e+5 -.34e-5 .223 +.45 +42 0",
 			[]token.Token{
 				{Literal: "3.1415", Type: token.FLOAT},
-				{Literal: "1e-5", Type: token.FLOAT},
+				{Literal: "1e5", Type: token.FLOAT},
 				{Literal: "1.3e+5", Type: token.FLOAT},
 				{Literal: "-.34e-5", Type: token.FLOAT},
 				{Literal: ".223", Type: token.FLOAT},
@@ -103,23 +102,10 @@ func TestLexer(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		l = NewLexer(strings.NewReader(tt.input))
-
-		for _, expected := range tt.expected {
-			result, err := l.nextToken()
-
-			if IsReaderError(err) {
-				t.Errorf("unexpected error: %s", err)
-			}
-			if !cmp.Equal(expected, result) {
-				t.Errorf("expected %v, got: %v", expected, result)
-			}
-		}
-
-		l = NewLexer(strings.NewReader(tt.input))
+		l := NewLexer(strings.NewReader(tt.input))
 		result, err := l.Tokenize()
 
-		if IsReaderError(err) {
+		if err != nil && err != io.EOF {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(tt.expected, result) {
@@ -149,7 +135,7 @@ func Test_readString(t *testing.T) {
 
 		result, err := l.readString()
 
-		if IsReaderError(err) {
+		if err != nil {
 			t.Errorf("unexpected error: %v", err)
 		}
 		if !cmp.Equal(result, tt.expected) {

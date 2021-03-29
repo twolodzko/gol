@@ -61,3 +61,7 @@ func (cr *CodeReader) skipLine() error {
 		}
 	}
 }
+
+func isValidRune(r rune) bool {
+	return unicode.IsPrint(r) || unicode.IsSpace(r)
+}

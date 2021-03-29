@@ -24,11 +24,9 @@ func (t Token) String() string {
 	switch t.Type {
 	case LPAREN, RPAREN:
 		return t.Type
-	case STRING:
+	case STRING, INT, FLOAT, SYMBOL:
 		return fmt.Sprintf("%q:%s", t.Literal, t.Type)
-	case INT, FLOAT, SYMBOL:
-		return fmt.Sprintf("%s:%s", t.Literal, t.Type)
 	default:
-		return "<invalid token>"
+		return "<ERR>"
 	}
 }

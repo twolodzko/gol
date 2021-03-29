@@ -55,7 +55,7 @@ func Read(in io.Reader) (string, error) {
 	for {
 		line, err = reader.ReadString('\n')
 
-		if parser.IsReaderError(err) {
+		if err != nil {
 			return out, err
 		}
 
@@ -79,19 +79,28 @@ func Read(in io.Reader) (string, error) {
 func Repl(in io.Reader) (string, error) {
 	s, err := Read(in)
 
-	if parser.IsReaderError(err) {
+	if err != nil {
 		return "", err
 	}
 
 	l := parser.NewLexer(strings.NewReader(s))
+	tokens, err := l.Tokenize()
 
-	expr, err := l.Tokenize()
-
-	if parser.IsReaderError(err) {
+	if err != nil && err != io.EOF {
 		return "", err
 	}
 
-	out := fmt.Sprintf("%v\n", expr)
+	p := parser.NewParser(tokens)
+	parsed, err := p.Parse()
+
+	if err != nil {
+		return "", err
+	}
+
+	out := ""
+	for _, result := range parsed {
+		out += fmt.Sprintf("%v\n", result)
+	}
 
 	return out, nil
 }

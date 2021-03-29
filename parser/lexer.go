@@ -11,7 +11,7 @@ import (
 
 var (
 	intRegex   = regexp.MustCompile(`^[+-]?\d+$`)
-	floatRegex = regexp.MustCompile(`^[+-]?\d*\.?\d+[eE]?[+-]?\d+$`)
+	floatRegex = regexp.MustCompile(`^[+-]?\d*\.?(?:\d+[eE]?[+-]?)?\d+$`)
 )
 
 func IsListStart(r rune) bool {
@@ -34,14 +34,6 @@ func IsCommentStart(r rune) bool {
 	return r == ';'
 }
 
-func isNumberStart(r rune) bool {
-	return unicode.IsDigit(r) || r == '-' || r == '+' || r == '.'
-}
-
-func isValidRune(r rune) bool {
-	return unicode.IsPrint(r) || unicode.IsSpace(r)
-}
-
 type Lexer struct {
 	*CodeReader
 }
@@ -56,15 +48,11 @@ func (l *Lexer) Tokenize() ([]token.Token, error) {
 	for {
 		t, err := l.nextToken()
 
-		if IsReaderError(err) {
+		if err != nil {
 			return tokens, err
 		}
 
 		tokens = append(tokens, t)
-
-		if err == io.EOF {
-			return tokens, err
-		}
 	}
 }
 
@@ -75,10 +63,9 @@ func (l *Lexer) nextToken() (token.Token, error) {
 		tokenType string
 	)
 
-	if err = l.NextRune(); IsReaderError(err) {
+	if err = l.NextRune(); err != nil {
 		return token.Token{}, err
 	}
-
 	if err := l.skipWhitespace(); err != nil {
 		return token.Token{}, err
 	}
@@ -86,19 +73,19 @@ func (l *Lexer) nextToken() (token.Token, error) {
 	r := l.Head
 
 	switch {
-	case r == '(':
+	case IsListStart(r):
 		return token.New(string(r), token.LPAREN), err
-	case r == ')':
+	case IsListEnd(r):
 		return token.New(string(r), token.RPAREN), err
 	case IsQuotationMark(r):
 		str, err = l.readString()
-		if IsReaderError(err) {
+		if err != nil {
 			return token.Token{}, err
 		}
 		return token.New(str, token.STRING), err
 	default:
 		str, err = l.readWord()
-		if IsReaderError(err) {
+		if err != nil {
 			return token.Token{}, err
 		}
 	}
@@ -186,6 +173,9 @@ func (l *Lexer) readWord() (string, error) {
 		err = l.NextRune()
 
 		if err != nil {
+			if err == io.EOF {
+				err = nil
+			}
 			break
 		}
 		if isWordBoundary(l.Head) {

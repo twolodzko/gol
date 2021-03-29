@@ -20,7 +20,7 @@ func TestParse(t *testing.T) {
 		{"foo bar\n", []objects.Object{objects.Symbol{Val: "foo"}, objects.Symbol{Val: "bar"}}},
 		{"42", []objects.Object{objects.Int{Val: 42}}},
 		{`"Hello World!" `, []objects.Object{objects.String{Val: "Hello World!"}}},
-		{"42", []objects.Object{objects.Int{Val: 42}}},
+		{"1e-7", []objects.Object{objects.Float{Val: 1e-7}}},
 		{" \n\t bar", []objects.Object{objects.Symbol{Val: "bar"}}},
 		{"((1 2))", []objects.Object{objects.NewList(objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}))}},
 		{`(foo 42 "bar")`, []objects.Object{objects.NewList(objects.Symbol{Val: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})}},

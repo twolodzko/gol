@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestInvalidInput(t *testing.T) {
+func TestRead_InvalidInput(t *testing.T) {
 	var testCases = []string{
 		")",
 		"(",

@@ -27,7 +27,7 @@ func Read(in io.Reader) (string, error) {
 	for {
 		line, err = reader.ReadString('\n')
 
-		if err != nil {
+		if err != nil && err != io.EOF {
 			return out, err
 		}
 

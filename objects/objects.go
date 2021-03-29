@@ -11,11 +11,11 @@ type Object interface {
 
 // Symbol is a generic type for a named object
 type Symbol struct {
-	Name string
+	Val string
 }
 
 func (s Symbol) String() string {
-	return s.Name
+	return s.Val
 }
 
 // String is a custom string type

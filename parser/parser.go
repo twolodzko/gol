@@ -18,7 +18,6 @@ func Parse(r io.Reader) ([]objects.Object, error) {
 	}
 
 	parser := NewParser(tokens)
-
 	parsed, err := parser.Parse()
 
 	if err != nil {
@@ -29,15 +28,16 @@ func Parse(r io.Reader) ([]objects.Object, error) {
 }
 
 type Parser struct {
-	tokens  []token.Token
-	current int
+	tokens          []token.Token
+	current         int
+	openBlocksCount int
 }
 
 func NewParser(t []token.Token) *Parser {
-	return &Parser{t, 0}
+	return &Parser{t, 0, 0}
 }
 
-func (p *Parser) token() (token.Token, bool) {
+func (p *Parser) getToken() (token.Token, bool) {
 	if p.current < len(p.tokens) {
 		return p.tokens[p.current], true
 	}
@@ -64,15 +64,20 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 	}
 
 	for {
-		t, ok := p.token()
+		t, ok := p.getToken()
 		if !ok {
 			return nil, errors.New("index out of bonunds")
 		}
 
 		switch t.Type {
 		case token.RPAREN:
+			p.openBlocksCount--
+			if p.openBlocksCount < 0 {
+				return parsed, errors.New("missing opening brakcet")
+			}
 			return parsed, nil
 		case token.LPAREN:
+			p.openBlocksCount++
 			if ok := p.nextToken(); !ok {
 				return parsed, errors.New("missing closing brakcet")
 			}
@@ -84,7 +89,7 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 		case token.STRING:
 			obj = objects.String{Val: t.Literal}
 		case token.SYMBOL:
-			obj = objects.Symbol{Name: t.Literal}
+			obj = objects.Symbol{Val: t.Literal}
 		}
 
 		if err != nil {
@@ -94,6 +99,9 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 		parsed = append(parsed, obj)
 
 		if ok := p.nextToken(); !ok {
+			if p.openBlocksCount > 0 {
+				return parsed, errors.New("missing closing brakcet")
+			}
 			return parsed, nil
 		}
 	}

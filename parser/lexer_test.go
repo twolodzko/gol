@@ -25,7 +25,7 @@ func Test_isWordBoundary(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		result := isWordBoundary(tt.input)
+		result := IsWordBoundary(tt.input)
 		if result != tt.expected {
 			t.Errorf("for %q expected %v, got: %v", tt.input, tt.expected, result)
 		}

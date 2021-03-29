@@ -55,3 +55,7 @@ func (cr *CodeReader) skipLine() error {
 func isValidRune(r rune) bool {
 	return unicode.IsPrint(r) || unicode.IsSpace(r)
 }
+
+func IsCommentStart(r rune) bool {
+	return r == ';'
+}

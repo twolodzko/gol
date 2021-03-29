@@ -27,12 +27,8 @@ func IsQuotationMark(r rune) bool {
 	return r == '"'
 }
 
-func isWordBoundary(r rune) bool {
+func IsWordBoundary(r rune) bool {
 	return unicode.IsSpace(r) || IsListEnd(r) || IsListStart(r)
-}
-
-func IsCommentStart(r rune) bool {
-	return r == ';'
 }
 
 type Lexer struct {
@@ -59,9 +55,8 @@ func (l *Lexer) Tokenize() ([]token.Token, error) {
 
 func (l *Lexer) nextToken() (token.Token, error) {
 	var (
-		str       string
-		err       error
-		tokenType string
+		str string
+		err error
 	)
 
 	if err = l.NextRune(); err != nil {
@@ -89,18 +84,19 @@ func (l *Lexer) nextToken() (token.Token, error) {
 		if err != nil {
 			return token.Token{}, err
 		}
+		return token.New(str, guessType(str)), err
 	}
+}
 
+func guessType(str string) string {
 	switch {
 	case intRegex.MatchString(str):
-		tokenType = token.INT
+		return token.INT
 	case floatRegex.MatchString(str):
-		tokenType = token.FLOAT
+		return token.FLOAT
 	default:
-		tokenType = token.SYMBOL
+		return token.SYMBOL
 	}
-
-	return token.New(str, tokenType), err
 }
 
 func (l *Lexer) skipWhitespace() error {
@@ -162,7 +158,7 @@ func (l *Lexer) readWord() (string, error) {
 		runes []rune
 	)
 
-	if isWordBoundary(l.Head) {
+	if IsWordBoundary(l.Head) {
 		return "", fmt.Errorf("unexpected character: %q", l.Head)
 	}
 
@@ -177,7 +173,7 @@ func (l *Lexer) readWord() (string, error) {
 			}
 			break
 		}
-		if isWordBoundary(l.Head) {
+		if IsWordBoundary(l.Head) {
 			if err = l.UnreadRune(); err != nil {
 				return "", err
 			}

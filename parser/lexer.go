@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"regexp"
 	"unicode"
@@ -104,9 +105,7 @@ func (l *Lexer) nextToken() (token.Token, error) {
 
 func (l *Lexer) skipWhitespace() error {
 	for {
-		r := l.Head
-
-		if !unicode.IsSpace(r) {
+		if !unicode.IsSpace(l.Head) {
 			return nil
 		}
 
@@ -164,7 +163,7 @@ func (l *Lexer) readWord() (string, error) {
 	)
 
 	if isWordBoundary(l.Head) {
-		return "", errors.New("parsing error")
+		return "", fmt.Errorf("unexpected character: %q", l.Head)
 	}
 
 	for {

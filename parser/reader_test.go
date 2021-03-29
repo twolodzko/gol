@@ -1,37 +1,12 @@
 package parser
 
 import (
-	"fmt"
 	"io"
 	"strings"
 	"testing"
 )
 
 func TestCodeReader(t *testing.T) {
-	var testCases = []struct {
-		input    string
-		expected rune
-	}{
-		{"ax", 'a'},
-		{"123", '1'},
-		{"; this is a comment\nb", 'b'},
-	}
-
-	for _, tt := range testCases {
-		reader := NewCodeReader(strings.NewReader(tt.input))
-		err := reader.NextRune()
-		result := reader.Head
-
-		if result != tt.expected {
-			t.Errorf("expected: '%v', got: '%v'", string(tt.expected), string(result))
-		}
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
-		}
-	}
-}
-
-func TestReadSequence(t *testing.T) {
 	var (
 		err error
 		cr  *CodeReader
@@ -43,11 +18,13 @@ func TestReadSequence(t *testing.T) {
 		expected rune
 		err      error
 	}{
+		{' ', nil}, // comment
 		{'(', nil},
 		{'f', nil},
 		{'o', nil},
 		{'o', nil},
 		{' ', nil},
+		{' ', nil}, // comment
 		{'b', nil},
 		{'a', nil},
 		{'r', nil},
@@ -61,29 +38,17 @@ func TestReadSequence(t *testing.T) {
 
 	cr = NewCodeReader(strings.NewReader(input))
 
-	var runes []rune
-
 	for i, tt := range testCases {
 		err = cr.NextRune()
 
-		if err != nil {
+		if err != nil && err != io.EOF {
 			break
 		}
 
 		result := cr.Head
 
-		fmt.Printf("%q %s\n", result, err)
-
 		if tt.expected != result {
 			t.Errorf("at step %d expected %q, got: %q (%v)", i, tt.expected, result, err)
 		}
-
-		runes = append(runes, result)
-	}
-
-	expected := "(foo bar 42)"
-	result := string(runes)
-	if result != expected {
-		t.Errorf("expected '%s' (%d chars), got: '%s' (%d chars)", expected, len(expected), result, len(result))
 	}
 }

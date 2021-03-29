@@ -16,34 +16,6 @@ type Reader struct {
 	isQuoted        bool
 }
 
-func (reader *Reader) shouldStop(line string) bool {
-	for _, r := range line {
-
-		if r == '\\' {
-			continue
-		}
-
-		switch {
-		case parser.IsQuotationMark(r):
-			reader.isQuoted = !reader.isQuoted
-		// comment - ignore rest of the line
-		case parser.IsCommentStart(r):
-			return false
-		// list - wait till closing brace
-		case parser.IsListStart(r):
-			reader.openBlocksCount++
-		case parser.IsListEnd(r):
-			reader.openBlocksCount--
-
-			if reader.openBlocksCount <= 0 {
-				return true
-			}
-		}
-	}
-
-	return reader.openBlocksCount == 0
-}
-
 func Read(in io.Reader) (string, error) {
 	var (
 		err       error
@@ -74,6 +46,34 @@ func Read(in io.Reader) (string, error) {
 	}
 
 	return out, err
+}
+
+func (reader *Reader) shouldStop(line string) bool {
+	for _, r := range line {
+
+		if r == '\\' {
+			continue
+		}
+
+		switch {
+		case parser.IsQuotationMark(r):
+			reader.isQuoted = !reader.isQuoted
+		// comment - ignore rest of the line
+		case parser.IsCommentStart(r):
+			return false
+		// list - wait till closing brace
+		case parser.IsListStart(r):
+			reader.openBlocksCount++
+		case parser.IsListEnd(r):
+			reader.openBlocksCount--
+
+			if reader.openBlocksCount <= 0 {
+				return true
+			}
+		}
+	}
+
+	return reader.openBlocksCount <= 0
 }
 
 func Repl(in io.Reader) (string, error) {

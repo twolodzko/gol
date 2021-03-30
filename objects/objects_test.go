@@ -33,3 +33,39 @@ func TestString(t *testing.T) {
 		t.Errorf("expected: %v, got: %v", expected, result)
 	}
 }
+
+func TestListHead(t *testing.T) {
+	var testCases = []struct {
+		input    List
+		expected Object
+	}{
+		{NewList(Int{1}), Int{1}},
+		{NewList(Int{1}, Int{2}, Int{3}), Int{1}},
+	}
+
+	for _, tt := range testCases {
+		result := tt.input.Head()
+
+		if !cmp.Equal(tt.expected, result) {
+			t.Errorf("expected: %v, got: %v", tt.expected, result)
+		}
+	}
+}
+
+func TestListTail(t *testing.T) {
+	var testCases = []struct {
+		input    List
+		expected Object
+	}{
+		{NewList(Int{1}), List{}},
+		{NewList(Int{1}, Int{2}, Int{3}), NewList(Int{2}, Int{3})},
+	}
+
+	for _, tt := range testCases {
+		result := tt.input.Tail()
+
+		if !cmp.Equal(tt.expected, result) {
+			t.Errorf("expected: %v, got: %v", tt.expected, result)
+		}
+	}
+}

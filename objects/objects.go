@@ -2,6 +2,7 @@ package objects
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Object interface {
@@ -49,14 +50,11 @@ func (l *List) Push(obj Object) {
 }
 
 func (l List) String() string {
-	s := ""
-	for i, elem := range l.Val {
-		s += fmt.Sprintf("%v", elem)
-		if i < len(l.Val)-1 {
-			s += " "
-		}
+	var str []string
+	for _, elem := range l.Val {
+		str = append(str, elem.String())
 	}
-	return "(" + s + ")"
+	return "(" + strings.Join(str, " ") + ")"
 }
 
 func NewList(objs ...Object) List {

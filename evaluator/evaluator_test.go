@@ -18,7 +18,9 @@ func TestEval(t *testing.T) {
 		{"3.14", objects.Float{Val: 3.14}},
 		{`"Hello World!"`, objects.String{Val: "Hello World!"}},
 		{"()", objects.List{}},
-		{"(str 0 3.14)", objects.NewList(objects.String{Val: "0"}, objects.String{Val: "3.14"})},
+		{`(str 3.14)`, objects.String{Val: "3.14"}},
+		{`(int "3.14")`, objects.Int{Val: 3}},
+		{`(float "1")`, objects.Float{Val: 1}},
 	}
 
 	for _, tt := range testCases {

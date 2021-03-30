@@ -84,15 +84,23 @@ func (l *Lexer) nextToken() (token.Token, error) {
 		if err != nil {
 			return token.Token{}, err
 		}
-		return token.New(str, guessType(str)), err
+		return token.New(str, GuessType(str)), err
 	}
 }
 
-func guessType(str string) string {
+func IsInt(str string) bool {
+	return intRegex.MatchString(str)
+}
+
+func IsFloat(str string) bool {
+	return floatRegex.MatchString(str)
+}
+
+func GuessType(str string) string {
 	switch {
-	case intRegex.MatchString(str):
+	case IsInt(str):
 		return token.INT
-	case floatRegex.MatchString(str):
+	case IsFloat(str):
 		return token.FLOAT
 	default:
 		return token.SYMBOL

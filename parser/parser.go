@@ -83,9 +83,9 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 			}
 			obj, err = p.parseList()
 		case token.INT:
-			obj, err = parseInt(t)
+			obj, err = ParseInt(t.Literal)
 		case token.FLOAT:
-			obj, err = parseFloat(t)
+			obj, err = ParseFloat(t.Literal)
 		case token.STRING:
 			obj = objects.String{Val: t.Literal}
 		case token.SYMBOL:
@@ -107,13 +107,13 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 	}
 }
 
-func parseInt(t token.Token) (objects.Int, error) {
-	i, err := strconv.Atoi(t.Literal)
+func ParseInt(s string) (objects.Int, error) {
+	i, err := strconv.Atoi(s)
 	return objects.Int{Val: i}, err
 }
 
-func parseFloat(t token.Token) (objects.Float, error) {
-	f, err := strconv.ParseFloat(t.Literal, 64)
+func ParseFloat(s string) (objects.Float, error) {
+	f, err := strconv.ParseFloat(s, 64)
 	return objects.Float{Val: f}, err
 }
 

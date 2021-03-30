@@ -22,7 +22,12 @@ func evalList(expr objects.List) (objects.Object, error) {
 		switch name := expr.Head().(type) {
 		case objects.Symbol:
 			args := expr.Tail()
-			return buildins[name.Val](args)
+
+			fn, ok := buildins[name.Val]
+			if !ok {
+				return nil, fmt.Errorf("undefined function: %s", name.Val)
+			}
+			return fn(args)
 		default:
 			return nil, fmt.Errorf("cannot evaluate list: %v", expr)
 		}

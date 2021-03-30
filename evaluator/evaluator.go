@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/twolodzko/goal/objects"
@@ -11,42 +12,46 @@ func Eval(expr objects.Object) (objects.Object, error) {
 	case objects.Int, objects.Float, objects.String:
 		return expr, nil
 	case objects.Symbol:
-		val, ok := baseEnv[expr.Val]
-		if !ok {
-			return nil, fmt.Errorf("undefined variable %v", expr)
+		val, err := baseEnv.Get(expr.Val)
+		if err != nil {
+			return nil, err
 		}
 		return val, nil
 	case objects.List:
-		return evalFn(expr)
+		return evalList(expr)
 	default:
 		return nil, fmt.Errorf("cannot evaluate object of type %T", expr)
 	}
 }
 
-func evalFn(expr objects.List) (objects.Object, error) {
+func evalList(expr objects.List) (objects.Object, error) {
 	if expr.Size() > 0 {
 		switch name := expr.Head().(type) {
 		case objects.Symbol:
 			if name.Val == "quote" {
-				return fixedNumArgs(quote, 1)(expr.Tail())
+				return quote(expr.Tail())
 			}
 
-			args, err := evalAll(expr.Tail())
+			fn, err := baseEnv.Get(name.Val)
 			if err != nil {
 				return nil, err
 			}
 
-			fn, ok := buildins[name.Val]
-			if !ok {
-				return nil, fmt.Errorf("undefined function: %s", name.Val)
+			switch fn := fn.(type) {
+			case fixedArgsFunction:
+				return fn.Call(expr.Tail())
+			case anyArgsFunction:
+				return fn.Call(expr.Tail())
 			}
-
-			return fn(args)
 		default:
 			return nil, fmt.Errorf("cannot evaluate list: %v", expr)
 		}
 	}
 	return expr, nil
+}
+
+func evalFn(fn Function, exprs []objects.Object) (objects.Object, error) {
+	return fn.Call(exprs)
 }
 
 func evalAll(exprs []objects.Object) ([]objects.Object, error) {
@@ -58,4 +63,11 @@ func evalAll(exprs []objects.Object) ([]objects.Object, error) {
 		exprs[i] = val
 	}
 	return exprs, nil
+}
+
+func quote(expr []objects.Object) (objects.Object, error) {
+	if len(expr) != 1 {
+		return nil, errors.New("wrong number of arguments")
+	}
+	return expr[0], nil
 }

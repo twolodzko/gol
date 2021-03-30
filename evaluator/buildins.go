@@ -1,8 +1,6 @@
 package evaluator
 
 import (
-	"errors"
-
 	"github.com/twolodzko/goal/objects"
 )
 
@@ -13,41 +11,33 @@ var (
 	False = objects.Symbol{Val: "false"}
 )
 
-var buildins = map[string]buildin{
-	"str":   fixedNumArgs(toString, 1),
-	"int":   fixedNumArgs(toInt, 1),
-	"float": fixedNumArgs(toFloat, 1),
-	"true?": fixedNumArgs(isTrue, 1),
-	"not":   fixedNumArgs(notTrue, 1),
-	"list":  func(exprs []objects.Object) (objects.Object, error) { return objects.List{Val: exprs}, nil },
-	"quote": nil,
+var buildins = map[string]objects.Object{
+	"true":  True,
+	"false": False,
+	"str":   fixedArgsFunction{toString, 1},
+	"int":   fixedArgsFunction{toInt, 1},
+	"float": fixedArgsFunction{toFloat, 1},
+	"true?": fixedArgsFunction{isTrue, 1},
+	"not":   fixedArgsFunction{notTrue, 1},
+	"list":  anyArgsFunction{list},
+	"quote": anyArgsFunction{nil},
 }
 
-func fixedNumArgs(fn func(objects.Object) (objects.Object, error), numArgs int) buildin {
-	return func(exprs []objects.Object) (objects.Object, error) {
-		if numArgs == len(exprs) {
-			return fn(exprs[0])
-		} else {
-			return nil, errors.New("wrong number of arguments")
-		}
-	}
-}
-
-func isTrue(expr objects.Object) (objects.Object, error) {
+func isTrue(expr []objects.Object) (objects.Object, error) {
 	// FIXME: need to evaluate the symbols!
-	if expr == False {
+	if expr[0] == False {
 		return False, nil
 	}
 	return True, nil
 }
 
-func notTrue(expr objects.Object) (objects.Object, error) {
-	if expr == False {
+func notTrue(expr []objects.Object) (objects.Object, error) {
+	if expr[0] == False {
 		return True, nil
 	}
 	return False, nil
 }
 
-func quote(expr objects.Object) (objects.Object, error) {
-	return expr, nil
+func list(exprs []objects.Object) (objects.Object, error) {
+	return objects.List{Val: exprs}, nil
 }

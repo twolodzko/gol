@@ -55,10 +55,10 @@ func TestListHead(t *testing.T) {
 func TestListTail(t *testing.T) {
 	var testCases = []struct {
 		input    List
-		expected Object
+		expected []Object
 	}{
-		{NewList(Int{1}), List{}},
-		{NewList(Int{1}, Int{2}, Int{3}), NewList(Int{2}, Int{3})},
+		{NewList(Int{1}), nil},
+		{NewList(Int{1}, Int{2}, Int{3}), []Object{Int{2}, Int{3}}},
 	}
 
 	for _, tt := range testCases {

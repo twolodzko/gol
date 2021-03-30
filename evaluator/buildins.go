@@ -6,7 +6,7 @@ import (
 	"github.com/twolodzko/goal/objects"
 )
 
-type buildin = func(objects.List) (objects.Object, error)
+type buildin = func([]objects.Object) (objects.Object, error)
 
 var (
 	True  = objects.Symbol{Val: "true"}
@@ -19,29 +19,29 @@ var buildins = map[string]buildin{
 	"float": fixedNumArgs(toFloat, 1),
 	"true?": fixedNumArgs(isTrue, 1),
 	"not":   fixedNumArgs(notTrue, 1),
-	"list":  func(o objects.List) (objects.Object, error) { return o, nil },
+	"list":  func(exprs []objects.Object) (objects.Object, error) { return objects.List{Val: exprs}, nil },
 }
 
 func fixedNumArgs(fn func(objects.Object) (objects.Object, error), numArgs int) buildin {
-	return func(o objects.List) (objects.Object, error) {
-		if numArgs == o.Size() {
-			return fn(o.Head())
+	return func(exprs []objects.Object) (objects.Object, error) {
+		if numArgs == len(exprs) {
+			return fn(exprs[0])
 		} else {
 			return nil, errors.New("wrong number of arguments")
 		}
 	}
 }
 
-func isTrue(o objects.Object) (objects.Object, error) {
+func isTrue(expr objects.Object) (objects.Object, error) {
 	// FIXME: need to evaluate the symbols!
-	if o == False {
+	if expr == False {
 		return False, nil
 	}
 	return True, nil
 }
 
-func notTrue(o objects.Object) (objects.Object, error) {
-	if o == False {
+func notTrue(expr objects.Object) (objects.Object, error) {
+	if expr == False {
 		return True, nil
 	}
 	return False, nil

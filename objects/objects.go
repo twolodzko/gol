@@ -73,10 +73,10 @@ func (l *List) Head() Object {
 	return l.Val[0]
 }
 
-func (l *List) Tail() List {
+func (l *List) Tail() []Object {
 	tail := l.Val[1:]
 	if len(tail) > 0 {
-		return List{tail}
+		return tail
 	}
-	return List{}
+	return nil
 }

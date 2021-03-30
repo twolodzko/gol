@@ -7,8 +7,8 @@ import (
 	"github.com/twolodzko/goal/parser"
 )
 
-func toString(o objects.Object) (objects.Object, error) {
-	switch o := o.(type) {
+func toString(expr objects.Object) (objects.Object, error) {
+	switch o := expr.(type) {
 	case objects.String:
 		return o, nil
 	default:
@@ -20,8 +20,8 @@ func floatToInt(f objects.Float) objects.Int {
 	return objects.Int{Val: int(f.Val)}
 }
 
-func toInt(o objects.Object) (objects.Object, error) {
-	switch o := o.(type) {
+func toInt(expr objects.Object) (objects.Object, error) {
+	switch o := expr.(type) {
 	case objects.Int:
 		return o, nil
 	case objects.Float:
@@ -48,8 +48,8 @@ func intToFloat(i objects.Int) objects.Float {
 	return objects.Float{Val: float64(i.Val)}
 }
 
-func toFloat(o objects.Object) (objects.Object, error) {
-	switch o := o.(type) {
+func toFloat(expr objects.Object) (objects.Object, error) {
+	switch o := expr.(type) {
 	case objects.Float:
 		return o, nil
 	case objects.Int:

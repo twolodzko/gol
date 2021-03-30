@@ -20,6 +20,7 @@ var buildins = map[string]buildin{
 	"true?": fixedNumArgs(isTrue, 1),
 	"not":   fixedNumArgs(notTrue, 1),
 	"list":  func(exprs []objects.Object) (objects.Object, error) { return objects.List{Val: exprs}, nil },
+	"quote": nil,
 }
 
 func fixedNumArgs(fn func(objects.Object) (objects.Object, error), numArgs int) buildin {
@@ -45,4 +46,8 @@ func notTrue(expr objects.Object) (objects.Object, error) {
 		return True, nil
 	}
 	return False, nil
+}
+
+func quote(expr objects.Object) (objects.Object, error) {
+	return expr, nil
 }

@@ -10,6 +10,12 @@ func Eval(expr objects.Object) (objects.Object, error) {
 	switch expr := expr.(type) {
 	case objects.Int, objects.Float, objects.String:
 		return expr, nil
+	case objects.Symbol:
+		val, ok := baseEnv[expr.Val]
+		if !ok {
+			return nil, fmt.Errorf("undefined variable %v", expr)
+		}
+		return val, nil
 	case objects.List:
 		return evalFn(expr)
 	default:
@@ -21,6 +27,10 @@ func evalFn(expr objects.List) (objects.Object, error) {
 	if expr.Size() > 0 {
 		switch name := expr.Head().(type) {
 		case objects.Symbol:
+			if name.Val == "quote" {
+				return fixedNumArgs(quote, 1)(expr.Tail())
+			}
+
 			args, err := evalAll(expr.Tail())
 			if err != nil {
 				return nil, err

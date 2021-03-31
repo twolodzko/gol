@@ -4,35 +4,35 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/twolodzko/goal/objects"
+	. "github.com/twolodzko/goal/types"
 )
 
-func Eval(expr objects.Object) (objects.Object, error) {
+func Eval(expr Any) (Any, error) {
 	switch expr := expr.(type) {
-	case objects.Int, objects.Float, objects.String:
+	case Int, Float, String:
 		return expr, nil
-	case objects.Symbol:
-		val, err := baseEnv.Get(expr.Val)
+	case Symbol:
+		val, err := baseEnv.Get(string(expr))
 		if err != nil {
 			return nil, err
 		}
 		return val, nil
-	case objects.List:
+	case List:
 		return evalList(expr)
 	default:
 		return nil, fmt.Errorf("cannot evaluate object of type %T", expr)
 	}
 }
 
-func evalList(expr objects.List) (objects.Object, error) {
-	if expr.Size() > 0 {
+func evalList(expr List) (Any, error) {
+	if len(expr) > 0 {
 		switch name := expr.Head().(type) {
-		case objects.Symbol:
-			if name.Val == "quote" {
+		case Symbol:
+			if name == "quote" {
 				return quote(expr.Tail())
 			}
 
-			fn, err := baseEnv.Get(name.Val)
+			fn, err := baseEnv.Get(string(name))
 			if err != nil {
 				return nil, err
 			}
@@ -47,14 +47,14 @@ func evalList(expr objects.List) (objects.Object, error) {
 			return nil, fmt.Errorf("cannot evaluate list: %v", expr)
 		}
 	}
-	return expr, nil
+	return List{}, nil
 }
 
-func evalFn(fn Function, exprs []objects.Object) (objects.Object, error) {
+func evalFn(fn Function, exprs List) (Any, error) {
 	return fn.Call(exprs)
 }
 
-func evalAll(exprs []objects.Object) ([]objects.Object, error) {
+func evalAll(exprs List) (List, error) {
 	for i, expr := range exprs {
 		val, err := Eval(expr)
 		if err != nil {
@@ -65,7 +65,7 @@ func evalAll(exprs []objects.Object) ([]objects.Object, error) {
 	return exprs, nil
 }
 
-func quote(expr []objects.Object) (objects.Object, error) {
+func quote(expr List) (Any, error) {
 	if len(expr) != 1 {
 		return nil, errors.New("wrong number of arguments")
 	}

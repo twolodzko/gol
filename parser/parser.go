@@ -5,11 +5,11 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/twolodzko/goal/objects"
 	"github.com/twolodzko/goal/token"
+	. "github.com/twolodzko/goal/types"
 )
 
-func Parse(r io.Reader) ([]objects.Object, error) {
+func Parse(r io.Reader) (List, error) {
 	lexer := NewLexer(r)
 	tokens, err := lexer.Tokenize()
 
@@ -52,10 +52,10 @@ func (p *Parser) nextToken() bool {
 	return false
 }
 
-func (p *Parser) Parse() ([]objects.Object, error) {
+func (p *Parser) Parse() (List, error) {
 	var (
-		parsed []objects.Object
-		obj    objects.Object
+		parsed List
+		obj    Any
 		err    error
 	)
 
@@ -66,20 +66,20 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 	for {
 		t, ok := p.getToken()
 		if !ok {
-			return nil, errors.New("index out of bonunds")
+			return nil, errors.New("index out of bounds")
 		}
 
 		switch t.Type {
 		case token.RPAREN:
 			p.openBlocksCount--
 			if p.openBlocksCount < 0 {
-				return parsed, errors.New("missing opening brakcet")
+				return parsed, errors.New("missing opening brackets")
 			}
 			return parsed, nil
 		case token.LPAREN:
 			p.openBlocksCount++
 			if ok := p.nextToken(); !ok {
-				return parsed, errors.New("missing closing brakcet")
+				return parsed, errors.New("missing closing brackets")
 			}
 			obj, err = p.parseList()
 		case token.INT:
@@ -87,9 +87,9 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 		case token.FLOAT:
 			obj, err = ParseFloat(t.Literal)
 		case token.STRING:
-			obj = objects.String{Val: t.Literal}
+			obj = String(t.Literal)
 		case token.SYMBOL:
-			obj = objects.Symbol{Val: t.Literal}
+			obj = Symbol(t.Literal)
 		}
 
 		if err != nil {
@@ -107,17 +107,17 @@ func (p *Parser) Parse() ([]objects.Object, error) {
 	}
 }
 
-func ParseInt(s string) (objects.Int, error) {
+func ParseInt(s string) (Int, error) {
 	i, err := strconv.Atoi(s)
-	return objects.Int{Val: i}, err
+	return Int(i), err
 }
 
-func ParseFloat(s string) (objects.Float, error) {
+func ParseFloat(s string) (Float, error) {
 	f, err := strconv.ParseFloat(s, 64)
-	return objects.Float{Val: f}, err
+	return Float(f), err
 }
 
-func (p *Parser) parseList() (objects.List, error) {
+func (p *Parser) parseList() (List, error) {
 	l, err := p.Parse()
-	return objects.List{Val: l}, err
+	return List(l), err
 }

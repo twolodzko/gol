@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/twolodzko/goal/objects"
+	. "github.com/twolodzko/goal/types"
 )
 
-type Fn = func([]objects.Object) (objects.Object, error)
+type Fn = func(List) (Any, error)
 
 type Function interface {
-	Call([]objects.Object) (objects.Object, error)
+	Call(List) (Any, error)
 }
 
 type fixedArgsFunction struct {
@@ -18,7 +18,7 @@ type fixedArgsFunction struct {
 	numArgs int
 }
 
-func (fn *fixedArgsFunction) Call(args []objects.Object) (objects.Object, error) {
+func (fn *fixedArgsFunction) Call(args List) (Any, error) {
 	if fn.numArgs != len(args) {
 		return nil, errors.New("wrong number of arguments")
 	}
@@ -33,7 +33,7 @@ type anyArgsFunction struct {
 	body Fn
 }
 
-func (fn *anyArgsFunction) Call(args []objects.Object) (objects.Object, error) {
+func (fn *anyArgsFunction) Call(args List) (Any, error) {
 	return fn.body(args)
 }
 

@@ -6,27 +6,27 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/twolodzko/goal/objects"
+	. "github.com/twolodzko/goal/types"
 )
 
 func TestParse(t *testing.T) {
 	var testCases = []struct {
 		input    string
-		expected []objects.Object
+		expected List
 	}{
 		{" ", nil},
 		{"\n", nil},
-		{"bar ", []objects.Object{objects.Symbol{Val: "bar"}}},
-		{"foo bar\n", []objects.Object{objects.Symbol{Val: "foo"}, objects.Symbol{Val: "bar"}}},
-		{"42", []objects.Object{objects.Int{Val: 42}}},
-		{`"Hello World!" `, []objects.Object{objects.String{Val: "Hello World!"}}},
-		{"1e-7", []objects.Object{objects.Float{Val: 1e-7}}},
-		{" \n\t bar", []objects.Object{objects.Symbol{Val: "bar"}}},
-		{"((1 2))", []objects.Object{objects.NewList(objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}))}},
-		{`(foo 42 "bar")`, []objects.Object{objects.NewList(objects.Symbol{Val: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})}},
-		{"  \n\t(\nfoo \n\n42\t\"bar\")", []objects.Object{objects.NewList(objects.Symbol{Val: "foo"}, objects.Int{Val: 42}, objects.String{Val: "bar"})}},
-		{"(1 2) (3 4)", []objects.Object{objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}), objects.NewList(objects.Int{Val: 3}, objects.Int{Val: 4})}},
-		{"(1 2)\n\n(3\n4)", []objects.Object{objects.NewList(objects.Int{Val: 1}, objects.Int{Val: 2}), objects.NewList(objects.Int{Val: 3}, objects.Int{Val: 4})}},
+		{"bar ", List{Symbol("bar")}},
+		{"foo bar\n", List{Symbol("foo"), Symbol("bar")}},
+		{"42", List{Int(42)}},
+		{`"Hello World!" `, List{String("Hello World!")}},
+		{"1e-7", List{Float(1e-7)}},
+		{" \n\t bar", List{Symbol("bar")}},
+		{"((1 2))", List{List{List{Int(1), Int(2)}}}},
+		{`(foo 42 "bar")`, List{List{Symbol("foo"), Int(42), String("bar")}}},
+		{"  \n\t(\nfoo \n\n42\t\"bar\")", List{List{Symbol("foo"), Int(42), String("bar")}}},
+		{"(1 2) (3 4)", List{List{Int(1), Int(2)}, List{Int(3), Int(4)}}},
+		{"(1 2)\n\n(3\n4)", List{List{Int(1), Int(2)}, List{Int(3), Int(4)}}},
 	}
 
 	for _, tt := range testCases {

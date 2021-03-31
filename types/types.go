@@ -16,7 +16,7 @@ type (
 )
 
 func (s String) String() string {
-	return fmt.Sprintf("%v", string(s))
+	return fmt.Sprintf("\"%s\"", string(s))
 }
 
 func (l List) String() string {

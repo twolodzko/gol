@@ -98,6 +98,8 @@ func IsFloat(str string) bool {
 
 func GuessType(str string) string {
 	switch {
+	case str == "true", str == "false":
+		return token.BOOL
 	case IsInt(str):
 		return token.INT
 	case IsFloat(str):

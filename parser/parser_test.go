@@ -16,6 +16,7 @@ func TestParse(t *testing.T) {
 	}{
 		{" ", nil},
 		{"\n", nil},
+		{"true", List{Bool(true)}},
 		{"bar ", List{Symbol("bar")}},
 		{"foo bar\n", List{Symbol("foo"), Symbol("bar")}},
 		{"42", List{Int(42)}},

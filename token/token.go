@@ -3,6 +3,7 @@ package token
 import "fmt"
 
 const (
+	BOOL   = "bool"
 	INT    = "int"
 	FLOAT  = "float"
 	STRING = "str"
@@ -24,7 +25,7 @@ func (t Token) String() string {
 	switch t.Type {
 	case LPAREN, RPAREN:
 		return t.Type
-	case STRING, INT, FLOAT, SYMBOL:
+	case BOOL, INT, FLOAT, STRING, SYMBOL:
 		return fmt.Sprintf("%q:%s", t.Literal, t.Type)
 	default:
 		return "<ERR>"

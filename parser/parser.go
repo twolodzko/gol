@@ -102,7 +102,7 @@ func (p *Parser) Parse() (List, error) {
 
 		if ok := p.nextToken(); !ok {
 			if p.openBlocksCount > 0 {
-				return parsed, errors.New("missing closing brakcet")
+				return parsed, errors.New("missing closing bracket")
 			}
 			return parsed, nil
 		}

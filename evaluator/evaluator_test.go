@@ -30,10 +30,10 @@ func TestEval(t *testing.T) {
 		{`(quote foo)`, Symbol("foo")},
 		{`(quote (foo bar))`, List{Symbol("foo"), Symbol("bar")}},
 		{`(size ())`, Int(0)},
-		{`(size (1 2 3))`, Int(3)},
+		{`(size (list 1 2 3))`, Int(3)},
 		{`(size "")`, Int(0)},
 		{`(size "hello")`, Int(5)},
-		{`(size (1 2 3) () (1, 2) "abcd")`, List{Int(3), Int(0), Int(2), Int(4)}},
+		{`(size (list 1 2 3) () (quote foo bar) "abcd")`, List{Int(3), Int(0), Int(2), Int(4)}},
 	}
 
 	for _, tt := range testCases {

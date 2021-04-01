@@ -11,7 +11,7 @@ func Eval(expr Any) (Any, error) {
 	case Bool, Int, Float, String:
 		return expr, nil
 	case Symbol:
-		val, err := baseEnv.Get(string(expr))
+		val, err := baseEnv.Get(expr)
 		if err != nil {
 			return nil, err
 		}
@@ -24,17 +24,28 @@ func Eval(expr Any) (Any, error) {
 }
 
 func evalList(expr List) (Any, error) {
+	var args []Any
+	fnName := expr.Head()
+
 	if len(expr) > 0 {
-		switch name := expr.Head().(type) {
+		switch fnName := fnName.(type) {
 		case Symbol:
-			fn, err := baseEnv.Get(string(name))
+			fn, err := baseEnv.Get(fnName)
 			if err != nil {
 				return nil, err
 			}
 
 			switch fn := fn.(type) {
 			case buildin:
-				args := expr.Tail()
+				args = expr.Tail()
+
+				if fnName != "quote" {
+					args, err = evalAll(args)
+					if err != nil {
+						return nil, err
+					}
+				}
+
 				return fn(args)
 			default:
 				return nil, fmt.Errorf("%v is not a function", fn)

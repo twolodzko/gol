@@ -1,7 +1,6 @@
 package evaluator
 
 import (
-	"errors"
 	"fmt"
 
 	. "github.com/twolodzko/goal/types"
@@ -14,11 +13,12 @@ type Enviroment struct {
 	parent  *Enviroment
 }
 
-func (env *Enviroment) Get(name string) (Any, error) {
+func (env *Enviroment) Get(sym Symbol) (Any, error) {
+	name := string(sym)
 	val, ok := env.objects[name]
 	if !ok {
 		if env.parent != nil {
-			return env.parent.Get(name)
+			return env.parent.Get(sym)
 		} else {
 			return nil, fmt.Errorf("object %s not found", name)
 		}
@@ -26,10 +26,8 @@ func (env *Enviroment) Get(name string) (Any, error) {
 	return val, nil
 }
 
-func (env *Enviroment) Set(name string, val Any) error {
-	if env.parent == nil {
-		return errors.New("cannot set values in base enviroment")
-	}
+func (env *Enviroment) Set(sym Symbol, val Any) error {
+	name := string(sym)
 	env.objects[name] = val
 	return nil
 }

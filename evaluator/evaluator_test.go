@@ -34,6 +34,8 @@ func TestEval(t *testing.T) {
 		{`(size "")`, Int(0)},
 		{`(size "hello")`, Int(5)},
 		{`(size (list 1 2 3) () (quote foo bar) "abcd")`, List{Int(3), Int(0), Int(2), Int(4)}},
+		{`(head (list 1 2 3))`, Int(1)},
+		{`(tail (list 1 2 3))`, List{Int(2), Int(3)}},
 		// math
 		{`(int+ 2 2)`, Int(4)},
 		{`(int+ 2 2 2 2)`, Int(8)},

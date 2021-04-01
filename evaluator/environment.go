@@ -20,7 +20,7 @@ func (env *Enviroment) Get(sym Symbol) (Any, error) {
 		if env.parent != nil {
 			return env.parent.Get(sym)
 		} else {
-			return nil, fmt.Errorf("object %s not found", name)
+			return nil, fmt.Errorf("unable to resolve %s in this context", name)
 		}
 	}
 	return val, nil

@@ -1,6 +1,8 @@
 package evaluator
 
 import (
+	"fmt"
+
 	. "github.com/twolodzko/goal/types"
 )
 
@@ -10,6 +12,8 @@ var buildins = map[string]Any{
 	"list":  listFn,
 	"quote": vectorize(quoteFn),
 	"size":  vectorize(sizeFn),
+	"head":  headFn,
+	"tail":  tailFn,
 	// type conversions
 	"str":   vectorize(toString),
 	"int":   vectorize(toInt),
@@ -65,4 +69,30 @@ func sizeFn(obj Any) (Any, error) {
 	default:
 		return 0, nil
 	}
+}
+
+func headFn(obj []Any) (Any, error) {
+	if len(obj) != 1 {
+		return nil, &errNumArgs{len(obj)}
+	}
+
+	l, ok := obj[0].(List)
+	if !ok {
+		return nil, fmt.Errorf("%v is not a list", obj[0])
+	}
+
+	return l.Head(), nil
+}
+
+func tailFn(obj []Any) (Any, error) {
+	if len(obj) != 1 {
+		return nil, &errNumArgs{len(obj)}
+	}
+
+	l, ok := obj[0].(List)
+	if !ok {
+		return nil, fmt.Errorf("%v is not a list", obj[0])
+	}
+
+	return l.Tail(), nil
 }

@@ -28,10 +28,11 @@ func main() {
 
 		if err != nil {
 			print(fmt.Sprintf("ERROR: %s", err))
-		} else {
-			for _, obj := range out {
-				print(fmt.Sprintf("%v", obj))
-			}
+			continue
+		}
+
+		for _, obj := range out {
+			print(fmt.Sprintf("%v", obj))
 		}
 	}
 }

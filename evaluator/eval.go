@@ -42,7 +42,7 @@ func evalList(expr List) (Any, error) {
 
 	fnName, ok := expr.Head().(Symbol)
 	if !ok {
-		return nil, fmt.Errorf("%q is not callable", fnName)
+		return nil, fmt.Errorf("%v is not callable", expr.Head())
 	}
 	args := expr.Tail()
 

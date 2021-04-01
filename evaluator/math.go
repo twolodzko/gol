@@ -6,7 +6,7 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func accumulateFnInt(fn func(Int, Int) Int) func([]Any) (Any, error) {
+func foldFnInt(fn func(Int, Int) Int) func([]Any) (Any, error) {
 	return func(arr []Any) (Any, error) {
 		if len(arr) < 2 {
 			return nil, fmt.Errorf("wrong number of arguments (%d)", len(arr))
@@ -28,7 +28,7 @@ func accumulateFnInt(fn func(Int, Int) Int) func([]Any) (Any, error) {
 	}
 }
 
-func accumulateFnFloat(fn func(Float, Float) Float) func([]Any) (Any, error) {
+func foldFnFloat(fn func(Float, Float) Float) func([]Any) (Any, error) {
 	return func(arr []Any) (Any, error) {
 		if len(arr) < 2 {
 			return nil, fmt.Errorf("wrong number of arguments (%d)", len(arr))

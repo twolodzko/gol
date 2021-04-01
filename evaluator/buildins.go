@@ -20,14 +20,14 @@ var buildins = map[string]Any{
 	"and":   andFn,
 	"or":    orFn,
 	// math
-	"int+":   accumulateFnInt(func(x, y Int) Int { return x + y }),
-	"int-":   accumulateFnInt(func(x, y Int) Int { return x - y }),
-	"int*":   accumulateFnInt(func(x, y Int) Int { return x * y }),
-	"int/":   accumulateFnInt(func(x, y Int) Int { return x / y }),
-	"float+": accumulateFnFloat(func(x, y Float) Float { return x + y }),
-	"float-": accumulateFnFloat(func(x, y Float) Float { return x - y }),
-	"float*": accumulateFnFloat(func(x, y Float) Float { return x * y }),
-	"float/": accumulateFnFloat(func(x, y Float) Float { return x / y }),
+	"int+":   foldFnInt(func(x, y Int) Int { return x + y }),
+	"int-":   foldFnInt(func(x, y Int) Int { return x - y }),
+	"int*":   foldFnInt(func(x, y Int) Int { return x * y }),
+	"int/":   foldFnInt(func(x, y Int) Int { return x / y }),
+	"float+": foldFnFloat(func(x, y Float) Float { return x + y }),
+	"float-": foldFnFloat(func(x, y Float) Float { return x - y }),
+	"float*": foldFnFloat(func(x, y Float) Float { return x * y }),
+	"float/": foldFnFloat(func(x, y Float) Float { return x / y }),
 }
 
 func vectorize(fn func(Any) (Any, error)) buildin {

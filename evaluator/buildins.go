@@ -4,29 +4,44 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-type buildin = func(List) (Any, error)
+type buildin = func([]Any) (Any, error)
 
 var buildins = map[string]Any{
 	"true":  true,
 	"false": false,
-	"str":   fixedArgsFunction{toString, 1},
-	"int":   fixedArgsFunction{toInt, 1},
-	"float": fixedArgsFunction{toFloat, 1},
-	// "true?": fixedArgsFunction{isTrue, 1},
-	// "not":   fixedArgsFunction{notTrue, 1},
-	"list":  anyArgsFunction{list},
-	"quote": anyArgsFunction{nil},
+	"str":   vectorize(toString),
+	"int":   vectorize(toInt),
+	"float": vectorize(toFloat),
+	"list":  list,
+	"quote": vectorize(quote),
+	"true?": vectorize(isTrue),
+	"not":   vectorize(notTrue),
+	"and":   andFn,
+	"or":    orFn,
 }
 
-// func isTrue(expr List) (Any, error) {
-// 	return expr[0] != false, nil
-// }
+func vectorize(fn func(Any) (Any, error)) buildin {
+	return func(objs []Any) (Any, error) {
+		if len(objs) == 1 {
+			return fn(objs[0])
+		}
 
-// func notTrue(expr List) (Any, error) {
-// 	b, _ = !isTrue(expr[0])
-// 	return !b.(bool), nil
-// }
+		var out List
+		for _, x := range objs {
+			result, err := fn(x)
+			if err != nil {
+				return out, err
+			}
+			out = append(out, result)
+		}
+		return out, nil
+	}
+}
 
-func list(exprs List) (Any, error) {
-	return exprs, nil
+func list(exprs []Any) (Any, error) {
+	return List(exprs), nil
+}
+
+func quote(obj Any) (Any, error) {
+	return obj, nil
 }

@@ -7,8 +7,8 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func toString(expr List) (Any, error) {
-	switch obj := expr[0].(type) {
+func toString(obj Any) (Any, error) {
+	switch obj := obj.(type) {
 	case String:
 		return obj, nil
 	default:
@@ -16,16 +16,12 @@ func toString(expr List) (Any, error) {
 	}
 }
 
-func floatToInt(f Float) Int {
-	return Int(int(f))
-}
-
-func toInt(expr List) (Any, error) {
-	switch obj := expr[0].(type) {
+func toInt(obj Any) (Any, error) {
+	switch obj := obj.(type) {
 	case Int:
 		return obj, nil
 	case Float:
-		return floatToInt(obj), nil
+		return Int(obj), nil
 	case String:
 		switch {
 		case parser.IsInt(string(obj)):
@@ -35,25 +31,21 @@ func toInt(expr List) (Any, error) {
 			if err != nil {
 				return nil, err
 			}
-			return floatToInt(f), nil
+			return Int(f), nil
 		default:
-			return nil, fmt.Errorf("cannot parse %v to int", obj)
+			return nil, fmt.Errorf("cannot convert %v to int", obj)
 		}
 	default:
-		return nil, fmt.Errorf("cannot convert object of type %T to int", obj)
+		return nil, fmt.Errorf("cannot convert %v of type %T to int", obj, obj)
 	}
 }
 
-func intToFloat(i Int) Float {
-	return Float(float64(i))
-}
-
-func toFloat(expr List) (Any, error) {
-	switch obj := expr[0].(type) {
+func toFloat(obj Any) (Any, error) {
+	switch obj := obj.(type) {
 	case Float:
 		return obj, nil
 	case Int:
-		return intToFloat(obj), nil
+		return Float(obj), nil
 	case String:
 		switch {
 		case parser.IsFloat(string(obj)):
@@ -63,11 +55,11 @@ func toFloat(expr List) (Any, error) {
 			if err != nil {
 				return nil, err
 			}
-			return intToFloat(i), nil
+			return Float(i), nil
 		default:
-			return nil, fmt.Errorf("cannot parse %v to float", obj)
+			return nil, fmt.Errorf("cannot convert %v to float", obj)
 		}
 	default:
-		return nil, fmt.Errorf("cannot convert object of type %T to float", obj)
+		return nil, fmt.Errorf("cannot convert %v of type %T to float", obj, obj)
 	}
 }

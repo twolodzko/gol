@@ -1,7 +1,6 @@
 package evaluator
 
 import (
-	"errors"
 	"fmt"
 
 	. "github.com/twolodzko/goal/types"
@@ -9,18 +8,18 @@ import (
 
 func Eval(expr Any) (Any, error) {
 	switch expr := expr.(type) {
-	case Int, Float, String:
+	case Bool, Int, Float, String:
 		return expr, nil
 	case Symbol:
 		val, err := baseEnv.Get(string(expr))
 		if err != nil {
 			return nil, err
 		}
-		return val, nil
+		return Eval(val)
 	case List:
 		return evalList(expr)
 	default:
-		return nil, fmt.Errorf("cannot evaluate object of type %T", expr)
+		return nil, fmt.Errorf("cannot evaluate %v of type %T", expr, expr)
 	}
 }
 
@@ -28,20 +27,17 @@ func evalList(expr List) (Any, error) {
 	if len(expr) > 0 {
 		switch name := expr.Head().(type) {
 		case Symbol:
-			if name == "quote" {
-				return quote(expr.Tail())
-			}
-
 			fn, err := baseEnv.Get(string(name))
 			if err != nil {
 				return nil, err
 			}
 
 			switch fn := fn.(type) {
-			case fixedArgsFunction:
-				return fn.Call(expr.Tail())
-			case anyArgsFunction:
-				return fn.Call(expr.Tail())
+			case buildin:
+				args := expr.Tail()
+				return fn(args)
+			default:
+				return nil, fmt.Errorf("%v is not a function", fn)
 			}
 		default:
 			return nil, fmt.Errorf("cannot evaluate list: %v", expr)
@@ -50,24 +46,14 @@ func evalList(expr List) (Any, error) {
 	return List{}, nil
 }
 
-func evalFn(fn Function, exprs List) (Any, error) {
-	return fn.Call(exprs)
-}
-
-func evalAll(exprs List) (List, error) {
-	for i, expr := range exprs {
+func evalAll(exprs []Any) (List, error) {
+	var out []Any
+	for _, expr := range exprs {
 		val, err := Eval(expr)
 		if err != nil {
 			return nil, err
 		}
-		exprs[i] = val
+		out = append(out, val)
 	}
-	return exprs, nil
-}
-
-func quote(expr List) (Any, error) {
-	if len(expr) != 1 {
-		return nil, errors.New("wrong number of arguments")
-	}
-	return expr[0], nil
+	return out, nil
 }

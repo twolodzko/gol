@@ -4,13 +4,16 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func isTrue(obj Any) (Any, error) {
-	return Bool(obj != nil && obj != false), nil
+func isTrue(obj Any) bool {
+	return obj != nil && obj != false
 }
 
-func notTrue(obj Any) (Any, error) {
-	b, _ := isTrue(obj)
-	return !b.(Bool), nil
+func isTrueFn(obj Any) (Any, error) {
+	return Bool(isTrue(obj)), nil
+}
+
+func notTrueFn(obj Any) (Any, error) {
+	return Bool(!isTrue(obj)), nil
 }
 
 func andFn(objs []Any) (Any, error) {
@@ -19,7 +22,7 @@ func andFn(objs []Any) (Any, error) {
 	}
 
 	for _, x := range objs {
-		if ok, _ := notTrue(x); ok.(Bool) {
+		if !isTrue(x) {
 			return Bool(false), nil
 		}
 	}
@@ -28,7 +31,7 @@ func andFn(objs []Any) (Any, error) {
 
 func orFn(objs []Any) (Any, error) {
 	for _, x := range objs {
-		if ok, _ := isTrue(x); ok.(Bool) {
+		if isTrue(x) {
 			return Bool(true), nil
 		}
 	}

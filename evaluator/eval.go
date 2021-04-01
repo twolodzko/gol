@@ -46,22 +46,39 @@ func evalList(expr List) (Any, error) {
 	}
 	args := expr.Tail()
 
-	obj, err := baseEnv.Get(fnName)
-	if err != nil {
-		return nil, err
-	}
+	switch fnName {
+	case Symbol("quote"):
+		if len(args) == 1 {
+			return args[0], nil
+		}
+		return args, nil
+	case Symbol("if"):
+		if len(args) != 3 {
+			return nil, &errNumArgs{len(args)}
+		}
+		cond, err := EvalExpr(args[0])
+		if err != nil {
+			return nil, err
+		}
+		if isTrue(cond) {
+			return EvalExpr(args[1])
+		}
+		return EvalExpr(args[2])
+	default:
+		obj, err := baseEnv.Get(fnName)
+		if err != nil {
+			return nil, err
+		}
 
-	fn, ok := obj.(buildIn)
-	if !ok {
-		return nil, fmt.Errorf("%q is not callable", fnName)
-	}
+		fn, ok := obj.(buildIn)
+		if !ok {
+			return nil, fmt.Errorf("%q is not callable", fnName)
+		}
 
-	if fnName != "quote" {
 		args, err = EvalAll(args)
 		if err != nil {
 			return nil, err
 		}
+		return fn(args)
 	}
-
-	return fn(args)
 }

@@ -10,18 +10,18 @@ type buildIn = func([]Any) (Any, error)
 
 var buildIns = map[Symbol]Any{
 	"list":  listFn,
-	"quote": vectorize(quoteFn),
 	"size":  vectorize(sizeFn),
 	"head":  headFn,
 	"tail":  tailFn,
 	"nil?":  vectorize(isNil),
+	"error": errorFn,
 	// type conversions
 	"str":   vectorize(toString),
 	"int":   vectorize(toInt),
 	"float": vectorize(toFloat),
 	// logic
-	"true?": vectorize(isTrue),
-	"not":   vectorize(notTrue),
+	"true?": vectorize(isTrueFn),
+	"not":   vectorize(notTrueFn),
 	"and":   andFn,
 	"or":    orFn,
 	// math
@@ -57,10 +57,6 @@ func listFn(exprs []Any) (Any, error) {
 	return List(exprs), nil
 }
 
-func quoteFn(obj Any) (Any, error) {
-	return obj, nil
-}
-
 func sizeFn(obj Any) (Any, error) {
 	switch obj := obj.(type) {
 	case List:
@@ -68,7 +64,7 @@ func sizeFn(obj Any) (Any, error) {
 	case String:
 		return len(obj), nil
 	default:
-		return 0, nil
+		return nil, nil
 	}
 }
 
@@ -100,4 +96,16 @@ func tailFn(obj []Any) (Any, error) {
 
 func isNil(obj Any) (Any, error) {
 	return Bool(obj == nil), nil
+}
+
+func errorFn(obj []Any) (Any, error) {
+	if len(obj) != 1 {
+		return nil, &errNumArgs{len(obj)}
+	}
+	msg, ok := obj[0].(String)
+	if !ok {
+		return nil, &errWrongType{obj[0]}
+	}
+
+	return nil, fmt.Errorf("%s", msg)
 }

@@ -39,6 +39,9 @@ func TestEvalExpr(t *testing.T) {
 		{`(nil? nil)`, Bool(true)},
 		{`(nil? ())`, Bool(false)},
 		{`(nil? true)`, Bool(false)},
+		{`(if true 1 2)`, Int(1)},
+		{`(if false 1 2)`, Int(2)},
+		{`(if (true? false) (int+ 2 2) (int- 2 2))`, Int(0)},
 		// math
 		{`(int+ 2 2)`, Int(4)},
 		{`(int+ 2 2 2 2)`, Int(8)},
@@ -65,7 +68,7 @@ func TestEvalExpr(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
 		}
 	}
 }
@@ -104,5 +107,20 @@ func TestBooleans(t *testing.T) {
 		if !cmp.Equal(result, tt.expected) {
 			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
 		}
+	}
+}
+
+func TestErrorFn(t *testing.T) {
+	input := `(list 1 (error "ok!") 2)`
+	expr, err := parser.Parse(strings.NewReader(input))
+
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+
+	result, err := EvalExpr(expr[0])
+
+	if err == nil {
+		t.Errorf("expected error, got result: %v", result)
 	}
 }

@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"errors"
 	"fmt"
 
 	. "github.com/twolodzko/goal/types"
@@ -15,6 +16,7 @@ var buildIns = map[Symbol]Any{
 	"tail":  tailFn,
 	"nil?":  vectorize(isNil),
 	"error": errorFn,
+	"=":     equalFn,
 	// type conversions
 	"str":   vectorize(toString),
 	"int":   vectorize(toInt),
@@ -108,4 +110,17 @@ func errorFn(obj []Any) (Any, error) {
 	}
 
 	return nil, fmt.Errorf("%s", msg)
+}
+
+func equalFn(obj []Any) (Any, error) {
+	if len(obj) != 2 {
+		return nil, &errNumArgs{len(obj)}
+	}
+	if _, ok := obj[0].(List); ok {
+		return nil, errors.New("= cannot be used to compare lists")
+	}
+	if _, ok := obj[1].(List); ok {
+		return nil, errors.New("= cannot be used to compare lists")
+	}
+	return Bool(obj[0] == obj[1]), nil
 }

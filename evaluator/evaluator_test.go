@@ -42,6 +42,10 @@ func TestEvalExpr(t *testing.T) {
 		{`(if true 1 2)`, Int(1)},
 		{`(if false 1 2)`, Int(2)},
 		{`(if (true? false) (int+ 2 2) (int- 2 2))`, Int(0)},
+		{`(= 2 2)`, Bool(true)},
+		{`(= 2 3)`, Bool(false)},
+		{`(= 2 "2")`, Bool(false)},
+		{`(= 2 (int+ 1 1))`, Bool(true)},
 		// math
 		{`(int+ 2 2)`, Int(4)},
 		{`(int+ 2 2 2 2)`, Int(8)},

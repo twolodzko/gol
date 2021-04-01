@@ -14,8 +14,7 @@ func TestParse(t *testing.T) {
 		input    string
 		expected []Any
 	}{
-		{" ", nil},
-		{"\n", nil},
+		{"nil", []Any{nil}},
 		{"true", []Any{Bool(true)}},
 		{"bar ", []Any{Symbol("bar")}},
 		{"foo bar\n", []Any{Symbol("foo"), Symbol("bar")}},

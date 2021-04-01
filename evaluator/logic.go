@@ -5,12 +5,7 @@ import (
 )
 
 func isTrue(obj Any) (Any, error) {
-	switch obj := obj.(type) {
-	case List:
-		return Bool(len(obj) > 0), nil
-	default:
-		return Bool(obj != false), nil
-	}
+	return Bool(obj != nil && obj != false), nil
 }
 
 func notTrue(obj Any) (Any, error) {

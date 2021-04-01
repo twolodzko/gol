@@ -100,6 +100,8 @@ func guessType(str string) string {
 	switch {
 	case str == "true", str == "false":
 		return token.BOOL
+	case str == "nil":
+		return token.NIL
 	case IsInt(str):
 		return token.INT
 	case IsFloat(str):

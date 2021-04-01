@@ -36,6 +36,9 @@ func TestEvalExpr(t *testing.T) {
 		{`(size (list 1 2 3) () (quote foo bar) "abcd")`, List{Int(3), Int(0), Int(2), Int(4)}},
 		{`(head (list 1 2 3))`, Int(1)},
 		{`(tail (list 1 2 3))`, List{Int(2), Int(3)}},
+		{`(nil? nil)`, Bool(true)},
+		{`(nil? ())`, Bool(false)},
+		{`(nil? true)`, Bool(false)},
 		// math
 		{`(int+ 2 2)`, Int(4)},
 		{`(int+ 2 2 2 2)`, Int(8)},
@@ -73,16 +76,17 @@ func TestBooleans(t *testing.T) {
 		expected Bool
 	}{
 		// booleans: everything is true
-		// the only false things are Bool(false) and empty list
+		// the only false things are Bool(false) and nil
 		{`(true? "1")`, true},
 		{`(true? 0)`, true},
 		{`(true? 3.1415)`, true},
 		{`(true? true)`, true},
-		{`(true? ())`, false},
+		{`(true? ())`, true},
 		{`(true? false)`, false},
 		{`(not true)`, false},
 		{`(not false)`, true},
-		{`(not ())`, true},
+		{`(not ())`, false},
+		{`(true? nil)`, false},
 	}
 
 	for _, tt := range testCases {

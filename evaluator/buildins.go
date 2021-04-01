@@ -14,6 +14,7 @@ var buildins = map[string]Any{
 	"size":  vectorize(sizeFn),
 	"head":  headFn,
 	"tail":  tailFn,
+	"nil?":  vectorize(isNil),
 	// type conversions
 	"str":   vectorize(toString),
 	"int":   vectorize(toInt),
@@ -95,4 +96,8 @@ func tailFn(obj []Any) (Any, error) {
 	}
 
 	return l.Tail(), nil
+}
+
+func isNil(obj Any) (Any, error) {
+	return Bool(obj == nil), nil
 }

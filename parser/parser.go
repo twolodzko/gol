@@ -82,6 +82,8 @@ func (p *Parser) Parse() ([]Any, error) {
 				return parsed, errors.New("missing closing brackets")
 			}
 			obj, err = p.parseList()
+		case token.NIL:
+			obj, err = nil, nil
 		case token.BOOL:
 			obj, err = Bool(t.Literal == "true"), nil
 		case token.INT:

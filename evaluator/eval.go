@@ -8,7 +8,7 @@ import (
 
 func EvalExpr(expr Any) (Any, error) {
 	switch expr := expr.(type) {
-	case Bool, Int, Float, String:
+	case nil, Bool, Int, Float, String:
 		return expr, nil
 	case Symbol:
 		val, err := baseEnv.Get(expr)

@@ -27,34 +27,35 @@ func evalList(expr List) (Any, error) {
 	var args []Any
 	fnName := expr.Head()
 
-	if len(expr) > 0 {
-		switch fnName := fnName.(type) {
-		case Symbol:
-			fn, err := baseEnv.Get(fnName)
-			if err != nil {
-				return nil, err
-			}
-
-			switch fn := fn.(type) {
-			case buildin:
-				args = expr.Tail()
-
-				if fnName != "quote" {
-					args, err = evalAll(args)
-					if err != nil {
-						return nil, err
-					}
-				}
-
-				return fn(args)
-			default:
-				return nil, fmt.Errorf("%v is not a function", fn)
-			}
-		default:
-			return nil, fmt.Errorf("cannot evaluate list: %v", expr)
-		}
+	if len(expr) == 0 {
+		return List{}, nil
 	}
-	return List{}, nil
+
+	switch fnName := fnName.(type) {
+	case Symbol:
+		fn, err := baseEnv.Get(fnName)
+		if err != nil {
+			return nil, err
+		}
+
+		switch fn := fn.(type) {
+		case buildin:
+			args = expr.Tail()
+
+			if fnName != "quote" {
+				args, err = evalAll(args)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			return fn(args)
+		default:
+			return nil, fmt.Errorf("%v is not a function", fn)
+		}
+	default:
+		return nil, fmt.Errorf("cannot evaluate list: %v", expr)
+	}
 }
 
 func evalAll(exprs []Any) (List, error) {

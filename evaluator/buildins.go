@@ -7,18 +7,27 @@ import (
 type buildin = func([]Any) (Any, error)
 
 var buildins = map[string]Any{
-	"true":  true,
-	"false": false,
-	"str":   vectorize(toString),
-	"int":   vectorize(toInt),
-	"float": vectorize(toFloat),
 	"list":  listFn,
 	"quote": vectorize(quoteFn),
 	"size":  vectorize(sizeFn),
+	// type conversions
+	"str":   vectorize(toString),
+	"int":   vectorize(toInt),
+	"float": vectorize(toFloat),
+	// logic
 	"true?": vectorize(isTrue),
 	"not":   vectorize(notTrue),
 	"and":   andFn,
 	"or":    orFn,
+	// math
+	"int+":   accumulateFnInt(func(x, y Int) Int { return x + y }),
+	"int-":   accumulateFnInt(func(x, y Int) Int { return x - y }),
+	"int*":   accumulateFnInt(func(x, y Int) Int { return x * y }),
+	"int/":   accumulateFnInt(func(x, y Int) Int { return x / y }),
+	"float+": accumulateFnFloat(func(x, y Float) Float { return x + y }),
+	"float-": accumulateFnFloat(func(x, y Float) Float { return x - y }),
+	"float*": accumulateFnFloat(func(x, y Float) Float { return x * y }),
+	"float/": accumulateFnFloat(func(x, y Float) Float { return x / y }),
 }
 
 func vectorize(fn func(Any) (Any, error)) buildin {

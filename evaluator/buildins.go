@@ -10,13 +10,15 @@ import (
 type buildIn = func([]Any) (Any, error)
 
 var buildIns = map[Symbol]Any{
-	"list":  listFn,
-	"size":  vectorize(sizeFn),
-	"head":  headFn,
-	"tail":  tailFn,
-	"nil?":  vectorize(isNil),
-	"error": errorFn,
-	"=":     equalFn,
+	"list":    listFn,
+	"size":    vectorize(sizeFn),
+	"head":    headFn,
+	"tail":    tailFn,
+	"nil?":    vectorize(isNil),
+	"error":   errorFn,
+	"=":       equalFn,
+	"print":   printFn,
+	"println": printLnFn,
 	// type conversions
 	"str":   vectorize(toString),
 	"int":   vectorize(toInt),
@@ -123,4 +125,22 @@ func equalFn(obj []Any) (Any, error) {
 		return nil, errors.New("= cannot be used to compare lists")
 	}
 	return Bool(obj[0] == obj[1]), nil
+}
+
+func printFn(obj []Any) (Any, error) {
+	out := ""
+	for _, o := range obj {
+		out += fmt.Sprintf("%v", o)
+	}
+	fmt.Print(out)
+	return nil, nil
+}
+
+func printLnFn(obj []Any) (Any, error) {
+	out := ""
+	for _, o := range obj {
+		out += fmt.Sprintf("%v", o)
+	}
+	fmt.Print(out + "\n")
+	return nil, nil
 }

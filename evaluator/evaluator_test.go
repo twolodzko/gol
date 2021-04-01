@@ -16,11 +16,11 @@ func TestEvalExpr(t *testing.T) {
 		expected Any
 	}{
 		// objects
-		{"()", List{}},
-		{"2", Int(2)},
-		{"3.14", Float(3.14)},
+		{`()`, List{}},
+		{`2`, Int(2)},
+		{`3.14`, Float(3.14)},
 		{`"Hello World!"`, String("Hello World!")},
-		{"true", Bool(true)},
+		{`true`, Bool(true)},
 		// functions
 		{`(str 3.14)`, String("3.14")},
 		{`(int "3.14")`, Int(3)},

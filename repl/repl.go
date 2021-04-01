@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/twolodzko/goal/evaluator"
 	"github.com/twolodzko/goal/parser"
 )
 
@@ -89,8 +90,14 @@ func Repl(in io.Reader) (string, error) {
 		return "", err
 	}
 
+	evaluated, err := evaluator.EvalAll(parsed)
+
+	if err != nil {
+		return "", err
+	}
+
 	out := ""
-	for _, result := range parsed {
+	for _, result := range evaluated {
 		out += fmt.Sprintf("%v\n", result)
 	}
 

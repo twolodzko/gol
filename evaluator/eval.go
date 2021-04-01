@@ -23,6 +23,18 @@ func Eval(expr Any) (Any, error) {
 	}
 }
 
+func EvalAll(exprs []Any) (List, error) {
+	var out []Any
+	for _, expr := range exprs {
+		val, err := Eval(expr)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, val)
+	}
+	return out, nil
+}
+
 func evalList(expr List) (Any, error) {
 	var args []Any
 	fnName := expr.Head()
@@ -43,7 +55,7 @@ func evalList(expr List) (Any, error) {
 			args = expr.Tail()
 
 			if fnName != "quote" {
-				args, err = evalAll(args)
+				args, err = EvalAll(args)
 				if err != nil {
 					return nil, err
 				}
@@ -56,16 +68,4 @@ func evalList(expr List) (Any, error) {
 	default:
 		return nil, fmt.Errorf("cannot evaluate list: %v", expr)
 	}
-}
-
-func evalAll(exprs []Any) (List, error) {
-	var out []Any
-	for _, expr := range exprs {
-		val, err := Eval(expr)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, val)
-	}
-	return out, nil
 }

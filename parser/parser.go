@@ -9,7 +9,7 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func Parse(r io.Reader) (List, error) {
+func Parse(r io.Reader) ([]Any, error) {
 	lexer := NewLexer(r)
 	tokens, err := lexer.Tokenize()
 
@@ -52,9 +52,9 @@ func (p *Parser) nextToken() bool {
 	return false
 }
 
-func (p *Parser) Parse() (List, error) {
+func (p *Parser) Parse() ([]Any, error) {
 	var (
-		parsed List
+		parsed []Any
 		obj    Any
 		err    error
 	)
@@ -110,13 +110,11 @@ func (p *Parser) Parse() (List, error) {
 }
 
 func ParseInt(s string) (Int, error) {
-	i, err := strconv.Atoi(s)
-	return Int(i), err
+	return strconv.Atoi(s)
 }
 
 func ParseFloat(s string) (Float, error) {
-	f, err := strconv.ParseFloat(s, 64)
-	return Float(f), err
+	return strconv.ParseFloat(s, 64)
 }
 
 func (p *Parser) parseList() (List, error) {

@@ -6,13 +6,13 @@ import (
 )
 
 type (
-	Any    interface{}
 	Symbol string
-	Bool   bool
-	Int    int
-	Float  float64
 	String string
 	List   []interface{}
+	Bool   = bool
+	Int    = int
+	Float  = float64
+	Any    = interface{}
 )
 
 func (s String) String() string {
@@ -28,13 +28,15 @@ func (l List) String() string {
 }
 
 func (l List) Head() Any {
-	return l[0]
+	if len(l) > 0 {
+		return l[0]
+	}
+	return nil
 }
 
 func (l List) Tail() List {
-	tail := l[1:]
-	if len(tail) > 0 {
-		return tail
+	if len(l) > 1 {
+		return l[1:]
 	}
-	return nil
+	return List{}
 }

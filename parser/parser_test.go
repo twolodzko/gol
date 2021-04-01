@@ -12,22 +12,22 @@ import (
 func TestParse(t *testing.T) {
 	var testCases = []struct {
 		input    string
-		expected List
+		expected []Any
 	}{
 		{" ", nil},
 		{"\n", nil},
-		{"true", List{Bool(true)}},
-		{"bar ", List{Symbol("bar")}},
-		{"foo bar\n", List{Symbol("foo"), Symbol("bar")}},
-		{"42", List{Int(42)}},
-		{`"Hello World!" `, List{String("Hello World!")}},
-		{"1e-7", List{Float(1e-7)}},
-		{" \n\t bar", List{Symbol("bar")}},
-		{"((1 2))", List{List{List{Int(1), Int(2)}}}},
-		{`(foo 42 "bar")`, List{List{Symbol("foo"), Int(42), String("bar")}}},
-		{"  \n\t(\nfoo \n\n42\t\"bar\")", List{List{Symbol("foo"), Int(42), String("bar")}}},
-		{"(1 2) (3 4)", List{List{Int(1), Int(2)}, List{Int(3), Int(4)}}},
-		{"(1 2)\n\n(3\n4)", List{List{Int(1), Int(2)}, List{Int(3), Int(4)}}},
+		{"true", []Any{Bool(true)}},
+		{"bar ", []Any{Symbol("bar")}},
+		{"foo bar\n", []Any{Symbol("foo"), Symbol("bar")}},
+		{"42", []Any{Int(42)}},
+		{`"Hello World!" `, []Any{String("Hello World!")}},
+		{"1e-7", []Any{Float(1e-7)}},
+		{" \n\t bar", []Any{Symbol("bar")}},
+		{"((1 2))", []Any{List{List{Int(1), Int(2)}}}},
+		{`(foo 42 "bar")`, []Any{List{Symbol("foo"), Int(42), String("bar")}}},
+		{"  \n\t(\nfoo \n\n42\t\"bar\")", []Any{List{Symbol("foo"), Int(42), String("bar")}}},
+		{"(1 2) (3 4)", []Any{List{Int(1), Int(2)}, List{Int(3), Int(4)}}},
+		{"(1 2)\n\n(3\n4)", []Any{List{Int(1), Int(2)}, List{Int(3), Int(4)}}},
 	}
 
 	for _, tt := range testCases {

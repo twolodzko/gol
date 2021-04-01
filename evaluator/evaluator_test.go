@@ -62,7 +62,7 @@ func TestEvalExpr(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := EvalExpr(expr[0])
+		result, err := EvalExpr(expr[0], BaseEnv)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
@@ -99,7 +99,7 @@ func TestBooleans(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := EvalExpr(expr[0])
+		result, err := EvalExpr(expr[0], BaseEnv)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
@@ -118,9 +118,38 @@ func TestErrorFn(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 	}
 
-	result, err := EvalExpr(expr[0])
+	result, err := EvalExpr(expr[0], BaseEnv)
 
 	if err == nil {
 		t.Errorf("expected error, got result: %v", result)
+	}
+}
+
+func TestLet(t *testing.T) {
+	expr, err := parser.Parse(strings.NewReader(`(let x 42)`))
+
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+	if _, err := EvalExpr(expr[0], BaseEnv); err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+	if _, err := BaseEnv.Get(Symbol("x")); err != nil {
+		t.Errorf("variable x not set")
+	}
+
+	expr, err = parser.Parse(strings.NewReader("x"))
+
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+
+	result, err := EvalExpr(expr[0], BaseEnv)
+
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+	if result != Int(42) {
+		t.Errorf("unable to read the variable")
 	}
 }

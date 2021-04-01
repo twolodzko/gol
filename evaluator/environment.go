@@ -6,14 +6,14 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-var baseEnv = &Enviroment{buildIns, nil}
+var BaseEnv = &Env{buildIns, nil}
 
-type Enviroment struct {
+type Env struct {
 	objects map[Symbol]Any
-	parent  *Enviroment
+	parent  *Env
 }
 
-func (env *Enviroment) Get(sym Symbol) (Any, error) {
+func (env *Env) Get(sym Symbol) (Any, error) {
 	val, ok := env.objects[sym]
 	if !ok {
 		if env.parent != nil {
@@ -25,7 +25,7 @@ func (env *Enviroment) Get(sym Symbol) (Any, error) {
 	return val, nil
 }
 
-func (env *Enviroment) Set(sym Symbol, val Any) error {
+func (env *Env) Set(sym Symbol, val Any) error {
 	env.objects[sym] = val
 	return nil
 }

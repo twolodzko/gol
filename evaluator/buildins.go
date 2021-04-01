@@ -12,8 +12,9 @@ var buildins = map[string]Any{
 	"str":   vectorize(toString),
 	"int":   vectorize(toInt),
 	"float": vectorize(toFloat),
-	"list":  list,
-	"quote": vectorize(quote),
+	"list":  listFn,
+	"quote": vectorize(quoteFn),
+	"size":  vectorize(sizeFn),
 	"true?": vectorize(isTrue),
 	"not":   vectorize(notTrue),
 	"and":   andFn,
@@ -38,10 +39,21 @@ func vectorize(fn func(Any) (Any, error)) buildin {
 	}
 }
 
-func list(exprs []Any) (Any, error) {
+func listFn(exprs []Any) (Any, error) {
 	return List(exprs), nil
 }
 
-func quote(obj Any) (Any, error) {
+func quoteFn(obj Any) (Any, error) {
 	return obj, nil
+}
+
+func sizeFn(obj Any) (Any, error) {
+	switch obj := obj.(type) {
+	case List:
+		return len(obj), nil
+	case String:
+		return len(obj), nil
+	default:
+		return 0, nil
+	}
 }

@@ -3,12 +3,12 @@ package repl
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 
 	"github.com/twolodzko/goal/evaluator"
 	"github.com/twolodzko/goal/parser"
+	. "github.com/twolodzko/goal/types"
 )
 
 type Reader struct {
@@ -77,29 +77,24 @@ func (reader *Reader) shouldStop(line string) bool {
 	return reader.openBlocksCount <= 0
 }
 
-func Repl(in io.Reader) (string, error) {
+func Repl(in io.Reader) ([]Any, error) {
 	s, err := Read(in)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	parsed, err := parser.Parse(strings.NewReader(s))
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	evaluated, err := evaluator.EvalAll(parsed)
+	evaluated, err := evaluator.Eval(parsed)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	out := ""
-	for _, result := range evaluated {
-		out += fmt.Sprintf("%v\n", result)
-	}
-
-	return out, nil
+	return evaluated, nil
 }

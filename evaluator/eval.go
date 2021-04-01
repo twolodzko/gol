@@ -6,7 +6,7 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func Eval(expr Any) (Any, error) {
+func EvalExpr(expr Any) (Any, error) {
 	switch expr := expr.(type) {
 	case Bool, Int, Float, String:
 		return expr, nil
@@ -15,7 +15,7 @@ func Eval(expr Any) (Any, error) {
 		if err != nil {
 			return nil, err
 		}
-		return Eval(val)
+		return EvalExpr(val)
 	case List:
 		return evalList(expr)
 	default:
@@ -23,10 +23,10 @@ func Eval(expr Any) (Any, error) {
 	}
 }
 
-func EvalAll(exprs []Any) (List, error) {
+func Eval(exprs []Any) ([]Any, error) {
 	var out []Any
 	for _, expr := range exprs {
-		val, err := Eval(expr)
+		val, err := EvalExpr(expr)
 		if err != nil {
 			return nil, err
 		}
@@ -42,7 +42,7 @@ func evalList(expr List) (Any, error) {
 
 	fnName, ok := expr.Head().(Symbol)
 	if !ok {
-		return nil, fmt.Errorf("%v is not callable", fnName)
+		return nil, fmt.Errorf("%q is not callable", fnName)
 	}
 	args := expr.Tail()
 
@@ -53,11 +53,11 @@ func evalList(expr List) (Any, error) {
 
 	fn, ok := obj.(buildin)
 	if !ok {
-		return nil, fmt.Errorf("%v is not callable", fnName)
+		return nil, fmt.Errorf("%q is not callable", fnName)
 	}
 
 	if fnName != "quote" {
-		args, err = EvalAll(args)
+		args, err = Eval(args)
 		if err != nil {
 			return nil, err
 		}

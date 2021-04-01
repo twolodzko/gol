@@ -10,7 +10,7 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func TestEval(t *testing.T) {
+func TestEvalExpr(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected Any
@@ -56,7 +56,7 @@ func TestEval(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := Eval(expr[0])
+		result, err := EvalExpr(expr[0])
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
@@ -92,7 +92,7 @@ func TestBooleans(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := Eval(expr[0])
+		result, err := EvalExpr(expr[0])
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)

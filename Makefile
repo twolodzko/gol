@@ -1,12 +1,16 @@
 .DEFAULT_GOAL := test
-.PHONY: test cov cycl cogn fmt clean repl
+.PHONY: test cov staticcheck cycl cogn fmt clean repl
 
-test:
+test: staticcheck
 	go test ./...
 
 cov:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
+
+staticcheck:
+	# go get honnef.co/go/tools/cmd/staticcheck
+	staticcheck ./...
 
 cycl:
 	# go get github.com/fzipp/gocyclo/cmd/gocyclo

@@ -7,18 +7,15 @@ import (
 	"unicode"
 )
 
-// CodeReader reads runes but ignores code comments
 type CodeReader struct {
 	*bufio.Reader
 	Head rune
 }
 
-// NewCodeReader initialize an instance of CodeReader
 func NewCodeReader(r io.Reader) *CodeReader {
 	return &CodeReader{bufio.NewReader(r), rune(0)}
 }
 
-// NextRune moves the head of the reader one rune forward and saves the state in CodeReader.Head
 func (cr *CodeReader) NextRune() error {
 	r, _, err := cr.ReadRune()
 

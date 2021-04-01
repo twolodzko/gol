@@ -84,7 +84,7 @@ func (l *Lexer) nextToken() (token.Token, error) {
 		if err != nil {
 			return token.Token{}, err
 		}
-		return token.New(str, GuessType(str)), err
+		return token.New(str, guessType(str)), err
 	}
 }
 
@@ -96,7 +96,7 @@ func IsFloat(str string) bool {
 	return floatRegex.MatchString(str)
 }
 
-func GuessType(str string) string {
+func guessType(str string) string {
 	switch {
 	case str == "true", str == "false":
 		return token.BOOL

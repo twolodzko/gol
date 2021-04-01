@@ -23,7 +23,7 @@ func EvalExpr(expr Any) (Any, error) {
 	}
 }
 
-func Eval(exprs []Any) ([]Any, error) {
+func EvalAll(exprs []Any) ([]Any, error) {
 	var out []Any
 	for _, expr := range exprs {
 		val, err := EvalExpr(expr)
@@ -51,13 +51,13 @@ func evalList(expr List) (Any, error) {
 		return nil, err
 	}
 
-	fn, ok := obj.(buildin)
+	fn, ok := obj.(buildIn)
 	if !ok {
 		return nil, fmt.Errorf("%q is not callable", fnName)
 	}
 
 	if fnName != "quote" {
-		args, err = Eval(args)
+		args, err = EvalAll(args)
 		if err != nil {
 			return nil, err
 		}

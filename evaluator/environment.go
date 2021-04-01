@@ -6,28 +6,26 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-var baseEnv = &Enviroment{buildins, nil}
+var baseEnv = &Enviroment{buildIns, nil}
 
 type Enviroment struct {
-	objects map[string]Any
+	objects map[Symbol]Any
 	parent  *Enviroment
 }
 
 func (env *Enviroment) Get(sym Symbol) (Any, error) {
-	name := string(sym)
-	val, ok := env.objects[name]
+	val, ok := env.objects[sym]
 	if !ok {
 		if env.parent != nil {
 			return env.parent.Get(sym)
 		} else {
-			return nil, fmt.Errorf("unable to resolve %s in this context", name)
+			return nil, fmt.Errorf("unable to resolve %s in this context", sym)
 		}
 	}
 	return val, nil
 }
 
 func (env *Enviroment) Set(sym Symbol, val Any) error {
-	name := string(sym)
-	env.objects[name] = val
+	env.objects[sym] = val
 	return nil
 }

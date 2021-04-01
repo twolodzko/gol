@@ -6,9 +6,9 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-type buildin = func([]Any) (Any, error)
+type buildIn = func([]Any) (Any, error)
 
-var buildins = map[string]Any{
+var buildIns = map[Symbol]Any{
 	"list":  listFn,
 	"quote": vectorize(quoteFn),
 	"size":  vectorize(sizeFn),
@@ -35,7 +35,7 @@ var buildins = map[string]Any{
 	"float/": foldFnFloat(func(x, y Float) Float { return x / y }),
 }
 
-func vectorize(fn func(Any) (Any, error)) buildin {
+func vectorize(fn func(Any) (Any, error)) buildIn {
 	return func(objs []Any) (Any, error) {
 		if len(objs) == 1 {
 			return fn(objs[0])

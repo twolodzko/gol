@@ -90,7 +90,7 @@ func Repl(in io.Reader) ([]Any, error) {
 		return nil, err
 	}
 
-	evaluated, err := evaluator.Eval(parsed)
+	evaluated, err := evaluator.EvalAll(parsed)
 
 	if err != nil {
 		return nil, err

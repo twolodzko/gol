@@ -44,9 +44,11 @@ func TestEvalExpr(t *testing.T) {
 		{`(if true 1 2)`, Int(1)},
 		{`(if false 1 2)`, Int(2)},
 		{`(if (true? false) (error "this should not fail!") "ok")`, String("ok")},
-		{`(= 2 2)`, Bool(true)},
-		{`(= 2 3)`, Bool(false)},
-		{`(= 2 "2")`, Bool(false)},
+		{`(eq? 2 2)`, Bool(true)},
+		{`(eq? 2 3)`, Bool(false)},
+		{`(eq? 2 "2")`, Bool(false)},
+		{`(eq? (list 1 2 3) (list 1 2 3))`, Bool(true)},
+		{`(eq? (list 1 2 3) (list 1 "2" 3))`, Bool(false)},
 	}
 
 	for _, tt := range testCases {
@@ -109,9 +111,9 @@ func TestMath(t *testing.T) {
 		input    string
 		expected Any
 	}{
-		{`(+ 2 2)`, Float(4)},
+		{`(int+ 2 2)`, Int(4)},
 		{`(+ 2 2.0)`, Float(4.0)},
-		{`(+ 2.0 2)`, Float(4.0)},
+		{`(int+ 2 2.0)`, Int(4.0)},
 		{`(- 3 2)`, Float(1)},
 		{`(- 3 2)`, Float(1)},
 		{`(* 2 3)`, Float(6)},
@@ -121,8 +123,9 @@ func TestMath(t *testing.T) {
 		{`(* 2.5 4.0)`, Float(10.0)},
 		{`(/ 10.2 5.1)`, Float(2.0)},
 		{`(+ 2 (- 4 (* 1 2)))`, Float(4)},
-		{`(// 5 2)`, Int(2)},
-		{`(% 5 2)`, Int(1)},
+		{`(int/ 5 2)`, Int(2)},
+		{`(% 5 2)`, Float(1)},
+		{`(int% 5 2)`, Int(1)},
 	}
 
 	for _, tt := range testCases {

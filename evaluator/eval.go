@@ -18,6 +18,8 @@ func EvalExpr(expr Any, env *Env) (Any, error) {
 		return EvalExpr(val, env)
 	case List:
 		return evalList(expr, env)
+	case BuildIn:
+		return expr, nil
 	default:
 		return nil, fmt.Errorf("cannot evaluate %v of type %T", expr, expr)
 	}
@@ -86,7 +88,7 @@ func evalList(expr List, env *Env) (Any, error) {
 			return nil, err
 		}
 
-		fn, ok := obj.(buildIn)
+		fn, ok := obj.(BuildIn)
 		if !ok {
 			return nil, fmt.Errorf("%q is not callable", fnName)
 		}

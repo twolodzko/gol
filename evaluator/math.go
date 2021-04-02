@@ -1,20 +1,24 @@
 package evaluator
 
 import (
+	"errors"
 	"math"
 
 	. "github.com/twolodzko/goal/types"
 )
 
 var (
-	sumFn      = accumulate(func(x, y Float) Float { return x + y }, 0)
-	difFn      = accumulate(func(x, y Float) Float { return x - y }, 0)
-	mulFn      = accumulate(func(x, y Float) Float { return x * y }, 1)
-	intDivFn   = intFn(func(x, y Int) Int { return x / y })
-	floatDivFn = accumulate(func(x, y Float) Float { return x / y }, 1)
-	intModFn   = intFn(func(x, y Int) Int { return x % y })
-	powFn      = accumulate(math.Pow, 1)
-	remFn      = accumulate(math.Remainder, 1)
+	floatSumFn = floatAccumulate(func(x, y Float) Float { return x + y }, 0)
+	intSumFn   = intAccumulate(func(x, y Int) Int { return x + y }, 0)
+	floatDifFn = floatAccumulate(func(x, y Float) Float { return x - y }, 0)
+	intDifFn   = intAccumulate(func(x, y Int) Int { return x - y }, 0)
+	floatMulFn = floatAccumulate(func(x, y Float) Float { return x * y }, 1)
+	intMulFn   = intAccumulate(func(x, y Int) Int { return x * y }, 1)
+	floatDivFn = floatAccumulate(func(x, y Float) Float { return x / y }, 1)
+	floatModFn = floatAccumulate(math.Mod, 1)
+	intModFn   = intAccumulate(func(x, y Int) Int { return x % y }, 1)
+	powFn      = floatAccumulate(math.Pow, 1)
+	remFn      = floatAccumulate(math.Remainder, 1)
 )
 
 func toFloat(o Any) (Float, bool) {
@@ -28,7 +32,7 @@ func toFloat(o Any) (Float, bool) {
 	}
 }
 
-func accumulate(fn func(Float, Float) Float, start Float) buildIn {
+func floatAccumulate(fn func(Float, Float) Float, start Float) BuildIn {
 	return func(obj []Any) (Any, error) {
 		var acc Float = start
 
@@ -57,28 +61,66 @@ func accumulate(fn func(Float, Float) Float, start Float) buildIn {
 	}
 }
 
-func intFn(fn func(Int, Int) Int) buildIn {
-	return func(obj []Any) (Any, error) {
-		var x, y Int
-
-		switch v := obj[0].(type) {
-		case Int:
-			x = v
-		case Float:
-			x = Int(v)
-		default:
-			return nil, &errWrongType{v}
-		}
-
-		switch v := obj[1].(type) {
-		case Int:
-			y = v
-		case Float:
-			y = Int(v)
-		default:
-			return nil, &errWrongType{v}
-		}
-
-		return fn(x, y), nil
+func toInt(o Any) (Int, bool) {
+	switch x := o.(type) {
+	case Int:
+		return x, true
+	case Float:
+		return Int(x), true
+	default:
+		return 0, false
 	}
+}
+
+func intAccumulate(fn func(Int, Int) Int, start Int) BuildIn {
+	return func(obj []Any) (Any, error) {
+		var acc Int = start
+
+		if len(obj) == 0 {
+			return nil, &errNumArgs{len(obj)}
+		}
+
+		x, ok := toInt(obj[0])
+		if !ok {
+			return 0, &errWrongType{obj[0]}
+		}
+
+		if len(obj) == 1 {
+			return fn(acc, x), nil
+		}
+
+		acc = x
+		for _, x := range obj[1:] {
+			f, ok := toInt(x)
+			if !ok {
+				return 0, &errWrongType{x}
+			}
+			acc = fn(acc, f)
+		}
+		return acc, nil
+	}
+}
+
+func intDivFn(obj []Any) (Any, error) {
+	if len(obj) < 2 {
+		return nil, &errNumArgs{len(obj)}
+	}
+
+	acc, ok := toInt(obj[0])
+	if !ok {
+		return 0, &errWrongType{obj[0]}
+	}
+
+	for _, x := range obj[1:] {
+		i, ok := toInt(x)
+		if !ok {
+			return 0, &errWrongType{x}
+		}
+		if x == 0 {
+			return 0, errors.New("integer divide by zero")
+		}
+
+		acc /= i
+	}
+	return acc, nil
 }

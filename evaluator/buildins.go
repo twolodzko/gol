@@ -1,13 +1,13 @@
 package evaluator
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/google/go-cmp/cmp"
 	. "github.com/twolodzko/goal/types"
 )
 
-type buildIn = func([]Any) (Any, error)
+type BuildIn = func([]Any) (Any, error)
 
 var buildIns = map[Symbol]Any{
 	"list":    listFn,
@@ -16,7 +16,7 @@ var buildIns = map[Symbol]Any{
 	"tail":    tailFn,
 	"nil?":    vectorize(isNilFn),
 	"error":   errorFn,
-	"=":       equalFn,
+	"eq?":     areSameFn,
 	"print":   printFn,
 	"println": printLnFn,
 	// type conversions
@@ -29,17 +29,21 @@ var buildIns = map[Symbol]Any{
 	"and":   andFn,
 	"or":    orFn,
 	// math
-	"+":   sumFn,
-	"-":   difFn,
-	"*":   mulFn,
-	"/":   floatDivFn,
-	"//":  intDivFn,
-	"%":   intModFn,
-	"pow": powFn,
-	"rem": remFn,
+	"+":    floatSumFn,
+	"-":    floatDifFn,
+	"*":    floatMulFn,
+	"/":    floatDivFn,
+	"%":    floatModFn,
+	"int+": intSumFn,
+	"int-": intDifFn,
+	"int*": intMulFn,
+	"int/": intDivFn,
+	"int%": intModFn,
+	"pow":  powFn,
+	"rem":  remFn,
 }
 
-func vectorize(fn func(Any) (Any, error)) buildIn {
+func vectorize(fn func(Any) (Any, error)) BuildIn {
 	return func(objs []Any) (Any, error) {
 		if len(objs) == 1 {
 			return fn(objs[0])
@@ -114,17 +118,11 @@ func errorFn(obj []Any) (Any, error) {
 	return nil, fmt.Errorf("%s", msg)
 }
 
-func equalFn(obj []Any) (Any, error) {
+func areSameFn(obj []Any) (Any, error) {
 	if len(obj) != 2 {
 		return nil, &errNumArgs{len(obj)}
 	}
-	if _, ok := obj[0].(List); ok {
-		return nil, errors.New("= cannot be used to compare lists")
-	}
-	if _, ok := obj[1].(List); ok {
-		return nil, errors.New("= cannot be used to compare lists")
-	}
-	return Bool(obj[0] == obj[1]), nil
+	return Bool(cmp.Equal(obj[0], obj[1])), nil
 }
 
 func printFn(obj []Any) (Any, error) {
@@ -137,10 +135,7 @@ func printFn(obj []Any) (Any, error) {
 }
 
 func printLnFn(obj []Any) (Any, error) {
-	out := ""
-	for _, o := range obj {
-		out += fmt.Sprintf("%v", o)
-	}
-	fmt.Print(out + "\n")
+	printFn(obj)
+	fmt.Println()
 	return nil, nil
 }

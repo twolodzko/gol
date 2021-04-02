@@ -15,6 +15,8 @@ type Env struct {
 
 func (env *Env) Get(sym Symbol) (Any, error) {
 	val, ok := env.objects[sym]
+
+	// recursive search over enviroments
 	if !ok {
 		if env.parent != nil {
 			return env.parent.Get(sym)
@@ -22,7 +24,14 @@ func (env *Env) Get(sym Symbol) (Any, error) {
 			return nil, fmt.Errorf("unable to resolve %s in this context", sym)
 		}
 	}
-	return val, nil
+
+	// resolve symbols pointing to other symbols
+	switch val := val.(type) {
+	case Symbol:
+		return env.Get(val)
+	default:
+		return val, nil
+	}
 }
 
 func (env *Env) Set(sym Symbol, val Any) error {

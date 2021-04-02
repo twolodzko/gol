@@ -16,6 +16,7 @@ func TestEvalExpr(t *testing.T) {
 		expected Any
 	}{
 		// objects
+		{`nil`, nil},
 		{`()`, List{}},
 		{`2`, Int(2)},
 		{`3.14`, Float(3.14)},
@@ -41,22 +42,26 @@ func TestEvalExpr(t *testing.T) {
 		{`(nil? true)`, Bool(false)},
 		{`(if true 1 2)`, Int(1)},
 		{`(if false 1 2)`, Int(2)},
-		{`(if (true? false) (int+ 2 2) (int- 2 2))`, Int(0)},
+		{`(if (true? false) (+ 2 2) (- 2 2))`, Int(0)},
 		{`(= 2 2)`, Bool(true)},
 		{`(= 2 3)`, Bool(false)},
 		{`(= 2 "2")`, Bool(false)},
-		{`(= 2 (int+ 1 1))`, Bool(true)},
+		{`(= 2 (+ 1 1))`, Bool(true)},
 		// math
-		{`(int+ 2 2)`, Int(4)},
-		{`(int+ 2 2 2 2)`, Int(8)},
-		{`(int- 3 2)`, Int(1)},
-		{`(int* 2 3)`, Int(6)},
-		{`(int/ 6 3)`, Int(2)},
-		{`(float+ 2.1 4.15)`, Float(6.25)},
-		{`(float- 2.1 4.0)`, Float(-1.9)},
-		{`(float* 2.5 4.0)`, Float(10.0)},
-		{`(float/ 10.2 5.1)`, Float(2.0)},
-		{`(int+ 2 (int- 4 (int* 1 2)))`, Int(4)},
+		{`(+ 2 2)`, Int(4)},
+		{`(+ 2 2.0)`, Float(4.0)},
+		{`(+ 2.0 2)`, Float(4.0)},
+		{`(- 3 2)`, Int(1)},
+		{`(- 3 2)`, Int(1)},
+		{`(* 2 3)`, Int(6)},
+		{`(/ 6 3)`, Float(2)},
+		{`(+ 2.1 4.15)`, Float(6.25)},
+		{`(- 2.1 4.0)`, Float(-1.9)},
+		{`(* 2.5 4.0)`, Float(10.0)},
+		{`(/ 10.2 5.1)`, Float(2.0)},
+		{`(+ 2 (- 4 (* 1 2)))`, Int(4)},
+		{`(// 5 2)`, Int(2)},
+		{`(% 5 2)`, Int(1)},
 	}
 
 	for _, tt := range testCases {

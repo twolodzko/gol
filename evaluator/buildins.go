@@ -29,14 +29,12 @@ var buildIns = map[Symbol]Any{
 	"and":   andFn,
 	"or":    orFn,
 	// math
-	"int+":   foldFnInt(func(x, y Int) Int { return x + y }),
-	"int-":   foldFnInt(func(x, y Int) Int { return x - y }),
-	"int*":   foldFnInt(func(x, y Int) Int { return x * y }),
-	"int/":   foldFnInt(func(x, y Int) Int { return x / y }),
-	"float+": foldFnFloat(func(x, y Float) Float { return x + y }),
-	"float-": foldFnFloat(func(x, y Float) Float { return x - y }),
-	"float*": foldFnFloat(func(x, y Float) Float { return x * y }),
-	"float/": foldFnFloat(func(x, y Float) Float { return x / y }),
+	"+":  sumFn,
+	"-":  difFn,
+	"*":  mulFn,
+	"/":  floatDivFn,
+	"//": intDivFn,
+	"%":  modFn,
 }
 
 func vectorize(fn func(Any) (Any, error)) buildIn {

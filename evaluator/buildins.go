@@ -14,27 +14,29 @@ var buildIns = map[Symbol]Any{
 	"size":    vectorize(sizeFn),
 	"head":    headFn,
 	"tail":    tailFn,
-	"nil?":    vectorize(isNil),
+	"nil?":    vectorize(isNilFn),
 	"error":   errorFn,
 	"=":       equalFn,
 	"print":   printFn,
 	"println": printLnFn,
 	// type conversions
-	"str":   vectorize(toString),
-	"int":   vectorize(toInt),
-	"float": vectorize(toFloat),
+	"str":   vectorize(toStringFn),
+	"int":   vectorize(toIntFn),
+	"float": vectorize(toFloatFn),
 	// logic
 	"true?": vectorize(isTrueFn),
 	"not":   vectorize(notTrueFn),
 	"and":   andFn,
 	"or":    orFn,
 	// math
-	"+":  sumFn,
-	"-":  difFn,
-	"*":  mulFn,
-	"/":  floatDivFn,
-	"//": intDivFn,
-	"%":  modFn,
+	"+":   sumFn,
+	"-":   difFn,
+	"*":   mulFn,
+	"/":   floatDivFn,
+	"//":  intDivFn,
+	"%":   intModFn,
+	"pow": powFn,
+	"rem": remFn,
 }
 
 func vectorize(fn func(Any) (Any, error)) buildIn {
@@ -96,7 +98,7 @@ func tailFn(obj []Any) (Any, error) {
 	return l.Tail(), nil
 }
 
-func isNil(obj Any) (Any, error) {
+func isNilFn(obj Any) (Any, error) {
 	return Bool(obj == nil), nil
 }
 

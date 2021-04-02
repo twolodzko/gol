@@ -1,46 +1,59 @@
 package evaluator
 
 import (
+	"math"
+
 	. "github.com/twolodzko/goal/types"
 )
 
 var (
-	sumFn      = numSwitchFn(func(x, y Int) Int { return x + y }, func(x, y Float) Float { return x + y })
-	difFn      = numSwitchFn(func(x, y Int) Int { return x - y }, func(x, y Float) Float { return x - y })
-	mulFn      = numSwitchFn(func(x, y Int) Int { return x * y }, func(x, y Float) Float { return x * y })
+	sumFn      = accumulate(func(x, y Float) Float { return x + y }, 0)
+	difFn      = accumulate(func(x, y Float) Float { return x - y }, 0)
+	mulFn      = accumulate(func(x, y Float) Float { return x * y }, 1)
 	intDivFn   = intFn(func(x, y Int) Int { return x / y })
-	floatDivFn = floatFn(func(x, y Float) Float { return x / y })
-	modFn      = intFn(func(x, y Int) Int { return x % y })
+	floatDivFn = accumulate(func(x, y Float) Float { return x / y }, 1)
+	intModFn   = intFn(func(x, y Int) Int { return x % y })
+	powFn      = accumulate(math.Pow, 1)
+	remFn      = accumulate(math.Remainder, 1)
 )
 
-func numSwitchFn(intFn func(Int, Int) Int, floatFn func(Float, Float) Float) buildIn {
+func toFloat(o Any) (Float, bool) {
+	switch x := o.(type) {
+	case Float:
+		return x, true
+	case Int:
+		return Float(x), true
+	default:
+		return 0, false
+	}
+}
+
+func accumulate(fn func(Float, Float) Float, start Float) buildIn {
 	return func(obj []Any) (Any, error) {
-		if len(obj) != 2 {
+		var acc Float = start
+
+		if len(obj) == 0 {
 			return nil, &errNumArgs{len(obj)}
 		}
 
-		switch x := obj[0].(type) {
-		case Int:
-			switch y := obj[1].(type) {
-			case Int:
-				return intFn(x, y), nil
-			case Float:
-				return floatFn(Float(x), y), nil
-			default:
-				return nil, &errWrongType{y}
-			}
-		case Float:
-			switch y := obj[1].(type) {
-			case Float:
-				return floatFn(x, y), nil
-			case Int:
-				return floatFn(x, Float(y)), nil
-			default:
-				return nil, &errWrongType{y}
-			}
-		default:
-			return nil, &errWrongType{x}
+		x, ok := toFloat(obj[0])
+		if !ok {
+			return 0, &errWrongType{obj[0]}
 		}
+
+		if len(obj) == 1 {
+			return fn(acc, x), nil
+		}
+
+		acc = x
+		for _, x := range obj[1:] {
+			f, ok := toFloat(x)
+			if !ok {
+				return 0, &errWrongType{x}
+			}
+			acc = fn(acc, f)
+		}
+		return acc, nil
 	}
 }
 
@@ -62,32 +75,6 @@ func intFn(fn func(Int, Int) Int) buildIn {
 			y = v
 		case Float:
 			y = Int(v)
-		default:
-			return nil, &errWrongType{v}
-		}
-
-		return fn(x, y), nil
-	}
-}
-
-func floatFn(fn func(Float, Float) Float) buildIn {
-	return func(obj []Any) (Any, error) {
-		var x, y Float
-
-		switch v := obj[0].(type) {
-		case Float:
-			x = v
-		case Int:
-			x = Float(v)
-		default:
-			return nil, &errWrongType{v}
-		}
-
-		switch v := obj[1].(type) {
-		case Float:
-			y = v
-		case Int:
-			y = Float(v)
 		default:
 			return nil, &errWrongType{v}
 		}

@@ -40,28 +40,13 @@ func TestEvalExpr(t *testing.T) {
 		{`(nil? nil)`, Bool(true)},
 		{`(nil? ())`, Bool(false)},
 		{`(nil? true)`, Bool(false)},
+		{`(nil? (print))`, Bool(true)},
 		{`(if true 1 2)`, Int(1)},
 		{`(if false 1 2)`, Int(2)},
-		{`(if (true? false) (+ 2 2) (- 2 2))`, Int(0)},
+		{`(if (true? false) (error "this should not fail!") "ok")`, String("ok")},
 		{`(= 2 2)`, Bool(true)},
 		{`(= 2 3)`, Bool(false)},
 		{`(= 2 "2")`, Bool(false)},
-		{`(= 2 (+ 1 1))`, Bool(true)},
-		// math
-		{`(+ 2 2)`, Int(4)},
-		{`(+ 2 2.0)`, Float(4.0)},
-		{`(+ 2.0 2)`, Float(4.0)},
-		{`(- 3 2)`, Int(1)},
-		{`(- 3 2)`, Int(1)},
-		{`(* 2 3)`, Int(6)},
-		{`(/ 6 3)`, Float(2)},
-		{`(+ 2.1 4.15)`, Float(6.25)},
-		{`(- 2.1 4.0)`, Float(-1.9)},
-		{`(* 2.5 4.0)`, Float(10.0)},
-		{`(/ 10.2 5.1)`, Float(2.0)},
-		{`(+ 2 (- 4 (* 1 2)))`, Int(4)},
-		{`(// 5 2)`, Int(2)},
-		{`(% 5 2)`, Int(1)},
 	}
 
 	for _, tt := range testCases {
@@ -99,6 +84,45 @@ func TestBooleans(t *testing.T) {
 		{`(not false)`, true},
 		{`(not ())`, false},
 		{`(true? nil)`, false},
+	}
+
+	for _, tt := range testCases {
+		expr, err := parser.Parse(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
+		result, err := EvalExpr(expr[0], BaseEnv)
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
+func TestMath(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected Any
+	}{
+		{`(+ 2 2)`, Float(4)},
+		{`(+ 2 2.0)`, Float(4.0)},
+		{`(+ 2.0 2)`, Float(4.0)},
+		{`(- 3 2)`, Float(1)},
+		{`(- 3 2)`, Float(1)},
+		{`(* 2 3)`, Float(6)},
+		{`(/ 6 3)`, Float(2)},
+		{`(+ 2.1 4.15)`, Float(6.25)},
+		{`(- 2.1 4.0)`, Float(-1.9)},
+		{`(* 2.5 4.0)`, Float(10.0)},
+		{`(/ 10.2 5.1)`, Float(2.0)},
+		{`(+ 2 (- 4 (* 1 2)))`, Float(4)},
+		{`(// 5 2)`, Int(2)},
+		{`(% 5 2)`, Int(1)},
 	}
 
 	for _, tt := range testCases {

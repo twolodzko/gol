@@ -7,7 +7,7 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func toString(obj Any) (Any, error) {
+func toStringFn(obj Any) (Any, error) {
 	switch obj := obj.(type) {
 	case String:
 		return obj, nil
@@ -16,7 +16,7 @@ func toString(obj Any) (Any, error) {
 	}
 }
 
-func toInt(obj Any) (Any, error) {
+func toIntFn(obj Any) (Any, error) {
 	switch obj := obj.(type) {
 	case Int:
 		return obj, nil
@@ -40,7 +40,7 @@ func toInt(obj Any) (Any, error) {
 	}
 }
 
-func toFloat(obj Any) (Any, error) {
+func toFloatFn(obj Any) (Any, error) {
 	switch obj := obj.(type) {
 	case Float:
 		return obj, nil

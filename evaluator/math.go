@@ -4,20 +4,6 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-// var (
-// 	FloatSum = floatAccumulate(func(x, y Float) Float { return x + y }, 0)
-// 	IntSum   = intAccumulate(func(x, y Int) Int { return x + y }, 0)
-// 	FloatDif = floatAccumulate(func(x, y Float) Float { return x - y }, 0)
-// 	IntDif   = intAccumulate(func(x, y Int) Int { return x - y }, 0)
-// 	FloatMul = floatAccumulate(func(x, y Float) Float { return x * y }, 1)
-// 	IntMul   = intAccumulate(func(x, y Int) Int { return x * y }, 1)
-// 	FloatDiv = floatAccumulate(func(x, y Float) Float { return x / y }, 1)
-// 	FloatMod = floatAccumulate(math.Mod, 1)
-// 	IntMod   = intAccumulate(func(x, y Int) Int { return x % y }, 1)
-// 	Pow      = floatAccumulate(math.Pow, 1)
-// 	Rem      = floatAccumulate(math.Remainder, 1)
-// )
-
 func toFloat(x Any) (Float, bool) {
 	switch x := x.(type) {
 	case Float:

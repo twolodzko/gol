@@ -2,12 +2,14 @@ package evaluator
 
 import (
 	"fmt"
+	"math"
 
-	"github.com/twolodzko/goal/enviroment"
+	"github.com/google/go-cmp/cmp"
+	"github.com/twolodzko/goal/environment"
 	. "github.com/twolodzko/goal/types"
 )
 
-func EvalExpr(expr Any, env *enviroment.Env) (Any, error) {
+func Eval(expr Any, env *environment.Env) (Any, error) {
 	switch expr := expr.(type) {
 	case nil, Bool, Int, Float, String:
 		return expr, nil
@@ -24,10 +26,10 @@ func EvalExpr(expr Any, env *enviroment.Env) (Any, error) {
 	}
 }
 
-func EvalAll(exprs []Any, env *enviroment.Env) ([]Any, error) {
+func EvalAll(exprs []Any, env *environment.Env) ([]Any, error) {
 	var out []Any
 	for _, expr := range exprs {
-		val, err := EvalExpr(expr, env)
+		val, err := Eval(expr, env)
 		if err != nil {
 			return nil, err
 		}
@@ -36,7 +38,7 @@ func EvalAll(exprs []Any, env *enviroment.Env) ([]Any, error) {
 	return out, nil
 }
 
-func evalList(expr List, env *enviroment.Env) (Any, error) {
+func evalList(expr List, env *environment.Env) (Any, error) {
 	if len(expr) == 0 {
 		return List{}, nil
 	}
@@ -47,45 +49,89 @@ func evalList(expr List, env *enviroment.Env) (Any, error) {
 	}
 	args := expr.Tail()
 
-	switch fnName {
+	switch string(fnName) {
 
-	case Symbol("quote"):
+	case "if":
+		return ifFn(args, env)
+
+	case "let":
+		return nil, letFn(args, env)
+
+	case "head":
+		return headFn(args, env)
+
+	case "tail":
+		return tailFn(args, env)
+
+	case "quote":
 		if len(args) == 1 {
 			return args[0], nil
 		}
 		return List(args), nil
 
-	case Symbol("if"):
-		if len(args) != 3 {
-			return nil, &ErrNumArgs{len(args)}
-		}
+	}
 
-		cond, err := EvalExpr(args[0], env)
-		if err != nil {
-			return nil, err
-		}
+	args, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
 
-		if isTrue(cond) {
-			return EvalExpr(args[1], env)
-		}
-		return EvalExpr(args[2], env)
+	switch string(fnName) {
 
-	case Symbol("let"):
+	case "list":
+		return List(args), nil
+
+	case "true?":
+		return apply(args, func(x Any) Any { return Bool(isTrue(x)) }), nil
+
+	case "not":
+		return apply(args, func(x Any) Any { return Bool(!isTrue(x)) }), nil
+
+	case "and":
+		return andFn(args), nil
+
+	case "or":
+		return orFn(args), nil
+
+	case "nil?":
+		return apply(args, func(x Any) Any { return Bool(x == nil) }), nil
+
+	case "eq?":
 		if len(args) != 2 {
 			return nil, &ErrNumArgs{len(args)}
 		}
+		return Bool(cmp.Equal(args[0], args[1])), nil
 
-		name, ok := args[0].(Symbol)
-		if !ok {
-			return nil, &ErrWrongType{args[0]}
+	case "error":
+		if len(args) != 1 {
+			return nil, &ErrNumArgs{len(args)}
 		}
+		return nil, fmt.Errorf("%s", fmt.Sprintf("%v", args[0]))
 
-		err := env.Set(name, args[1])
-		if err != nil {
-			return nil, err
-		}
-
+	case "print":
+		printFn(args)
 		return nil, nil
+
+	case "+":
+		return accumulate(args, func(x, y Float) Float { return x + y }, 0)
+
+	case "-":
+		return accumulate(args, func(x, y Float) Float { return x - y }, 0)
+
+	case "*":
+		return accumulate(args, func(x, y Float) Float { return x * y }, 1)
+
+	case "/":
+		return accumulate(args, func(x, y Float) Float { return x / y }, 1)
+
+	case "%":
+		return accumulate(args, math.Mod, 1)
+
+	case "rem":
+		return accumulate(args, math.Remainder, 1)
+
+	case "pow":
+		return accumulate(args, math.Pow, 1)
 
 	default:
 		obj, err := env.Get(fnName)
@@ -98,10 +144,6 @@ func evalList(expr List, env *enviroment.Env) (Any, error) {
 			return nil, fmt.Errorf("%q is not callable", fnName)
 		}
 
-		args, err := EvalAll(args, env)
-		if err != nil {
-			return nil, err
-		}
 		return fn(args)
 	}
 }

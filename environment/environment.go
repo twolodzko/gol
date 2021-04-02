@@ -1,4 +1,4 @@
-package enviroment
+package environment
 
 import (
 	"fmt"
@@ -9,6 +9,16 @@ import (
 type Env struct {
 	Objects map[Symbol]Any
 	Parent  *Env
+}
+
+func NewEnv() *Env {
+	objs := make(map[Symbol]Any)
+	return &Env{Objects: objs, Parent: nil}
+}
+
+func NewEnclosedEnv(env *Env) *Env {
+	objs := make(map[Symbol]Any)
+	return &Env{Objects: objs, Parent: env}
 }
 
 func (env *Env) Get(sym Symbol) (Any, error) {
@@ -23,13 +33,7 @@ func (env *Env) Get(sym Symbol) (Any, error) {
 		}
 	}
 
-	// resolve symbols pointing to other symbols
-	switch val := val.(type) {
-	case Symbol:
-		return env.Get(val)
-	default:
-		return val, nil
-	}
+	return val, nil
 }
 
 func (env *Env) Set(sym Symbol, val Any) error {

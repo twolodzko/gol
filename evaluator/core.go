@@ -3,85 +3,130 @@ package evaluator
 import (
 	"fmt"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/twolodzko/goal/environment"
 	. "github.com/twolodzko/goal/types"
 )
 
-func Size(obj Any) (Any, error) {
-	switch obj := obj.(type) {
-	case List:
-		return len(obj), nil
-	case String:
-		return len(obj), nil
-	default:
-		return nil, nil
-	}
+func isTrue(obj Any) bool {
+	return obj != nil && obj != false
 }
 
-func Head(obj []Any) (Any, error) {
-	if len(obj) != 1 {
-		return nil, &ErrNumArgs{len(obj)}
+func ifFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 3 {
+		return nil, &ErrNumArgs{len(args)}
 	}
 
-	l, ok := obj[0].(List)
+	cond, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	if isTrue(cond) {
+		return Eval(args[1], env)
+	}
+	return Eval(args[2], env)
+}
+
+func letFn(args []Any, env *environment.Env) error {
+	var err error
+
+	if len(args) != 2 {
+		return &ErrNumArgs{len(args)}
+	}
+
+	name, ok := args[0].(Symbol)
 	if !ok {
-		return nil, fmt.Errorf("%v is not a list", obj[0])
+		return &ErrWrongType{args[0]}
 	}
 
+	val, err := Eval(args[1], env)
+	if err != nil {
+		return err
+	}
+
+	err = env.Set(name, val)
+
+	return err
+}
+
+func headFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 1 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	obj, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	l, ok := obj.(List)
+	if !ok {
+		return nil, fmt.Errorf("%v is not a list", obj)
+	}
 	return l.Head(), nil
 }
 
-func Tail(obj []Any) (Any, error) {
-	if len(obj) != 1 {
-		return nil, &ErrNumArgs{len(obj)}
+func tailFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 1 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	obj, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
 	}
 
-	l, ok := obj[0].(List)
+	l, ok := obj.(List)
 	if !ok {
-		return nil, fmt.Errorf("%v is not a list", obj[0])
+		return nil, fmt.Errorf("%v is not a list", obj)
 	}
-
 	return l.Tail(), nil
 }
 
-func IsNil(obj Any) (Any, error) {
-	return Bool(obj == nil), nil
-}
-
-func Error(obj []Any) (Any, error) {
-	if len(obj) != 1 {
-		return nil, &ErrNumArgs{len(obj)}
-	}
-	msg, ok := obj[0].(String)
-	if !ok {
-		return nil, &ErrWrongType{obj[0]}
+func andFn(args []Any) Bool {
+	if len(args) == 0 {
+		return Bool(false)
 	}
 
-	return nil, fmt.Errorf("%s", msg)
-}
-
-func AreSame(obj []Any) (Any, error) {
-	if len(obj) != 2 {
-		return nil, &ErrNumArgs{len(obj)}
+	for _, x := range args {
+		if !isTrue(x) {
+			return Bool(false)
+		}
 	}
-	return Bool(cmp.Equal(obj[0], obj[1])), nil
+	return Bool(true)
 }
 
-func Print(obj []Any) (Any, error) {
+func orFn(args []Any) Bool {
+	if len(args) == 0 {
+		return Bool(false)
+	}
+
+	for _, x := range args {
+		if isTrue(x) {
+			return Bool(true)
+		}
+	}
+	return Bool(false)
+}
+
+func apply(args []Any, fn func(Any) Any) Any {
+	var out []Any
+	for _, x := range args {
+		out = append(out, fn(x))
+	}
+
+	switch len(out) {
+	case 0:
+		return nil
+	case 1:
+		return out[0]
+	default:
+		return List(out)
+	}
+}
+
+func printFn(args []Any) {
 	out := ""
-	for _, o := range obj {
+	for _, o := range args {
 		out += fmt.Sprintf("%v", o)
 	}
-	fmt.Print(out)
-	return nil, nil
-}
-
-func PrintLn(obj []Any) (Any, error) {
-	Print(obj)
-	fmt.Println()
-	return nil, nil
-}
-
-func ToList(exprs []Any) (Any, error) {
-	return List(exprs), nil
+	fmt.Printf("%s\n", out)
 }

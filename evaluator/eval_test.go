@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/twolodzko/goal/environment"
 	"github.com/twolodzko/goal/parser"
 
 	. "github.com/twolodzko/goal/types"
 )
 
-func TestEvalExpr(t *testing.T) {
+func TestEval(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected Any
@@ -35,7 +36,8 @@ func TestEvalExpr(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		result, err := EvalExpr(expr[0], BaseEnv)
+		env := environment.NewEnv()
+		result, err := Eval(expr[0], env)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)

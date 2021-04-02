@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/twolodzko/goal/environment"
 	"github.com/twolodzko/goal/evaluator"
 	"github.com/twolodzko/goal/parser"
 	. "github.com/twolodzko/goal/types"
@@ -90,7 +91,8 @@ func Repl(in io.Reader) ([]Any, error) {
 		return nil, err
 	}
 
-	evaluated, err := evaluator.EvalAll(parsed, evaluator.BaseEnv)
+	env := environment.NewEnv()
+	evaluated, err := evaluator.EvalAll(parsed, env)
 
 	if err != nil {
 		return nil, err

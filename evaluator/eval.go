@@ -2,12 +2,12 @@ package evaluator
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/twolodzko/goal/enviroment"
 	. "github.com/twolodzko/goal/types"
 )
 
-func EvalExpr(expr Any, env *Env) (Any, error) {
+func EvalExpr(expr Any, env *enviroment.Env) (Any, error) {
 	switch expr := expr.(type) {
 	case nil, Bool, Int, Float, String:
 		return expr, nil
@@ -24,7 +24,7 @@ func EvalExpr(expr Any, env *Env) (Any, error) {
 	}
 }
 
-func EvalAll(exprs []Any, env *Env) ([]Any, error) {
+func EvalAll(exprs []Any, env *enviroment.Env) ([]Any, error) {
 	var out []Any
 	for _, expr := range exprs {
 		val, err := EvalExpr(expr, env)
@@ -36,7 +36,7 @@ func EvalAll(exprs []Any, env *Env) ([]Any, error) {
 	return out, nil
 }
 
-func evalList(expr List, env *Env) (Any, error) {
+func evalList(expr List, env *enviroment.Env) (Any, error) {
 	if len(expr) == 0 {
 		return List{}, nil
 	}
@@ -87,10 +87,6 @@ func evalList(expr List, env *Env) (Any, error) {
 
 		return nil, nil
 
-	case Symbol("env"):
-		printEnv(env, 0)
-		return nil, nil
-
 	default:
 		obj, err := env.Get(fnName)
 		if err != nil {
@@ -108,16 +104,4 @@ func evalList(expr List, env *Env) (Any, error) {
 		}
 		return fn(args)
 	}
-}
-
-func printEnv(env *Env, index int) {
-	if env.parent != nil {
-		printEnv(env.parent, index-1)
-	}
-
-	var out []string
-	for key, val := range env.objects {
-		out = append(out, fmt.Sprintf("%q => %v", key, val))
-	}
-	fmt.Printf("%d: { %s }\n", index, strings.Join(out, ", "))
 }

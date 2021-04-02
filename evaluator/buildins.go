@@ -1,10 +1,13 @@
 package evaluator
 
 import (
+	"github.com/twolodzko/goal/enviroment"
 	. "github.com/twolodzko/goal/types"
 )
 
 type Buildin = func([]Any) (Any, error)
+
+var BaseEnv = &enviroment.Env{Buildins, nil}
 
 var Buildins = map[Symbol]Any{
 	"list":    ToList,

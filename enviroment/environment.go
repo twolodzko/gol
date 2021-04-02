@@ -1,4 +1,4 @@
-package evaluator
+package enviroment
 
 import (
 	"fmt"
@@ -6,20 +6,18 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-var BaseEnv = &Env{Buildins, nil}
-
 type Env struct {
-	objects map[Symbol]Any
-	parent  *Env
+	Objects map[Symbol]Any
+	Parent  *Env
 }
 
 func (env *Env) Get(sym Symbol) (Any, error) {
-	val, ok := env.objects[sym]
+	val, ok := env.Objects[sym]
 
-	// recursive search over enviroments
+	// recursive search over enviroment
 	if !ok {
-		if env.parent != nil {
-			return env.parent.Get(sym)
+		if env.Parent != nil {
+			return env.Parent.Get(sym)
 		} else {
 			return nil, fmt.Errorf("unable to resolve %s in this context", sym)
 		}
@@ -35,6 +33,6 @@ func (env *Env) Get(sym Symbol) (Any, error) {
 }
 
 func (env *Env) Set(sym Symbol, val Any) error {
-	env.objects[sym] = val
+	env.Objects[sym] = val
 	return nil
 }

@@ -6,7 +6,7 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-var BaseEnv = &Env{buildIns, nil}
+var BaseEnv = &Env{Buildins, nil}
 
 type Env struct {
 	objects map[Symbol]Any

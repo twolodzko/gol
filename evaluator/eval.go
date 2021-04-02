@@ -53,16 +53,18 @@ func evalList(expr List, env *Env) (Any, error) {
 		if len(args) == 1 {
 			return args[0], nil
 		}
-		return args, nil
+		return List(args), nil
 
 	case Symbol("if"):
 		if len(args) != 3 {
-			return nil, &errNumArgs{len(args)}
+			return nil, &ErrNumArgs{len(args)}
 		}
+
 		cond, err := EvalExpr(args[0], env)
 		if err != nil {
 			return nil, err
 		}
+
 		if isTrue(cond) {
 			return EvalExpr(args[1], env)
 		}
@@ -70,12 +72,12 @@ func evalList(expr List, env *Env) (Any, error) {
 
 	case Symbol("let"):
 		if len(args) != 2 {
-			return nil, &errNumArgs{len(args)}
+			return nil, &ErrNumArgs{len(args)}
 		}
 
 		name, ok := args[0].(Symbol)
 		if !ok {
-			return nil, &errWrongType{args[0]}
+			return nil, &ErrWrongType{args[0]}
 		}
 
 		err := env.Set(name, args[1])
@@ -95,12 +97,12 @@ func evalList(expr List, env *Env) (Any, error) {
 			return nil, err
 		}
 
-		fn, ok := obj.(BuildIn)
+		fn, ok := obj.(Buildin)
 		if !ok {
 			return nil, fmt.Errorf("%q is not callable", fnName)
 		}
 
-		args, err = EvalAll(args, env)
+		args, err := EvalAll(args, env)
 		if err != nil {
 			return nil, err
 		}

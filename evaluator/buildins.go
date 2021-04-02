@@ -1,49 +1,53 @@
 package evaluator
 
 import (
-	"fmt"
-
-	"github.com/google/go-cmp/cmp"
 	. "github.com/twolodzko/goal/types"
 )
 
-type BuildIn = func([]Any) (Any, error)
+type Buildin = func([]Any) (Any, error)
 
-var buildIns = map[Symbol]Any{
-	"list":    listFn,
-	"size":    vectorize(sizeFn),
-	"head":    headFn,
-	"tail":    tailFn,
-	"nil?":    vectorize(isNilFn),
-	"error":   errorFn,
-	"eq?":     areSameFn,
-	"print":   printFn,
-	"println": printLnFn,
+var Buildins = map[Symbol]Any{
+	"list":    ToList,
+	"size":    vectorize(Size),
+	"head":    Head,
+	"tail":    Tail,
+	"nil?":    vectorize(IsNil),
+	"error":   Error,
+	"eq?":     AreSame,
+	"print":   Print,
+	"println": PrintLn,
 	// type conversions
-	"str":   vectorize(toStringFn),
-	"int":   vectorize(toIntFn),
-	"float": vectorize(toFloatFn),
+	"str":   vectorize(ToString),
+	"int":   vectorize(ToInt),
+	"float": vectorize(ToFloat),
+	// type checking
+	"bool?":  vectorize(IsBool),
+	"int?":   vectorize(IsInt),
+	"float?": vectorize(IsFloat),
+	"str?":   vectorize(IsString),
+	"atom?":  vectorize(IsAtom),
+	"list?":  vectorize(IsList),
 	// logic
-	"true?": vectorize(isTrueFn),
-	"not":   vectorize(notTrueFn),
-	"and":   andFn,
-	"or":    orFn,
+	"true?": vectorize(IsTrue),
+	"not":   vectorize(Not),
+	"and":   And,
+	"or":    Or,
 	// math
-	"+":    floatSumFn,
-	"-":    floatDifFn,
-	"*":    floatMulFn,
-	"/":    floatDivFn,
-	"%":    floatModFn,
-	"int+": intSumFn,
-	"int-": intDifFn,
-	"int*": intMulFn,
-	"int/": intDivFn,
-	"int%": intModFn,
-	"pow":  powFn,
-	"rem":  remFn,
+	"+":    FloatSum,
+	"-":    FloatDif,
+	"*":    FloatMul,
+	"/":    FloatDiv,
+	"%":    FloatMod,
+	"int+": IntSum,
+	"int-": IntDif,
+	"int*": IntMul,
+	"int/": IntDiv,
+	"int%": IntMod,
+	"pow":  Pow,
+	"rem":  Rem,
 }
 
-func vectorize(fn func(Any) (Any, error)) BuildIn {
+func vectorize(fn func(Any) (Any, error)) Buildin {
 	return func(objs []Any) (Any, error) {
 		if len(objs) == 1 {
 			return fn(objs[0])
@@ -59,83 +63,4 @@ func vectorize(fn func(Any) (Any, error)) BuildIn {
 		}
 		return out, nil
 	}
-}
-
-func listFn(exprs []Any) (Any, error) {
-	return List(exprs), nil
-}
-
-func sizeFn(obj Any) (Any, error) {
-	switch obj := obj.(type) {
-	case List:
-		return len(obj), nil
-	case String:
-		return len(obj), nil
-	default:
-		return nil, nil
-	}
-}
-
-func headFn(obj []Any) (Any, error) {
-	if len(obj) != 1 {
-		return nil, &errNumArgs{len(obj)}
-	}
-
-	l, ok := obj[0].(List)
-	if !ok {
-		return nil, fmt.Errorf("%v is not a list", obj[0])
-	}
-
-	return l.Head(), nil
-}
-
-func tailFn(obj []Any) (Any, error) {
-	if len(obj) != 1 {
-		return nil, &errNumArgs{len(obj)}
-	}
-
-	l, ok := obj[0].(List)
-	if !ok {
-		return nil, fmt.Errorf("%v is not a list", obj[0])
-	}
-
-	return l.Tail(), nil
-}
-
-func isNilFn(obj Any) (Any, error) {
-	return Bool(obj == nil), nil
-}
-
-func errorFn(obj []Any) (Any, error) {
-	if len(obj) != 1 {
-		return nil, &errNumArgs{len(obj)}
-	}
-	msg, ok := obj[0].(String)
-	if !ok {
-		return nil, &errWrongType{obj[0]}
-	}
-
-	return nil, fmt.Errorf("%s", msg)
-}
-
-func areSameFn(obj []Any) (Any, error) {
-	if len(obj) != 2 {
-		return nil, &errNumArgs{len(obj)}
-	}
-	return Bool(cmp.Equal(obj[0], obj[1])), nil
-}
-
-func printFn(obj []Any) (Any, error) {
-	out := ""
-	for _, o := range obj {
-		out += fmt.Sprintf("%v", o)
-	}
-	fmt.Print(out)
-	return nil, nil
-}
-
-func printLnFn(obj []Any) (Any, error) {
-	printFn(obj)
-	fmt.Println()
-	return nil, nil
 }

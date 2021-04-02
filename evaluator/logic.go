@@ -8,15 +8,15 @@ func isTrue(obj Any) bool {
 	return obj != nil && obj != false
 }
 
-func isTrueFn(obj Any) (Any, error) {
+func IsTrue(obj Any) (Any, error) {
 	return Bool(isTrue(obj)), nil
 }
 
-func notTrueFn(obj Any) (Any, error) {
+func Not(obj Any) (Any, error) {
 	return Bool(!isTrue(obj)), nil
 }
 
-func andFn(objs []Any) (Any, error) {
+func And(objs []Any) (Any, error) {
 	if len(objs) == 0 {
 		return Bool(false), nil
 	}
@@ -29,7 +29,7 @@ func andFn(objs []Any) (Any, error) {
 	return Bool(true), nil
 }
 
-func orFn(objs []Any) (Any, error) {
+func Or(objs []Any) (Any, error) {
 	for _, x := range objs {
 		if isTrue(x) {
 			return Bool(true), nil

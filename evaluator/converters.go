@@ -7,7 +7,7 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func toStringFn(obj Any) (Any, error) {
+func ToString(obj Any) (Any, error) {
 	switch obj := obj.(type) {
 	case String:
 		return obj, nil
@@ -16,7 +16,7 @@ func toStringFn(obj Any) (Any, error) {
 	}
 }
 
-func toIntFn(obj Any) (Any, error) {
+func ToInt(obj Any) (Any, error) {
 	switch obj := obj.(type) {
 	case Int:
 		return obj, nil
@@ -40,7 +40,7 @@ func toIntFn(obj Any) (Any, error) {
 	}
 }
 
-func toFloatFn(obj Any) (Any, error) {
+func ToFloat(obj Any) (Any, error) {
 	switch obj := obj.(type) {
 	case Float:
 		return obj, nil
@@ -50,12 +50,6 @@ func toFloatFn(obj Any) (Any, error) {
 		switch {
 		case parser.IsFloat(string(obj)):
 			return parser.ParseFloat(string(obj))
-		case parser.IsInt(string(obj)):
-			i, err := parser.ParseInt(string(obj))
-			if err != nil {
-				return nil, err
-			}
-			return Float(i), nil
 		default:
 			return nil, fmt.Errorf("cannot convert %v to float", obj)
 		}

@@ -8,17 +8,17 @@ import (
 )
 
 var (
-	floatSumFn = floatAccumulate(func(x, y Float) Float { return x + y }, 0)
-	intSumFn   = intAccumulate(func(x, y Int) Int { return x + y }, 0)
-	floatDifFn = floatAccumulate(func(x, y Float) Float { return x - y }, 0)
-	intDifFn   = intAccumulate(func(x, y Int) Int { return x - y }, 0)
-	floatMulFn = floatAccumulate(func(x, y Float) Float { return x * y }, 1)
-	intMulFn   = intAccumulate(func(x, y Int) Int { return x * y }, 1)
-	floatDivFn = floatAccumulate(func(x, y Float) Float { return x / y }, 1)
-	floatModFn = floatAccumulate(math.Mod, 1)
-	intModFn   = intAccumulate(func(x, y Int) Int { return x % y }, 1)
-	powFn      = floatAccumulate(math.Pow, 1)
-	remFn      = floatAccumulate(math.Remainder, 1)
+	FloatSum = floatAccumulate(func(x, y Float) Float { return x + y }, 0)
+	IntSum   = intAccumulate(func(x, y Int) Int { return x + y }, 0)
+	FloatDif = floatAccumulate(func(x, y Float) Float { return x - y }, 0)
+	IntDif   = intAccumulate(func(x, y Int) Int { return x - y }, 0)
+	FloatMul = floatAccumulate(func(x, y Float) Float { return x * y }, 1)
+	IntMul   = intAccumulate(func(x, y Int) Int { return x * y }, 1)
+	FloatDiv = floatAccumulate(func(x, y Float) Float { return x / y }, 1)
+	FloatMod = floatAccumulate(math.Mod, 1)
+	IntMod   = intAccumulate(func(x, y Int) Int { return x % y }, 1)
+	Pow      = floatAccumulate(math.Pow, 1)
+	Rem      = floatAccumulate(math.Remainder, 1)
 )
 
 func toFloat(o Any) (Float, bool) {
@@ -32,17 +32,17 @@ func toFloat(o Any) (Float, bool) {
 	}
 }
 
-func floatAccumulate(fn func(Float, Float) Float, start Float) BuildIn {
+func floatAccumulate(fn func(Float, Float) Float, start Float) Buildin {
 	return func(obj []Any) (Any, error) {
 		var acc Float = start
 
 		if len(obj) == 0 {
-			return nil, &errNumArgs{len(obj)}
+			return nil, &ErrNumArgs{len(obj)}
 		}
 
 		x, ok := toFloat(obj[0])
 		if !ok {
-			return 0, &errWrongType{obj[0]}
+			return 0, &ErrWrongType{obj[0]}
 		}
 
 		if len(obj) == 1 {
@@ -53,7 +53,7 @@ func floatAccumulate(fn func(Float, Float) Float, start Float) BuildIn {
 		for _, x := range obj[1:] {
 			f, ok := toFloat(x)
 			if !ok {
-				return 0, &errWrongType{x}
+				return 0, &ErrWrongType{x}
 			}
 			acc = fn(acc, f)
 		}
@@ -72,17 +72,17 @@ func toInt(o Any) (Int, bool) {
 	}
 }
 
-func intAccumulate(fn func(Int, Int) Int, start Int) BuildIn {
+func intAccumulate(fn func(Int, Int) Int, start Int) Buildin {
 	return func(obj []Any) (Any, error) {
 		var acc Int = start
 
 		if len(obj) == 0 {
-			return nil, &errNumArgs{len(obj)}
+			return nil, &ErrNumArgs{len(obj)}
 		}
 
 		x, ok := toInt(obj[0])
 		if !ok {
-			return 0, &errWrongType{obj[0]}
+			return 0, &ErrWrongType{obj[0]}
 		}
 
 		if len(obj) == 1 {
@@ -93,7 +93,7 @@ func intAccumulate(fn func(Int, Int) Int, start Int) BuildIn {
 		for _, x := range obj[1:] {
 			f, ok := toInt(x)
 			if !ok {
-				return 0, &errWrongType{x}
+				return 0, &ErrWrongType{x}
 			}
 			acc = fn(acc, f)
 		}
@@ -101,20 +101,20 @@ func intAccumulate(fn func(Int, Int) Int, start Int) BuildIn {
 	}
 }
 
-func intDivFn(obj []Any) (Any, error) {
+func IntDiv(obj []Any) (Any, error) {
 	if len(obj) < 2 {
-		return nil, &errNumArgs{len(obj)}
+		return nil, &ErrNumArgs{len(obj)}
 	}
 
 	acc, ok := toInt(obj[0])
 	if !ok {
-		return 0, &errWrongType{obj[0]}
+		return 0, &ErrWrongType{obj[0]}
 	}
 
 	for _, x := range obj[1:] {
 		i, ok := toInt(x)
 		if !ok {
-			return 0, &errWrongType{x}
+			return 0, &ErrWrongType{x}
 		}
 		if x == 0 {
 			return 0, errors.New("integer divide by zero")

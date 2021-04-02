@@ -6,18 +6,18 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-type errNumArgs struct {
+type ErrNumArgs struct {
 	num int
 }
 
-func (e *errNumArgs) Error() string {
+func (e *ErrNumArgs) Error() string {
 	return fmt.Sprintf("wrong number of arguments (%d)", e.num)
 }
 
-type errWrongType struct {
+type ErrWrongType struct {
 	obj Any
 }
 
-func (e *errWrongType) Error() string {
+func (e *ErrWrongType) Error() string {
 	return fmt.Sprintf("invalid type %T for %v", e.obj, e.obj)
 }

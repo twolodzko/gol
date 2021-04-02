@@ -10,22 +10,14 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func TestEvalExpr(t *testing.T) {
+func TestCore(t *testing.T) {
 	var testCases = []struct {
 		input    string
 		expected Any
 	}{
-		// objects
-		{`nil`, nil},
-		{`()`, List{}},
-		{`2`, Int(2)},
-		{`3.14`, Float(3.14)},
-		{`"Hello World!"`, String("Hello World!")},
-		{`true`, Bool(true)},
-		// functions
-		{`(str 3.14)`, String("3.14")},
-		{`(int "3.14")`, Int(3)},
-		{`(float "1")`, Float(1)},
+		{`(str 3.14 42 "hello")`, List{String("3.14"), String("42"), String("hello")}},
+		{`(int "3.14" "10" 5.2 100)`, List{Int(3), Int(10), Int(5), Int(100)}},
+		{`(float 5.22 "1" "1e-5")`, List{Float(5.22), Float(1), Float(1e-5)}},
 		{`(list "Hello World!" 42 3.14)`, List{String("Hello World!"), Int(42), Float(3.14)}},
 		{`(quote 3.14)`, Float(3.14)},
 		{`(quote foo)`, Symbol("foo")},
@@ -41,9 +33,6 @@ func TestEvalExpr(t *testing.T) {
 		{`(nil? ())`, Bool(false)},
 		{`(nil? true)`, Bool(false)},
 		{`(nil? (print))`, Bool(true)},
-		{`(if true 1 2)`, Int(1)},
-		{`(if false 1 2)`, Int(2)},
-		{`(if (true? false) (error "this should not fail!") "ok")`, String("ok")},
 		{`(eq? 2 2)`, Bool(true)},
 		{`(eq? 2 3)`, Bool(false)},
 		{`(eq? 2 "2")`, Bool(false)},
@@ -86,6 +75,10 @@ func TestBooleans(t *testing.T) {
 		{`(not false)`, true},
 		{`(not ())`, false},
 		{`(true? nil)`, false},
+		{`(and true true false)`, false},
+		{`(and true 1 ())`, true},
+		{`(or false true false)`, true},
+		{`(or false nil)`, false},
 	}
 
 	for _, tt := range testCases {
@@ -115,8 +108,9 @@ func TestMath(t *testing.T) {
 		{`(+ 2 2.0)`, Float(4.0)},
 		{`(int+ 2 2.0)`, Int(4.0)},
 		{`(- 3 2)`, Float(1)},
-		{`(- 3 2)`, Float(1)},
+		{`(int- 3 2)`, Int(1)},
 		{`(* 2 3)`, Float(6)},
+		{`(int* 2 3)`, Int(6)},
 		{`(/ 6 3)`, Float(2)},
 		{`(+ 2.1 4.15)`, Float(6.25)},
 		{`(- 2.1 4.0)`, Float(-1.9)},

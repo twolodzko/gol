@@ -91,6 +91,7 @@ func Repl(in io.Reader) ([]Any, error) {
 		return nil, err
 	}
 
+	// FIXME enviroment needs to be fixed per session!
 	env := environment.NewEnv()
 	evaluated, err := evaluator.EvalAll(parsed, env)
 

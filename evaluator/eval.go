@@ -155,6 +155,9 @@ func evalList(expr List, env *environment.Env) (Any, error) {
 	case "pow":
 		return accumulate(args, math.Pow, 1)
 
+	case "env":
+		return env.Objects, nil
+
 	default:
 		return nil, errors.New("not implemented")
 

@@ -30,6 +30,7 @@ func TestEval(t *testing.T) {
 		{`(def b (+ 1 2))`, Float(3)},
 		{`(let (c 2) c)`, Int(2)},
 		{`(let (x 10) (+ 5 x))`, Float(15)},
+		{`(let (x 5) (let (y 6) (+ x y)))`, Float(11)},
 	}
 
 	for _, tt := range testCases {

@@ -27,7 +27,7 @@ func ifFn(args []Any, env *environment.Env) (Any, error) {
 	return Eval(args[2], env)
 }
 
-func letFn(args []Any, env *environment.Env) error {
+func defFn(args []Any, env *environment.Env) error {
 	var err error
 
 	if len(args) != 2 {

@@ -187,10 +187,10 @@ func TestErrorFn(t *testing.T) {
 	}
 }
 
-func TestLet(t *testing.T) {
+func TestDef(t *testing.T) {
 	env := environment.NewEnv()
 
-	expr, err := parser.Parse(strings.NewReader(`(let x 42)`))
+	expr, err := parser.Parse(strings.NewReader(`(def x 42)`))
 
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)

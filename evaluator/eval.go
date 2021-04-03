@@ -55,8 +55,8 @@ func evalList(expr List, env *environment.Env) (Any, error) {
 	case "if":
 		return ifFn(args, env)
 
-	case "let":
-		return nil, letFn(args, env)
+	case "def":
+		return nil, defFn(args, env)
 
 	case "head":
 		return headFn(args, env)

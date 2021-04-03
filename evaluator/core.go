@@ -27,26 +27,26 @@ func ifFn(args []Any, env *environment.Env) (Any, error) {
 	return Eval(args[2], env)
 }
 
-func defFn(args []Any, env *environment.Env) error {
+func defFn(args []Any, env *environment.Env) (Any, error) {
 	var err error
 
 	if len(args) != 2 {
-		return &ErrNumArgs{len(args)}
+		return nil, &ErrNumArgs{len(args)}
 	}
 
 	name, ok := args[0].(Symbol)
 	if !ok {
-		return &ErrWrongType{args[0]}
+		return nil, &ErrWrongType{args[0]}
 	}
 
 	val, err := Eval(args[1], env)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = env.Set(name, val)
 
-	return err
+	return val, err
 }
 
 func headFn(args []Any, env *environment.Env) (Any, error) {

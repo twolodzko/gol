@@ -4,36 +4,36 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func IsBool(obj Any) (Any, error) {
+func isBool(obj Any) Any {
 	_, ok := obj.(Bool)
-	return Bool(ok), nil
+	return Bool(ok)
 }
 
-func IsInt(obj Any) (Any, error) {
+func isInt(obj Any) Any {
 	_, ok := obj.(Int)
-	return Bool(ok), nil
+	return Bool(ok)
 }
 
-func IsFloat(obj Any) (Any, error) {
+func isFloat(obj Any) Any {
 	_, ok := obj.(Float)
-	return Bool(ok), nil
+	return Bool(ok)
 }
 
-func IsString(obj Any) (Any, error) {
+func isString(obj Any) Any {
 	_, ok := obj.(String)
-	return Bool(ok), nil
+	return Bool(ok)
 }
 
-func IsAtom(obj Any) (Any, error) {
+func isAtom(obj Any) Any {
 	switch obj.(type) {
 	case Bool, Int, Float, String:
-		return Bool(true), nil
+		return Bool(true)
 	default:
-		return Bool(false), nil
+		return Bool(false)
 	}
 }
 
-func IsList(obj Any) (Any, error) {
+func isList(obj Any) Any {
 	_, ok := obj.(List)
-	return Bool(ok), nil
+	return Bool(ok)
 }

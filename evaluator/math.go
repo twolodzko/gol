@@ -4,7 +4,7 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func toFloat(x Any) (Float, bool) {
+func numToFloat(x Any) (Float, bool) {
 	switch x := x.(type) {
 	case Float:
 		return x, true
@@ -22,7 +22,7 @@ func accumulate(obj []Any, fn func(Float, Float) Float, start Float) (Any, error
 		return nil, &ErrNumArgs{len(obj)}
 	}
 
-	x, ok := toFloat(obj[0])
+	x, ok := numToFloat(obj[0])
 	if !ok {
 		return 0, &ErrWrongType{obj[0]}
 	}
@@ -33,7 +33,7 @@ func accumulate(obj []Any, fn func(Float, Float) Float, start Float) (Any, error
 
 	acc = x
 	for _, x := range obj[1:] {
-		f, ok := toFloat(x)
+		f, ok := numToFloat(x)
 		if !ok {
 			return 0, &ErrWrongType{x}
 		}

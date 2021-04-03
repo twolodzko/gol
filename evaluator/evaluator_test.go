@@ -11,6 +11,45 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
+func TestEval(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected Any
+	}{
+		// objects
+		{`nil`, nil},
+		{`()`, List{}},
+		{`2`, Int(2)},
+		{`3.14`, Float(3.14)},
+		{`"Hello World!"`, String("Hello World!")},
+		{`true`, Bool(true)},
+		// functions
+		{`(if true 1 2)`, Int(1)},
+		{`(if false 1 2)`, Int(2)},
+		{`(if (true? false) (error "this should not fail!") "ok")`, String("ok")},
+		{`(quote (+ 1 2))`, List{Symbol("+"), Int(1), Int(2)}},
+		{`(- 7 (* 2 (+ 1 2)) 1)`, Float(0)},
+	}
+
+	for _, tt := range testCases {
+		expr, err := parser.Parse(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
+		env := environment.NewEnv()
+		result, err := Eval(expr[0], env)
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
 func TestCore(t *testing.T) {
 	var testCases = []struct {
 		input    string
@@ -176,5 +215,74 @@ func TestLet(t *testing.T) {
 	}
 	if result != Int(42) {
 		t.Errorf("unable to read the variable")
+	}
+}
+
+func TestCheckers(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected Bool
+	}{
+		{`(nil? nil)`, true},
+		{`(nil? ())`, false},
+		{`(nil? 0)`, false},
+		{`(nil? "")`, false},
+		{`(nil? (list 1 2))`, false},
+		{`(bool? true)`, true},
+		{`(bool? false)`, true},
+		{`(bool? nil)`, false},
+		{`(bool? ())`, false},
+		{`(bool? 0)`, false},
+		{`(bool? "")`, false},
+		{`(bool? (list 1 2))`, false},
+		{`(int? nil)`, false},
+		{`(int? ())`, false},
+		{`(int? 0)`, true},
+		{`(int? 42)`, true},
+		{`(int? "")`, false},
+		{`(int? (list 1 2))`, false},
+		{`(float? nil)`, false},
+		{`(float? ())`, false},
+		{`(float? 0)`, false},
+		{`(float? "")`, false},
+		{`(float? (list 1 2))`, false},
+		{`(float? 3.1415)`, true},
+		{`(str? nil)`, false},
+		{`(str? ())`, false},
+		{`(str? 0)`, false},
+		{`(str? "")`, true},
+		{`(str? "hello")`, true},
+		{`(str? (list 1 2))`, false},
+		{`(list? nil)`, false},
+		{`(list? ())`, true},
+		{`(list? 0)`, false},
+		{`(list? "")`, false},
+		{`(list? "hello")`, false},
+		{`(list? (list 1 2))`, true},
+		{`(atom? nil)`, false},
+		{`(atom? ())`, false},
+		{`(atom? 0)`, true},
+		{`(atom? 3.1415)`, true},
+		{`(atom? true)`, true},
+		{`(atom? "")`, true},
+		{`(atom? (list 1 2))`, false},
+	}
+
+	for _, tt := range testCases {
+		expr, err := parser.Parse(strings.NewReader(tt.input))
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+
+		env := environment.NewEnv()
+		result, err := Eval(expr[0], env)
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
+		}
 	}
 }

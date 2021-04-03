@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -96,6 +97,24 @@ func evalList(expr List, env *environment.Env) (Any, error) {
 	case "nil?":
 		return apply(args, func(x Any) Any { return Bool(x == nil) }), nil
 
+	case "bool?":
+		return apply(args, isBool), nil
+
+	case "int?":
+		return apply(args, isInt), nil
+
+	case "float?":
+		return apply(args, isFloat), nil
+
+	case "str?":
+		return apply(args, isString), nil
+
+	case "list?":
+		return apply(args, isList), nil
+
+	case "atom?":
+		return apply(args, isAtom), nil
+
 	case "eq?":
 		if len(args) != 2 {
 			return nil, &ErrNumArgs{len(args)}
@@ -134,16 +153,7 @@ func evalList(expr List, env *environment.Env) (Any, error) {
 		return accumulate(args, math.Pow, 1)
 
 	default:
-		obj, err := env.Get(fnName)
-		if err != nil {
-			return nil, err
-		}
+		return nil, errors.New("not implemented")
 
-		fn, ok := obj.(Buildin)
-		if !ok {
-			return nil, fmt.Errorf("%q is not callable", fnName)
-		}
-
-		return fn(args)
 	}
 }

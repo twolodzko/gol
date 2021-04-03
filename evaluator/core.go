@@ -153,11 +153,3 @@ func apply(args []Any, fn func(Any) Any) Any {
 		return List(out)
 	}
 }
-
-func printFn(args []Any) {
-	out := ""
-	for _, o := range args {
-		out += fmt.Sprintf("%v", o)
-	}
-	fmt.Printf("%s\n", out)
-}

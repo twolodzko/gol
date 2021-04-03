@@ -40,7 +40,7 @@ func TestEval(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := environment.NewEnv()
+		env := InitBuildin()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {
@@ -66,10 +66,6 @@ func TestCore(t *testing.T) {
 		{`(quote (foo bar))`, List{Symbol("foo"), Symbol("bar")}},
 		{`(head (list 1 2 3))`, Int(1)},
 		{`(tail (list 1 2 3))`, List{Int(2), Int(3)}},
-		{`(nil? nil)`, Bool(true)},
-		{`(nil? ())`, Bool(false)},
-		{`(nil? true)`, Bool(false)},
-		{`(nil? (print))`, Bool(true)},
 		{`(eq? 2 2)`, Bool(true)},
 		{`(eq? 2 3)`, Bool(false)},
 		{`(eq? 2 "2")`, Bool(false)},
@@ -84,7 +80,7 @@ func TestCore(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := environment.NewEnv()
+		env := InitBuildin()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {
@@ -126,7 +122,7 @@ func TestBooleans(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := environment.NewEnv()
+		env := InitBuildin()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {
@@ -161,7 +157,7 @@ func TestMath(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := environment.NewEnv()
+		env := InitBuildin()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {
@@ -190,7 +186,7 @@ func TestErrorFn(t *testing.T) {
 }
 
 func TestDef(t *testing.T) {
-	env := environment.NewEnv()
+	env := InitBuildin()
 
 	expr, err := parser.Parse(strings.NewReader(`(def x 42)`))
 
@@ -277,7 +273,7 @@ func TestCheckers(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := environment.NewEnv()
+		env := InitBuildin()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {

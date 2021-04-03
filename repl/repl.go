@@ -6,7 +6,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/twolodzko/goal/environment"
 	"github.com/twolodzko/goal/evaluator"
 	"github.com/twolodzko/goal/parser"
 	. "github.com/twolodzko/goal/types"
@@ -92,7 +91,7 @@ func Repl(in io.Reader) ([]Any, error) {
 	}
 
 	// FIXME enviroment needs to be fixed per session!
-	env := environment.NewEnv()
+	env := evaluator.InitBuildin()
 	evaluated, err := evaluator.EvalAll(parsed, env)
 
 	if err != nil {

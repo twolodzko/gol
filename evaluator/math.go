@@ -1,8 +1,23 @@
 package evaluator
 
 import (
+	"github.com/twolodzko/goal/environment"
 	. "github.com/twolodzko/goal/types"
 )
+
+type ArithmeticFunction struct {
+	intFn   func(x, y Int) Int
+	floatFn func(x, y Float) Float
+	start   Float
+}
+
+func (f *ArithmeticFunction) Call(args []Any, env *environment.Env) (Any, error) {
+	args, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+	return accumulate(args, f.floatFn, 0)
+}
 
 func numToFloat(x Any) (Float, bool) {
 	switch x := x.(type) {

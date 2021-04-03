@@ -16,19 +16,20 @@ func TestEval(t *testing.T) {
 		input    string
 		expected Any
 	}{
-		// objects
 		{`nil`, nil},
 		{`()`, List{}},
 		{`2`, Int(2)},
 		{`3.14`, Float(3.14)},
 		{`"Hello World!"`, String("Hello World!")},
 		{`true`, Bool(true)},
-		// functions
 		{`(if true 1 2)`, Int(1)},
 		{`(if false 1 2)`, Int(2)},
 		{`(if (true? false) (error "this should not fail!") "ok")`, String("ok")},
 		{`(quote (+ 1 2))`, List{Symbol("+"), Int(1), Int(2)}},
 		{`(- 7 (* 2 (+ 1 2)) 1)`, Float(0)},
+		{`(def b (+ 1 2))`, Float(3)},
+		{`(let (c 2) c)`, Int(2)},
+		{`(let (x 10) (+ 5 x))`, Float(15)},
 	}
 
 	for _, tt := range testCases {

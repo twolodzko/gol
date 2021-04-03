@@ -49,6 +49,37 @@ func defFn(args []Any, env *environment.Env) (Any, error) {
 	return val, err
 }
 
+func letFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) < 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+
+	vars, ok := args[0].(List)
+	if !ok {
+		return nil, &ErrWrongType{args[0]}
+	}
+	if len(vars) != 2 {
+		return nil, fmt.Errorf("invalid variable assignment %v", vars)
+	}
+
+	localEnv := environment.NewEnclosedEnv(env)
+
+	name, ok := vars[0].(Symbol)
+	if !ok {
+		return nil, &ErrWrongType{vars[0]}
+	}
+
+	localEnv.Set(name, vars[1])
+
+	res, err := EvalAll(args[1:], localEnv)
+
+	if len(res) == 0 {
+		return nil, err
+	}
+
+	return res[len(res)-1], err
+}
+
 func headFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) != 1 {
 		return nil, &ErrNumArgs{len(args)}

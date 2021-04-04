@@ -40,7 +40,7 @@ func TestEval(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := InitBuildin()
+		env := InitEnv()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {
@@ -80,7 +80,7 @@ func TestCore(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := InitBuildin()
+		env := InitEnv()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {
@@ -122,7 +122,7 @@ func TestBooleans(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := InitBuildin()
+		env := InitEnv()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {
@@ -158,7 +158,7 @@ func TestMath(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := InitBuildin()
+		env := InitEnv()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {
@@ -186,10 +186,10 @@ func TestErrorFn(t *testing.T) {
 	}
 }
 
-func TestDef(t *testing.T) {
-	env := InitBuildin()
+func TestDefAndDel(t *testing.T) {
+	env := InitEnv()
 
-	expr, err := parser.Parse(strings.NewReader(`(def x 42)`))
+	expr, err := parser.Parse(strings.NewReader(`(def x 42) (del x) (del y)`))
 
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
@@ -197,23 +197,26 @@ func TestDef(t *testing.T) {
 	if _, err := Eval(expr[0], env); err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
-	if _, err := env.Get(Symbol("x")); err != nil {
+
+	result, err := env.Get(Symbol("x"))
+	if err != nil {
 		t.Errorf("variable x not set")
-	}
-
-	expr, err = parser.Parse(strings.NewReader("x"))
-
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	}
-
-	result, err := Eval(expr[0], env)
-
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
 	}
 	if result != Int(42) {
 		t.Errorf("unable to read the variable")
+	}
+
+	_, err = Eval(expr[1], env)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+	if result, err := env.Get(Symbol("x")); err == nil {
+		t.Errorf("expected not to see x, got %v", result)
+	}
+
+	_, err = Eval(expr[2], env)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
 	}
 }
 
@@ -274,7 +277,7 @@ func TestCheckers(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 
-		env := InitBuildin()
+		env := InitEnv()
 		result, err := Eval(expr[0], env)
 
 		if err != nil {

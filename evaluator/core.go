@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/twolodzko/goal/environment"
 	. "github.com/twolodzko/goal/types"
@@ -136,4 +137,17 @@ func orFn(args []Any) Bool {
 		}
 	}
 	return Bool(false)
+}
+
+func printEnv(env *environment.Env, depth int) {
+	if env.Parent != nil {
+		printEnv(env.Parent, depth-1)
+	}
+
+	var out []string
+	for key, val := range env.Objects {
+		out = append(out, fmt.Sprintf("%v => %v", key, val))
+	}
+
+	fmt.Printf("%d: { %v }\n", depth, strings.Join(out, ", "))
 }

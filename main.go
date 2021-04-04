@@ -19,7 +19,7 @@ func print(msg string) {
 }
 
 func main() {
-	env := evaluator.InitBuildin()
+	env := evaluator.InitEnv()
 	repl := repl.NewREPL(os.Stdin, env)
 
 	fmt.Println("Press ^C to exit.")

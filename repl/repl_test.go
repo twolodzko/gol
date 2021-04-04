@@ -17,7 +17,7 @@ func TestRead_InvalidInput(t *testing.T) {
 		"(()",
 	}
 
-	env := evaluator.InitBuildin()
+	env := evaluator.InitEnv()
 
 	for _, input := range testCases {
 		repl := NewREPL(strings.NewReader(input), env)

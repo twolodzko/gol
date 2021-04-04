@@ -26,11 +26,11 @@ func TestEval(t *testing.T) {
 		{`(if false 1 2)`, Int(2)},
 		{`(if (true? false) (error "this should not fail!") "ok")`, String("ok")},
 		{`(quote (+ 1 2))`, List{Symbol("+"), Int(1), Int(2)}},
-		{`(- 7 (* 2 (+ 1 2)) 1)`, Float(0)},
-		{`(def b (+ 1 2))`, Float(3)},
+		{`(- 7 (* 2 (+ 1 2)) 1)`, Int(0)},
+		{`(def b (+ 1 2))`, Int(3)},
 		{`(let (c 2) c)`, Int(2)},
-		{`(let (x 10) (+ 5 x))`, Float(15)},
-		{`(let (x 5) (let (y 6) (+ x y)))`, Float(11)},
+		{`(let (x 10) (+ 5 x))`, Int(15)},
+		{`(let (x 5) (let (y 6) (+ x y)))`, Int(11)},
 	}
 
 	for _, tt := range testCases {
@@ -140,14 +140,15 @@ func TestMath(t *testing.T) {
 		expected Any
 	}{
 		{`(+ 2 2.0)`, Float(4.0)},
-		{`(- 3 2)`, Float(1)},
-		{`(* 2 3)`, Float(6)},
+		{`(- 3 2)`, Int(1)},
+		{`(* 2 3)`, Int(6)},
 		{`(/ 6 3)`, Float(2)},
 		{`(+ 2.1 4.15)`, Float(6.25)},
 		{`(- 2.1 4.0)`, Float(-1.9)},
 		{`(* 2.5 4.0)`, Float(10.0)},
 		{`(/ 10.2 5.1)`, Float(2.0)},
-		{`(+ 2 (- 4 (* 1 2)))`, Float(4)},
+		{`(+ 2 (- 4 (* 1 2)))`, Int(4)},
+		{`(// 100 2 5 2)`, Int(5)},
 	}
 
 	for _, tt := range testCases {
@@ -164,7 +165,7 @@ func TestMath(t *testing.T) {
 			t.Errorf("unexpected error: %s", err)
 		}
 		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
 		}
 	}
 }

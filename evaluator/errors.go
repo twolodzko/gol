@@ -27,13 +27,5 @@ type ErrNaN struct {
 }
 
 func (e *ErrNaN) Error() string {
-	return fmt.Sprintf("not a number: %v", e.val)
-}
-
-type ErrNotAnInteger struct {
-	val Any
-}
-
-func (e *ErrNotAnInteger) Error() string {
-	return fmt.Sprintf("not an integer: %v", e.val)
+	return fmt.Sprintf("%v is not a number", e.val)
 }

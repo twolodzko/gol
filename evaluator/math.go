@@ -16,107 +16,106 @@ func (f *ArithmeticFunction) Call(args []Any, env *environment.Env) (Any, error)
 	if err != nil {
 		return nil, err
 	}
-	return accumulate(args, f.floatFn, 0)
+	return f.apply(args)
 }
 
-func numToFloat(x Any) (Float, bool) {
-	switch x := x.(type) {
-	case Float:
-		return x, true
+func (f *ArithmeticFunction) apply(arr []Any) (Any, error) {
+	if len(arr) == 0 {
+		return nil, &ErrNumArgs{len(arr)}
+	}
+
+	switch x := arr[0].(type) {
 	case Int:
-		return Float(x), true
+		if len(arr) == 1 {
+			return f.intFn(Int(f.start), x), nil
+		}
+		acc := x
+		for i, x := range arr[1:] {
+			switch x := x.(type) {
+			case Int:
+				acc = f.intFn(acc, x)
+			case Float:
+				// fallback to floats
+				return applyFloatFn(arr[1+i:], f.floatFn, Float(acc))
+			default:
+				return 0, &ErrNaN{x}
+			}
+		}
+		return acc, nil
+
+	case Float:
+		if len(arr) == 1 {
+			return f.floatFn(f.start, x), nil
+		}
+		return applyFloatFn(arr[1:], f.floatFn, x)
+
 	default:
-		return 0, false
+		return nil, &ErrNaN{x}
 	}
 }
 
-func accumulate(obj []Any, fn func(Float, Float) Float, start Float) (Any, error) {
-	var acc Float = start
-
-	if len(obj) == 0 {
-		return nil, &ErrNumArgs{len(obj)}
-	}
-
-	x, ok := numToFloat(obj[0])
-	if !ok {
-		return 0, &ErrWrongType{obj[0]}
-	}
-
-	if len(obj) == 1 {
-		return fn(acc, x), nil
-	}
-
-	acc = x
-	for _, x := range obj[1:] {
-		f, ok := numToFloat(x)
-		if !ok {
-			return 0, &ErrWrongType{x}
+func applyFloatFn(arr []Any, fn func(x, y Float) Float, start Float) (Float, error) {
+	acc := start
+	for _, x := range arr {
+		switch x := x.(type) {
+		case Float:
+			acc = fn(acc, x)
+		case Int:
+			acc = fn(acc, Float(x))
+		default:
+			return 0, &ErrNaN{x}
 		}
-		acc = fn(acc, f)
 	}
 	return acc, nil
 }
 
-// func toInt(o Any) (Int, bool) {
-// 	switch x := o.(type) {
-// 	case Int:
-// 		return x, true
-// 	case Float:
-// 		return Int(x), true
-// 	default:
-// 		return 0, false
-// 	}
-// }
+func floatDivFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) == 0 {
+		return nil, &ErrNumArgs{len(args)}
+	}
 
-// func intAccumulate(fn func(Int, Int) Int, start Int) Buildin {
-// 	return func(obj []Any) (Any, error) {
-// 		var acc Int = start
+	var start Float
+	switch x := args[0].(type) {
+	case Float:
+		start = x
+	case Int:
+		start = Float(x)
+	default:
+		return nil, &ErrNaN{x}
+	}
 
-// 		if len(obj) == 0 {
-// 			return nil, &ErrNumArgs{len(obj)}
-// 		}
+	if len(args) == 1 {
+		return 1 / start, nil
+	}
 
-// 		x, ok := toInt(obj[0])
-// 		if !ok {
-// 			return 0, &ErrWrongType{obj[0]}
-// 		}
+	return applyFloatFn(args[1:], func(x, y Float) Float { return x / y }, start)
+}
 
-// 		if len(obj) == 1 {
-// 			return fn(acc, x), nil
-// 		}
+func intDivFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) < 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
 
-// 		acc = x
-// 		for _, x := range obj[1:] {
-// 			f, ok := toInt(x)
-// 			if !ok {
-// 				return 0, &ErrWrongType{x}
-// 			}
-// 			acc = fn(acc, f)
-// 		}
-// 		return acc, nil
-// 	}
-// }
+	var acc Int
+	switch x := args[0].(type) {
+	case Int:
+		acc = x
+	case Float:
+		return nil, &ErrWrongType{x}
+	default:
+		return nil, &ErrNaN{x}
+	}
 
-// func IntDiv(obj []Any) (Any, error) {
-// 	if len(obj) < 2 {
-// 		return nil, &ErrNumArgs{len(obj)}
-// 	}
+	for _, x := range args[1:] {
+		switch x := x.(type) {
+		case Int:
+			acc /= x
+		case Float:
+			return nil, &ErrWrongType{x}
+		default:
+			return nil, &ErrNaN{x}
+		}
+	}
 
-// 	acc, ok := toInt(obj[0])
-// 	if !ok {
-// 		return 0, &ErrWrongType{obj[0]}
-// 	}
-
-// 	for _, x := range obj[1:] {
-// 		i, ok := toInt(x)
-// 		if !ok {
-// 			return 0, &ErrWrongType{x}
-// 		}
-// 		if x == 0 {
-// 			return 0, errors.New("integer divide by zero")
-// 		}
-
-// 		acc /= i
-// 	}
-// 	return acc, nil
-// }
+	return acc, nil
+}

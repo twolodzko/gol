@@ -137,19 +137,3 @@ func orFn(args []Any) Bool {
 	}
 	return Bool(false)
 }
-
-func apply(args []Any, fn func(Any) Any) Any {
-	var out []Any
-	for _, x := range args {
-		out = append(out, fn(x))
-	}
-
-	switch len(out) {
-	case 0:
-		return nil
-	case 1:
-		return out[0]
-	default:
-		return List(out)
-	}
-}

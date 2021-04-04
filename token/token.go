@@ -29,6 +29,6 @@ func (t Token) String() string {
 	case BOOL, INT, FLOAT, STRING, SYMBOL:
 		return fmt.Sprintf("%q:%s", t.Literal, t.Type)
 	default:
-		return "<ERR>"
+		return "<invalid token>"
 	}
 }

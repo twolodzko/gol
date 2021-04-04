@@ -25,20 +25,70 @@ func InitBuildin() *environment.Env {
 				return List(args), nil
 			},
 		},
-		"if":     &SpecialFunction{ifFn},
-		"def":    &SpecialFunction{defFn},
-		"let":    &SpecialFunction{letFn},
-		"head":   &SpecialFunction{headFn},
-		"tail":   &SpecialFunction{tailFn},
-		"nil?":   &VectorizableFunction{func(x Any) Any { return Bool(x == nil) }},
-		"bool?":  &VectorizableFunction{isBool},
-		"int?":   &VectorizableFunction{isInt},
-		"float?": &VectorizableFunction{isFloat},
-		"str?":   &VectorizableFunction{isString},
-		"list?":  &VectorizableFunction{isList},
-		"atom?":  &VectorizableFunction{isAtom},
-		"true?":  &VectorizableFunction{func(x Any) Any { return Bool(isTrue(x)) }},
-		"not":    &VectorizableFunction{func(x Any) Any { return Bool(!isTrue(x)) }},
+		"if": &SpecialFunction{
+			ifFn,
+		},
+		"def": &SpecialFunction{
+			defFn,
+		},
+		"let": &SpecialFunction{
+			letFn,
+		},
+		"head": &SpecialFunction{
+			headFn,
+		},
+		"tail": &SpecialFunction{
+			tailFn,
+		},
+		"nil?": &VectorizableFunction{
+			func(x Any) Any { return Bool(x == nil) },
+		},
+		"bool?": &VectorizableFunction{
+			func(obj Any) Any {
+				_, ok := obj.(Bool)
+				return Bool(ok)
+			},
+		},
+		"int?": &VectorizableFunction{
+			func(obj Any) Any {
+				_, ok := obj.(Int)
+				return Bool(ok)
+			},
+		},
+		"float?": &VectorizableFunction{
+			func(obj Any) Any {
+				_, ok := obj.(Float)
+				return Bool(ok)
+			},
+		},
+		"str?": &VectorizableFunction{
+			func(obj Any) Any {
+				_, ok := obj.(String)
+				return Bool(ok)
+			},
+		},
+		"list?": &VectorizableFunction{
+			func(obj Any) Any {
+				_, ok := obj.(List)
+				return Bool(ok)
+			},
+		},
+		"atom?": &VectorizableFunction{
+			func(obj Any) Any {
+				switch obj.(type) {
+				case Bool, Int, Float, String:
+					return Bool(true)
+				default:
+					return Bool(false)
+				}
+			},
+		},
+		"true?": &VectorizableFunction{
+			func(x Any) Any { return Bool(isTrue(x)) },
+		},
+		"not": &VectorizableFunction{
+			func(x Any) Any { return Bool(!isTrue(x)) },
+		},
 		"and": &SimpleFunction{
 			func(args []Any, env *environment.Env) (Any, error) {
 				return andFn(args), nil
@@ -90,24 +140,25 @@ func InitBuildin() *environment.Env {
 			func(x, y Float) Float { return x * y },
 			1,
 		},
-		"/": &ArithmeticFunction{
-			func(x, y Int) Int { return x / y },
-			func(x, y Float) Float { return x / y },
-			1,
+		"/": &SimpleFunction{
+			floatDivFn,
+		},
+		"//": &SimpleFunction{
+			intDivFn,
 		},
 		"%": &ArithmeticFunction{
 			func(x, y Int) Int { return x % y },
-			func(x, y Float) Float { return math.Mod(x, y) },
+			math.Mod,
 			1,
 		},
 		"pow": &SimpleFunction{
 			func(args []Any, env *environment.Env) (Any, error) {
-				return accumulate(args, math.Pow, 1)
+				return applyFloatFn(args, math.Pow, 1)
 			},
 		},
 		"rem": &SimpleFunction{
 			func(args []Any, env *environment.Env) (Any, error) {
-				return accumulate(args, math.Remainder, 1)
+				return applyFloatFn(args, math.Remainder, 1)
 			},
 		},
 		"env": &SpecialFunction{
@@ -154,5 +205,21 @@ func (f *VectorizableFunction) Call(args []Any, env *environment.Env) (Any, erro
 	if err != nil {
 		return nil, err
 	}
-	return apply(args, f.fn), nil
+	return f.apply(args), nil
+}
+
+func (f *VectorizableFunction) apply(args []Any) Any {
+	var out []Any
+	for _, x := range args {
+		out = append(out, f.fn(x))
+	}
+
+	switch len(out) {
+	case 0:
+		return nil
+	case 1:
+		return out[0]
+	default:
+		return List(out)
+	}
 }

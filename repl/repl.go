@@ -6,24 +6,53 @@ import (
 	"io"
 	"strings"
 
+	"github.com/twolodzko/goal/environment"
 	"github.com/twolodzko/goal/evaluator"
 	"github.com/twolodzko/goal/parser"
 	. "github.com/twolodzko/goal/types"
 )
 
-type Reader struct {
+type REPL struct {
+	reader *bufio.Reader
+	env    *environment.Env
+}
+
+func NewREPL(in io.Reader, env *environment.Env) *REPL {
+	return &REPL{bufio.NewReader(in), env}
+}
+
+func (repl *REPL) Repl() ([]Any, error) {
+	s, err := repl.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	parsed, err := parser.Parse(strings.NewReader(s))
+	if err != nil {
+		return nil, err
+	}
+
+	evaluated, err := evaluator.EvalAll(parsed, repl.env)
+	if err != nil {
+		return nil, err
+	}
+
+	return evaluated, nil
+}
+
+type BlockReader struct {
 	*bufio.Reader
 	openBlocksCount int
 	isQuoted        bool
 }
 
-func Read(in io.Reader) (string, error) {
+func (repl *REPL) Read() (string, error) {
 	var (
 		err       error
 		out, line string
 	)
 
-	reader := Reader{bufio.NewReader(in), 0, false}
+	reader := BlockReader{repl.reader, 0, false}
 
 	for {
 		line, err = reader.ReadString('\n')
@@ -49,7 +78,7 @@ func Read(in io.Reader) (string, error) {
 	return out, err
 }
 
-func (reader *Reader) shouldStop(line string) bool {
+func (reader *BlockReader) shouldStop(line string) bool {
 	for _, r := range line {
 
 		if r == '\\' {
@@ -75,28 +104,4 @@ func (reader *Reader) shouldStop(line string) bool {
 	}
 
 	return reader.openBlocksCount <= 0 && !reader.isQuoted
-}
-
-func Repl(in io.Reader) ([]Any, error) {
-	s, err := Read(in)
-
-	if err != nil {
-		return nil, err
-	}
-
-	parsed, err := parser.Parse(strings.NewReader(s))
-
-	if err != nil {
-		return nil, err
-	}
-
-	// FIXME enviroment needs to be fixed per session!
-	env := evaluator.InitBuildin()
-	evaluated, err := evaluator.EvalAll(parsed, env)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return evaluated, nil
 }

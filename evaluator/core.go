@@ -9,7 +9,12 @@ import (
 )
 
 func isTrue(obj Any) bool {
-	return obj != nil && obj != false
+	switch obj := obj.(type) {
+	case Bool:
+		return obj
+	default:
+		return obj != nil
+	}
 }
 
 func ifFn(args []Any, env *environment.Env) (Any, error) {

@@ -74,7 +74,7 @@ func (reader *Reader) shouldStop(line string) bool {
 		}
 	}
 
-	return reader.openBlocksCount <= 0
+	return reader.openBlocksCount <= 0 && !reader.isQuoted
 }
 
 func Repl(in io.Reader) ([]Any, error) {

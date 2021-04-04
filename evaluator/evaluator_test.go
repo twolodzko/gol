@@ -28,6 +28,7 @@ func TestEval(t *testing.T) {
 		{`(let (c 2) c)`, Int(2)},
 		{`(let (x 10) (+ 5 x))`, Int(15)},
 		{`(let (x 5) (let (y 6) (+ x y)))`, Int(11)},
+		{`(do (+ 2 2) (+ 3 5))`, Int(8)},
 	}
 
 	e := NewEvaluator()
@@ -49,20 +50,20 @@ func TestCore(t *testing.T) {
 		input    string
 		expected Any
 	}{
-		// {`(str 3.14 42 "hello")`, List{String("3.14"), String("42"), String("hello")}},
-		// {`(int "3.14" "10" 5.2 100)`, List{Int(3), Int(10), Int(5), Int(100)}},
-		// {`(float 5.22 "1" "1e-5")`, List{Float(5.22), Float(1), Float(1e-5)}},
+		{`(str 3.14 42 "hello")`, List{String("3.14"), String("42"), String("hello")}},
+		{`(int "3.14" "10" 5.2 100)`, List{Int(3), Int(10), Int(5), Int(100)}},
+		{`(float 5.22 "1" "1e-5")`, List{Float(5.22), Float(1), Float(1e-5)}},
 		{`(list "Hello World!" 42 3.14)`, List{String("Hello World!"), Int(42), Float(3.14)}},
 		{`(quote 3.14)`, Float(3.14)},
 		{`(quote foo)`, Symbol("foo")},
 		{`(quote (foo bar))`, List{Symbol("foo"), Symbol("bar")}},
 		{`(head (list 1 2 3))`, Int(1)},
 		{`(tail (list 1 2 3))`, List{Int(2), Int(3)}},
-		{`(eq? 2 2)`, Bool(true)},
-		{`(eq? 2 3)`, Bool(false)},
-		{`(eq? 2 "2")`, Bool(false)},
-		{`(eq? (list 1 2 3) (list 1 2 3))`, Bool(true)},
-		{`(eq? (list 1 2 3) (list 1 "2" 3))`, Bool(false)},
+		{`(= 2 2)`, Bool(true)},
+		{`(= 2 3)`, Bool(false)},
+		{`(= 2 "2")`, Bool(false)},
+		{`(= (list 1 2 3) (list 1 2 3))`, Bool(true)},
+		{`(= (list 1 2 3) (list 1 "2" 3))`, Bool(false)},
 	}
 
 	e := NewEvaluator()
@@ -171,9 +172,12 @@ func TestDefAndDel(t *testing.T) {
 		t.Errorf("unable to read the variable")
 	}
 
-	_, err = e.Eval("(del x)")
+	result, err = e.Eval("(pop x)")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
+	}
+	if result[0] != Int(42) {
+		t.Errorf("expected %v, got %v", Int(42), result[0])
 	}
 
 	_, err = e.Eval("x")
@@ -181,7 +185,7 @@ func TestDefAndDel(t *testing.T) {
 		t.Errorf("expected not to see x, got %v", result)
 	}
 
-	_, err = e.Eval("(del y)")
+	_, err = e.Eval("(pop y)")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}

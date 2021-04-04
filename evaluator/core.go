@@ -83,7 +83,7 @@ func letFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, err
 	}
 
-	return res[len(res)-1], err
+	return last(res), err
 }
 
 func headFn(args []Any, env *environment.Env) (Any, error) {
@@ -155,4 +155,11 @@ func printEnv(env *environment.Env, depth int) {
 	}
 
 	fmt.Printf("%d: { %v }\n", depth, strings.Join(out, ", "))
+}
+
+func last(args []Any) Any {
+	if len(args) == 0 {
+		return nil
+	}
+	return args[len(args)-1]
 }

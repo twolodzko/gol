@@ -16,7 +16,7 @@ var buildins = map[Symbol]Any{
 			return List(args), nil
 		},
 	},
-	"quote": &SpecialFunction{
+	"quote": &SpecialEvalFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			if len(args) == 1 {
 				return args[0], nil
@@ -24,82 +24,99 @@ var buildins = map[Symbol]Any{
 			return List(args), nil
 		},
 	},
-	"if": &SpecialFunction{
+	"if": &SpecialEvalFunction{
 		ifFn,
 	},
-	"def": &SpecialFunction{
+	"def": &SpecialEvalFunction{
 		defFn,
 	},
-	"del": &SpecialFunction{
+	"pop": &SpecialEvalFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
+			var out []Any
 			for _, name := range args {
 				switch name := name.(type) {
 				case Symbol:
+					val, _ := env.Get(name)
 					delete(env.Objects, name)
+					out = append(out, val)
 				default:
 					return nil, &ErrWrongType{name}
 				}
 			}
-			return nil, nil
+			return toAtomOrList(out), nil
 		},
 	},
-	"let": &SpecialFunction{
+	"let": &SpecialEvalFunction{
 		letFn,
 	},
-	"head": &SpecialFunction{
+	"do": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			return last(args), nil
+		},
+	},
+	"head": &SpecialEvalFunction{
 		headFn,
 	},
-	"tail": &SpecialFunction{
+	"tail": &SpecialEvalFunction{
 		tailFn,
 	},
 	"nil?": &VectorizableFunction{
-		func(x Any) Any { return Bool(x == nil) },
+		func(x Any) (Any, error) { return Bool(x == nil), nil },
 	},
 	"bool?": &VectorizableFunction{
-		func(obj Any) Any {
+		func(obj Any) (Any, error) {
 			_, ok := obj.(Bool)
-			return Bool(ok)
+			return Bool(ok), nil
 		},
 	},
 	"int?": &VectorizableFunction{
-		func(obj Any) Any {
+		func(obj Any) (Any, error) {
 			_, ok := obj.(Int)
-			return Bool(ok)
+			return Bool(ok), nil
 		},
 	},
 	"float?": &VectorizableFunction{
-		func(obj Any) Any {
+		func(obj Any) (Any, error) {
 			_, ok := obj.(Float)
-			return Bool(ok)
+			return Bool(ok), nil
 		},
 	},
 	"str?": &VectorizableFunction{
-		func(obj Any) Any {
+		func(obj Any) (Any, error) {
 			_, ok := obj.(String)
-			return Bool(ok)
+			return Bool(ok), nil
 		},
 	},
+	"int": &VectorizableFunction{
+		toInt,
+	},
+	"float": &VectorizableFunction{
+		toFloat,
+	},
+	"str": &VectorizableFunction{
+		toString,
+	},
 	"list?": &VectorizableFunction{
-		func(obj Any) Any {
+		func(obj Any) (Any, error) {
 			_, ok := obj.(List)
-			return Bool(ok)
+			return Bool(ok), nil
 		},
 	},
 	"atom?": &VectorizableFunction{
-		func(obj Any) Any {
+		func(obj Any) (Any, error) {
 			switch obj.(type) {
 			case Bool, Int, Float, String:
-				return Bool(true)
+				return Bool(true), nil
 			default:
-				return Bool(false)
+				return Bool(false), nil
 			}
 		},
 	},
 	"true?": &VectorizableFunction{
-		func(x Any) Any { return Bool(isTrue(x)) },
+		func(x Any) (Any, error) { return Bool(isTrue(x)), nil },
 	},
 	"not": &VectorizableFunction{
-		func(x Any) Any { return Bool(!isTrue(x)) },
+		func(x Any) (Any, error) { return Bool(!isTrue(x)), nil },
 	},
 	"and": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
@@ -111,7 +128,7 @@ var buildins = map[Symbol]Any{
 			return orFn(args), nil
 		},
 	},
-	"eq?": &SimpleFunction{
+	"=": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			if len(args) != 2 {
 				return nil, &ErrNumArgs{len(args)}
@@ -173,7 +190,7 @@ var buildins = map[Symbol]Any{
 			return applyFloatFn(args, math.Remainder, 1)
 		},
 	},
-	"env": &SpecialFunction{
+	"env": &SpecialEvalFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			if len(args) > 0 {
 				return nil, errors.New("env does not take any arguments")
@@ -188,11 +205,11 @@ type Function interface {
 	Call([]Any, *environment.Env) (Any, error)
 }
 
-type SpecialFunction struct {
+type SpecialEvalFunction struct {
 	fn func([]Any, *environment.Env) (Any, error)
 }
 
-func (f *SpecialFunction) Call(args []Any, env *environment.Env) (Any, error) {
+func (f *SpecialEvalFunction) Call(args []Any, env *environment.Env) (Any, error) {
 	return f.fn(args, env)
 }
 
@@ -209,7 +226,7 @@ func (f *SimpleFunction) Call(args []Any, env *environment.Env) (Any, error) {
 }
 
 type VectorizableFunction struct {
-	fn func(Any) Any
+	fn func(Any) (Any, error)
 }
 
 func (f *VectorizableFunction) Call(args []Any, env *environment.Env) (Any, error) {
@@ -217,21 +234,28 @@ func (f *VectorizableFunction) Call(args []Any, env *environment.Env) (Any, erro
 	if err != nil {
 		return nil, err
 	}
-	return f.apply(args), nil
+	return f.apply(args)
 }
 
-func (f *VectorizableFunction) apply(args []Any) Any {
+func (f *VectorizableFunction) apply(args []Any) (Any, error) {
 	var out []Any
 	for _, x := range args {
-		out = append(out, f.fn(x))
+		res, err := f.fn(x)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
 	}
+	return toAtomOrList(out), nil
+}
 
-	switch len(out) {
+func toAtomOrList(args []Any) Any {
+	switch len(args) {
 	case 0:
 		return nil
 	case 1:
-		return out[0]
+		return args[0]
 	default:
-		return List(out)
+		return List(args)
 	}
 }

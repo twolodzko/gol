@@ -3,8 +3,6 @@ package repl
 import (
 	"strings"
 	"testing"
-
-	"github.com/twolodzko/goal/evaluator"
 )
 
 func TestRead_InvalidInput(t *testing.T) {
@@ -17,10 +15,8 @@ func TestRead_InvalidInput(t *testing.T) {
 		"(()",
 	}
 
-	env := evaluator.InitEnv()
-
 	for _, input := range testCases {
-		repl := NewREPL(strings.NewReader(input), env)
+		repl := NewRepl(strings.NewReader(input))
 		result, err := repl.Read()
 
 		if err == nil {

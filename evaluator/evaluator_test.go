@@ -1,12 +1,9 @@
 package evaluator
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/twolodzko/goal/environment"
-	"github.com/twolodzko/goal/parser"
 
 	. "github.com/twolodzko/goal/types"
 )
@@ -33,21 +30,16 @@ func TestEval(t *testing.T) {
 		{`(let (x 5) (let (y 6) (+ x y)))`, Int(11)},
 	}
 
+	e := NewEvaluator()
+
 	for _, tt := range testCases {
-		expr, err := parser.Parse(strings.NewReader(tt.input))
+		result, err := e.Eval(tt.input)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-
-		env := InitEnv()
-		result, err := Eval(expr[0], env)
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
+		if !cmp.Equal(result[0], tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result[0], result[0])
 		}
 	}
 }
@@ -73,21 +65,16 @@ func TestCore(t *testing.T) {
 		{`(eq? (list 1 2 3) (list 1 "2" 3))`, Bool(false)},
 	}
 
+	e := NewEvaluator()
+
 	for _, tt := range testCases {
-		expr, err := parser.Parse(strings.NewReader(tt.input))
+		result, err := e.Eval(tt.input)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-
-		env := InitEnv()
-		result, err := Eval(expr[0], env)
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
+		if !cmp.Equal(result[0], tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result[0], result[0])
 		}
 	}
 }
@@ -115,21 +102,16 @@ func TestBooleans(t *testing.T) {
 		{`(or false nil)`, false},
 	}
 
+	e := NewEvaluator()
+
 	for _, tt := range testCases {
-		expr, err := parser.Parse(strings.NewReader(tt.input))
+		result, err := e.Eval(tt.input)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-
-		env := InitEnv()
-		result, err := Eval(expr[0], env)
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+		if !cmp.Equal(result[0], tt.expected) {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result[0], result[0])
 		}
 	}
 }
@@ -151,35 +133,23 @@ func TestMath(t *testing.T) {
 		{`(// 100 2 5 2)`, Int(5)},
 	}
 
+	e := NewEvaluator()
+
 	for _, tt := range testCases {
-		expr, err := parser.Parse(strings.NewReader(tt.input))
+		result, err := e.Eval(tt.input)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-
-		env := InitEnv()
-		result, err := Eval(expr[0], env)
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
+		if !cmp.Equal(result[0], tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result[0], result[0])
 		}
 	}
 }
 
 func TestErrorFn(t *testing.T) {
-	input := `(list 1 (error "ok!") 2)`
-	expr, err := parser.Parse(strings.NewReader(input))
-
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	}
-
-	env := environment.NewEnv()
-	result, err := Eval(expr[0], env)
+	e := NewEvaluator()
+	result, err := e.Eval(`(list 1 (error "ok!") 2)`)
 
 	if err == nil {
 		t.Errorf("expected error, got result: %v", result)
@@ -187,34 +157,31 @@ func TestErrorFn(t *testing.T) {
 }
 
 func TestDefAndDel(t *testing.T) {
-	env := InitEnv()
+	e := NewEvaluator()
 
-	expr, err := parser.Parse(strings.NewReader(`(def x 42) (del x) (del y)`))
-
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	}
-	if _, err := Eval(expr[0], env); err != nil {
+	if _, err := e.Eval("(def x 42)"); err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
 
-	result, err := env.Get(Symbol("x"))
+	result, err := e.Eval("x")
 	if err != nil {
 		t.Errorf("variable x not set")
 	}
-	if result != Int(42) {
+	if result[0] != Int(42) {
 		t.Errorf("unable to read the variable")
 	}
 
-	_, err = Eval(expr[1], env)
+	_, err = e.Eval("(del x)")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
-	if result, err := env.Get(Symbol("x")); err == nil {
+
+	_, err = e.Eval("x")
+	if err == nil {
 		t.Errorf("expected not to see x, got %v", result)
 	}
 
-	_, err = Eval(expr[2], env)
+	_, err = e.Eval("(del y)")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -270,21 +237,16 @@ func TestCheckers(t *testing.T) {
 		{`(atom? (list 1 2))`, false},
 	}
 
+	e := NewEvaluator()
+
 	for _, tt := range testCases {
-		expr, err := parser.Parse(strings.NewReader(tt.input))
+		result, err := e.Eval(tt.input)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-
-		env := InitEnv()
-		result, err := Eval(expr[0], env)
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
+		if !cmp.Equal(result[0], tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result[0], result[0])
 		}
 	}
 }

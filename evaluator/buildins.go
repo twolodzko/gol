@@ -10,12 +10,6 @@ import (
 	. "github.com/twolodzko/goal/types"
 )
 
-func InitEnv() *environment.Env {
-	env := environment.NewEnv()
-	env.Objects = buildins
-	return environment.NewEnclosedEnv(env)
-}
-
 var buildins = map[Symbol]Any{
 	"list": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {

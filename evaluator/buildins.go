@@ -54,11 +54,14 @@ var buildins = map[Symbol]Any{
 			return last(args), nil
 		},
 	},
-	"head": &SpecialEvalFunction{
-		headFn,
+	"first": &SpecialEvalFunction{
+		firstFn,
 	},
-	"tail": &SpecialEvalFunction{
-		tailFn,
+	"rest": &SpecialEvalFunction{
+		restFn,
+	},
+	"nth": &SimpleFunction{
+		nthFn,
 	},
 	"nil?": &VectorizableFunction{
 		func(x Any) (Any, error) { return Bool(x == nil), nil },

@@ -86,7 +86,7 @@ func letFn(args []Any, env *environment.Env) (Any, error) {
 	return last(res), err
 }
 
-func headFn(args []Any, env *environment.Env) (Any, error) {
+func firstFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) != 1 {
 		return nil, &ErrNumArgs{len(args)}
 	}
@@ -102,7 +102,7 @@ func headFn(args []Any, env *environment.Env) (Any, error) {
 	return l.Head(), nil
 }
 
-func tailFn(args []Any, env *environment.Env) (Any, error) {
+func restFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) != 1 {
 		return nil, &ErrNumArgs{len(args)}
 	}
@@ -116,6 +116,33 @@ func tailFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, fmt.Errorf("%v is not a list", obj)
 	}
 	return l.Tail(), nil
+}
+
+func nthFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+
+	switch l := args[0].(type) {
+	case List:
+		var n int
+		switch val := args[1].(type) {
+		case Int:
+			n = val
+		case Float:
+			n = int(val)
+		default:
+			return nil, &ErrWrongType{args[1]}
+		}
+
+		if n < len(l) {
+			return l[n], nil
+		}
+
+		return nil, fmt.Errorf("arrempting to access %d element of %d", n, len(l))
+	default:
+		return nil, &ErrWrongType{args[0]}
+	}
 }
 
 func andFn(args []Any) Bool {

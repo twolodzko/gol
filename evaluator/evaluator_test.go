@@ -50,9 +50,9 @@ func TestCore(t *testing.T) {
 		input    string
 		expected Any
 	}{
-		{`(str 3.14 42 "hello")`, List{String("3.14"), String("42"), String("hello")}},
-		{`(int "3.14" "10" 5.2 100)`, List{Int(3), Int(10), Int(5), Int(100)}},
-		{`(float 5.22 "1" "1e-5")`, List{Float(5.22), Float(1), Float(1e-5)}},
+		{`(str 3.14)`, String("3.14")},
+		{`(int "3.14")`, Int(3)},
+		{`(float "1e-5")`, Float(1e-5)},
 		{`(list "Hello World!" 42 3.14)`, List{String("Hello World!"), Int(42), Float(3.14)}},
 		{`(quote 3.14)`, Float(3.14)},
 		{`(quote foo)`, Symbol("foo")},
@@ -202,13 +202,6 @@ func TestCheckers(t *testing.T) {
 		{`(nil? 0)`, false},
 		{`(nil? "")`, false},
 		{`(nil? (list 1 2))`, false},
-		{`(bool? true)`, true},
-		{`(bool? false)`, true},
-		{`(bool? nil)`, false},
-		{`(bool? ())`, false},
-		{`(bool? 0)`, false},
-		{`(bool? "")`, false},
-		{`(bool? (list 1 2))`, false},
 		{`(int? nil)`, false},
 		{`(int? ())`, false},
 		{`(int? 0)`, true},

@@ -13,100 +13,173 @@ import (
 var buildins = map[Symbol]Any{
 	"list": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			return List(args), nil
-		},
-	},
-	"quote": &SpecialEvalFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) == 1 {
-				return args[0], nil
+			args, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
 			}
 			return List(args), nil
 		},
 	},
-	"if": &SpecialEvalFunction{
+	"quote": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			return args[0], nil
+		},
+	},
+	"if": &SimpleFunction{
 		ifFn,
 	},
-	"def": &SpecialEvalFunction{
+	"def": &SimpleFunction{
 		defFn,
 	},
-	"pop": &SpecialEvalFunction{
+	"pop": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			var out []Any
-			for _, name := range args {
-				switch name := name.(type) {
-				case Symbol:
-					val, _ := env.Get(name)
-					delete(env.Objects, name)
-					out = append(out, val)
-				default:
-					return nil, &ErrWrongType{name}
-				}
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
 			}
-			return toAtomOrList(out), nil
+
+			name, ok := args[0].(Symbol)
+			if !ok {
+				return nil, &ErrWrongType{args[0]}
+			}
+
+			obj, _ := env.Get(name)
+			delete(env.Objects, name)
+			return obj, nil
 		},
 	},
-	"let": &SpecialEvalFunction{
+	"let": &SimpleFunction{
 		letFn,
 	},
 	"do": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			return last(args), nil
+			objs, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+			return last(objs), nil
 		},
 	},
-	"first": &SpecialEvalFunction{
+	"first": &SimpleFunction{
 		firstFn,
 	},
-	"rest": &SpecialEvalFunction{
+	"rest": &SimpleFunction{
 		restFn,
 	},
 	"nth": &SimpleFunction{
 		nthFn,
 	},
-	"nil?": &VectorizableFunction{
-		func(x Any) (Any, error) { return Bool(x == nil), nil },
-	},
-	"bool?": &VectorizableFunction{
-		func(obj Any) (Any, error) {
-			_, ok := obj.(Bool)
-			return Bool(ok), nil
+	"nil?": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
+			return Bool(obj == nil), nil
 		},
 	},
-	"int?": &VectorizableFunction{
-		func(obj Any) (Any, error) {
+	"int?": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
 			_, ok := obj.(Int)
 			return Bool(ok), nil
 		},
 	},
-	"float?": &VectorizableFunction{
-		func(obj Any) (Any, error) {
+	"float?": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
 			_, ok := obj.(Float)
 			return Bool(ok), nil
 		},
 	},
-	"str?": &VectorizableFunction{
-		func(obj Any) (Any, error) {
+	"str?": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
 			_, ok := obj.(String)
 			return Bool(ok), nil
 		},
 	},
-	"int": &VectorizableFunction{
-		toInt,
+	"int": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
+			return toInt(obj)
+		},
 	},
-	"float": &VectorizableFunction{
-		toFloat,
+	"float": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
+			return toFloat(obj)
+		},
 	},
-	"str": &VectorizableFunction{
-		toString,
+	"str": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
+			return toString(obj)
+		},
 	},
-	"list?": &VectorizableFunction{
-		func(obj Any) (Any, error) {
+	"list?": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
 			_, ok := obj.(List)
 			return Bool(ok), nil
 		},
 	},
-	"atom?": &VectorizableFunction{
-		func(obj Any) (Any, error) {
+	"atom?": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
 			switch obj.(type) {
 			case Bool, Int, Float, String:
 				return Bool(true), nil
@@ -115,20 +188,46 @@ var buildins = map[Symbol]Any{
 			}
 		},
 	},
-	"true?": &VectorizableFunction{
-		func(x Any) (Any, error) { return Bool(isTrue(x)), nil },
+	"true?": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
+			return Bool(isTrue(obj)), nil
+		},
 	},
-	"not": &VectorizableFunction{
-		func(x Any) (Any, error) { return Bool(!isTrue(x)), nil },
+	"not": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
+			return Bool(!isTrue(obj)), nil
+		},
 	},
 	"and": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			return andFn(args), nil
+			objs, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+			return andFn(objs), nil
 		},
 	},
 	"or": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			return orFn(args), nil
+			objs, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+			return orFn(objs), nil
 		},
 	},
 	"=": &SimpleFunction{
@@ -136,7 +235,11 @@ var buildins = map[Symbol]Any{
 			if len(args) != 2 {
 				return nil, &ErrNumArgs{len(args)}
 			}
-			return Bool(cmp.Equal(args[0], args[1])), nil
+			objs, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+			return Bool(cmp.Equal(objs[0], objs[1])), nil
 		},
 	},
 	"error": &SimpleFunction{
@@ -149,11 +252,17 @@ var buildins = map[Symbol]Any{
 	},
 	"print": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
+			objs, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+
 			out := ""
-			for _, o := range args {
+			for _, o := range objs {
 				out += fmt.Sprintf("%v", o)
 			}
 			fmt.Printf("%s\n", out)
+
 			return nil, nil
 		},
 	},
@@ -193,7 +302,7 @@ var buildins = map[Symbol]Any{
 			return applyFloatFn(args, math.Remainder, 1)
 		},
 	},
-	"env": &SpecialEvalFunction{
+	"env": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			if len(args) > 0 {
 				return nil, errors.New("env does not take any arguments")
@@ -208,57 +317,10 @@ type Function interface {
 	Call([]Any, *environment.Env) (Any, error)
 }
 
-type SpecialEvalFunction struct {
-	fn func([]Any, *environment.Env) (Any, error)
-}
-
-func (f *SpecialEvalFunction) Call(args []Any, env *environment.Env) (Any, error) {
-	return f.fn(args, env)
-}
-
 type SimpleFunction struct {
 	fn func([]Any, *environment.Env) (Any, error)
 }
 
 func (f *SimpleFunction) Call(args []Any, env *environment.Env) (Any, error) {
-	args, err := EvalAll(args, env)
-	if err != nil {
-		return nil, err
-	}
 	return f.fn(args, env)
-}
-
-type VectorizableFunction struct {
-	fn func(Any) (Any, error)
-}
-
-func (f *VectorizableFunction) Call(args []Any, env *environment.Env) (Any, error) {
-	args, err := EvalAll(args, env)
-	if err != nil {
-		return nil, err
-	}
-	return f.apply(args)
-}
-
-func (f *VectorizableFunction) apply(args []Any) (Any, error) {
-	var out []Any
-	for _, x := range args {
-		res, err := f.fn(x)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, res)
-	}
-	return toAtomOrList(out), nil
-}
-
-func toAtomOrList(args []Any) Any {
-	switch len(args) {
-	case 0:
-		return nil
-	case 1:
-		return args[0]
-	default:
-		return List(args)
-	}
 }

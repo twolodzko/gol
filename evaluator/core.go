@@ -122,6 +122,10 @@ func nthFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) != 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
+	args, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
 
 	switch l := args[0].(type) {
 	case List:

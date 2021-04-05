@@ -29,6 +29,13 @@ func TestEval(t *testing.T) {
 		{`(let (x 10) (+ 5 x))`, Int(15)},
 		{`(let (x 5) (let (y 6) (+ x y)))`, Int(11)},
 		{`(do (+ 2 2) (+ 3 5))`, Int(8)},
+		{`'(1 2 3)`, List{Int(1), Int(2), Int(3)}},
+		{`'foo`, Symbol("foo")},
+		{`(append '(1 2) 3)`, List{Int(1), Int(2), Int(3)}},
+		{`(append '(1) 2)`, List{Int(1), Int(2)}},
+		{`(append '(1) 2 3)`, List{Int(1), Int(2), Int(3)}},
+		{`(append '(1) '(2 3))`, List{Int(1), List{Int(2), Int(3)}}},
+		{`(concat '(1 2) '(3 4))`, List{Int(1), Int(2), Int(3), Int(4)}},
 	}
 
 	e := NewEvaluator()
@@ -173,7 +180,7 @@ func TestDefAndDel(t *testing.T) {
 		t.Errorf("unable to read the variable")
 	}
 
-	result, err = e.Eval("(pop x)")
+	result, err = e.Eval("(del x)")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -186,7 +193,7 @@ func TestDefAndDel(t *testing.T) {
 		t.Errorf("expected not to see x, got %v", result)
 	}
 
-	_, err = e.Eval("(pop y)")
+	_, err = e.Eval("(del y)")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -233,6 +240,10 @@ func TestCheckers(t *testing.T) {
 		{`(atom? true)`, true},
 		{`(atom? "")`, true},
 		{`(atom? (list 1 2))`, false},
+		{`(fn? fn?)`, true},
+		{`(fn? +)`, true},
+		{`(fn? ())`, false},
+		{`(fn? nil)`, false},
 	}
 
 	e := NewEvaluator()

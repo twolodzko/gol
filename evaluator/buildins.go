@@ -34,7 +34,7 @@ var buildins = map[Symbol]Any{
 	"def": &SimpleFunction{
 		defFn,
 	},
-	"pop": &SimpleFunction{
+	"del": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			if len(args) != 1 {
 				return nil, &ErrNumArgs{len(args)}
@@ -67,6 +67,43 @@ var buildins = map[Symbol]Any{
 	},
 	"rest": &SimpleFunction{
 		restFn,
+	},
+	"append": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) < 2 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			objs, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+			l, ok := objs[0].(List)
+			if !ok {
+				return nil, &ErrWrongType{args[0]}
+			}
+			return List(append(l, objs[1:]...)), nil
+		},
+	},
+	"concat": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) < 2 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			objs, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+			var list List
+			for _, obj := range objs {
+				switch obj := obj.(type) {
+				case List:
+					list = append(list, obj...)
+				default:
+					return nil, &ErrWrongType{obj}
+				}
+			}
+			return list, nil
+		},
 	},
 	"nth": &SimpleFunction{
 		nthFn,
@@ -119,6 +156,19 @@ var buildins = map[Symbol]Any{
 				return nil, err
 			}
 			_, ok := obj.(String)
+			return Bool(ok), nil
+		},
+	},
+	"fn?": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
+			_, ok := obj.(Function)
 			return Bool(ok), nil
 		},
 	},

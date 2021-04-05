@@ -84,6 +84,9 @@ func (p *Parser) Parse() ([]Any, error) {
 			if p.openBlocksCount < 0 {
 				return parsed, errors.New("missing opening brackets")
 			}
+			if quoted {
+				return parsed, errors.New("missing quoted object")
+			}
 			return parsed, nil
 		case token.LPAREN:
 			p.openBlocksCount++

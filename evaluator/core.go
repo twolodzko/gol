@@ -1,11 +1,14 @@
 package evaluator
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/twolodzko/goal/environment"
+	"github.com/twolodzko/goal/parser"
 	. "github.com/twolodzko/goal/types"
 )
 
@@ -372,6 +375,54 @@ func ltFn(args []Any, env *environment.Env) (Any, error) {
 	default:
 		return nil, &ErrWrongType{objs[0]}
 	}
+}
+
+func readStringFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 1 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	obj, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	code, ok := obj.(String)
+	if !ok {
+		return nil, &ErrWrongType{obj}
+	}
+	expr, err := parser.Parse(strings.NewReader(string(code)))
+	if err != nil {
+		return nil, err
+	}
+
+	switch len(expr) {
+	case 0:
+		return nil, nil
+	case 1:
+		return expr[0], nil
+	default:
+		return List(expr), nil
+	}
+}
+
+func readFile(name String) (String, error) {
+	var lines []string
+
+	file, err := os.Open(string(name))
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		lines = append(lines, line)
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+	return String(strings.Join(lines, "\n")), nil
 }
 
 func printEnv(env *environment.Env, depth int) {

@@ -28,7 +28,8 @@ func TestEval(t *testing.T) {
 		{`(let (c 2) c)`, Int(2)},
 		{`(let (x 10) (+ 5 x))`, Int(15)},
 		{`(let (x 5) (let (y 6) (+ x y)))`, Int(11)},
-		{`(do (+ 2 2) (+ 3 5))`, Int(8)},
+		{`(do ((+ 2 2) (+ 3 5)))`, Int(8)},
+		{`(do ((def x 2) (+ x 4)))`, Int(6)},
 		{`'(1 2 3)`, List{Int(1), Int(2), Int(3)}},
 		{`'foo`, Symbol("foo")},
 		{`(append '(1 2) 3)`, List{Int(1), Int(2), Int(3)}},
@@ -42,6 +43,7 @@ func TestEval(t *testing.T) {
 		{`((fn (a) a) 123)`, Int(123)},
 		{`((fn (a b) (+ a b)) 1 2)`, Int(3)},
 		{`((fn (x y) (or (= x y) (> x y))) 2 1)`, Bool(true)},
+		{`((fn () 5))`, Int(5)},
 	}
 
 	e := NewEvaluator()
@@ -85,6 +87,7 @@ func TestCore(t *testing.T) {
 		{`(< 1.0 2)`, Bool(true)},
 		{`(> 1 2)`, Bool(false)},
 		{`(> 1.0 2)`, Bool(false)},
+		{`(eval (read-string "(+ 2 2)"))`, Int(4)},
 	}
 
 	e := NewEvaluator()

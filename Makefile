@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := test
-.PHONY: test cov staticcheck cycl cogn fmt clean repl
+.PHONY: test cov staticcheck vet cycl cogn fmt clean repl
 
-test: staticcheck
+test: staticcheck vet
 	go test ./...
 
 cov:
@@ -11,6 +11,9 @@ cov:
 staticcheck:
 	# go get honnef.co/go/tools/cmd/staticcheck
 	staticcheck ./...
+
+vet:
+	go vet ./...
 
 cycl:
 	# go get github.com/fzipp/gocyclo/cmd/gocyclo

@@ -41,6 +41,7 @@ func TestEval(t *testing.T) {
 		{`(eval (list + 2 2))`, Int(4)},
 		{`((fn (a) a) 123)`, Int(123)},
 		{`((fn (a b) (+ a b)) 1 2)`, Int(3)},
+		{`((fn (x y) (or (= x y) (> x y))) 2 1)`, Bool(true)},
 	}
 
 	e := NewEvaluator()
@@ -72,6 +73,8 @@ func TestCore(t *testing.T) {
 		{`(quote (foo bar))`, List{Symbol("foo"), Symbol("bar")}},
 		{`(first (list 1 2 3))`, Int(1)},
 		{`(rest (list 1 2 3))`, List{Int(2), Int(3)}},
+		{`(init (list 1 2 3))`, List{Int(1), Int(2)}},
+		{`(last (list 1 2 3))`, Int(3)},
 		{`(nth (list 1 2 3) 1)`, Int(2)},
 		{`(= 2 2)`, Bool(true)},
 		{`(= 2 3)`, Bool(false)},

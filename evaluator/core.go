@@ -119,6 +119,44 @@ func restFn(args []Any, env *environment.Env) (Any, error) {
 	return l.Tail(), nil
 }
 
+func initFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 1 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	obj, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	l, ok := obj.(List)
+	if !ok {
+		return nil, fmt.Errorf("%v is not a list", obj)
+	}
+	if len(l) == 0 {
+		return nil, nil
+	}
+	return l[:len(l)-1], nil
+}
+
+func lastFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 1 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	obj, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	l, ok := obj.(List)
+	if !ok {
+		return nil, fmt.Errorf("%v is not a list", obj)
+	}
+	if len(l) == 0 {
+		return nil, nil
+	}
+	return l[len(l)-1], nil
+}
+
 func nthFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) != 2 {
 		return nil, &ErrNumArgs{len(args)}
@@ -150,30 +188,73 @@ func nthFn(args []Any, env *environment.Env) (Any, error) {
 	}
 }
 
-func andFn(args []Any) Bool {
-	if len(args) == 0 {
-		return Bool(false)
+func appendFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) < 2 {
+		return nil, &ErrNumArgs{len(args)}
 	}
-
-	for _, x := range args {
-		if !isTrue(x) {
-			return Bool(false)
-		}
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
 	}
-	return Bool(true)
+	l, ok := objs[0].(List)
+	if !ok {
+		return nil, &ErrWrongType{args[0]}
+	}
+	return List(append(l, objs[1:]...)), nil
 }
 
-func orFn(args []Any) Bool {
-	if len(args) == 0 {
-		return Bool(false)
+func concatFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) < 2 {
+		return nil, &ErrNumArgs{len(args)}
 	}
-
-	for _, x := range args {
-		if isTrue(x) {
-			return Bool(true)
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+	var list List
+	for _, obj := range objs {
+		switch obj := obj.(type) {
+		case List:
+			list = append(list, obj...)
+		default:
+			return nil, &ErrWrongType{obj}
 		}
 	}
-	return Bool(false)
+	return list, nil
+}
+
+func andFn(args []Any, env *environment.Env) (Any, error) {
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) == 0 {
+		return Bool(false), nil
+	}
+
+	for _, x := range objs {
+		if !isTrue(x) {
+			return Bool(false), nil
+		}
+	}
+	return Bool(true), nil
+}
+
+func orFn(args []Any, env *environment.Env) (Any, error) {
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+	if len(objs) == 0 {
+		return Bool(false), nil
+	}
+
+	for _, x := range objs {
+		if isTrue(x) {
+			return Bool(true), nil
+		}
+	}
+	return Bool(false), nil
 }
 
 func equalFn(args []Any, env *environment.Env) (Any, error) {

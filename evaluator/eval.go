@@ -63,24 +63,20 @@ func EvalAll(exprs []Any, env *environment.Env) ([]Any, error) {
 }
 
 func getFunction(obj Any, env *environment.Env) (Function, error) {
-	var fn Function
-
 	switch obj := obj.(type) {
 	case Symbol:
 		o, err := env.Get(obj)
 		if err != nil {
 			return nil, err
 		}
-		f, ok := o.(Function)
+		fn, ok := o.(Function)
 		if !ok {
 			return nil, fmt.Errorf("%v is not callable", o)
 		}
-		fn = f
+		return fn, nil
 	case Function:
-		fn = obj
+		return obj, nil
 	default:
 		return nil, fmt.Errorf("%v is not callable", obj)
 	}
-
-	return fn, nil
 }

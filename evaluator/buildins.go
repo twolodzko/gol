@@ -28,6 +28,18 @@ var buildins = map[Symbol]Any{
 			return args[0], nil
 		},
 	},
+	"eval": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			obj, err := Eval(args[0], env)
+			if err != nil {
+				return nil, err
+			}
+			return Eval(obj, env)
+		},
+	},
 	"if": &SimpleFunction{
 		ifFn,
 	},
@@ -300,7 +312,7 @@ var buildins = map[Symbol]Any{
 			return nil, fmt.Errorf("%s", fmt.Sprintf("%v", args[0]))
 		},
 	},
-	"print": &SimpleFunction{
+	"println": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			objs, err := EvalAll(args, env)
 			if err != nil {

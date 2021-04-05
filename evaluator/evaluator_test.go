@@ -36,6 +36,8 @@ func TestEval(t *testing.T) {
 		{`(append '(1) 2 3)`, List{Int(1), Int(2), Int(3)}},
 		{`(append '(1) '(2 3))`, List{Int(1), List{Int(2), Int(3)}}},
 		{`(concat '(1 2) '(3 4))`, List{Int(1), Int(2), Int(3), Int(4)}},
+		{`(eval '(+ 2 2))`, Int(4)},
+		{`(eval (list + 2 2))`, Int(4)},
 	}
 
 	e := NewEvaluator()

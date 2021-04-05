@@ -30,7 +30,7 @@ func (e *Evaluator) Eval(cmd string) ([]Any, error) {
 
 func Eval(expr Any, env *environment.Env) (Any, error) {
 	switch expr := expr.(type) {
-	case nil, Bool, Int, Float, String:
+	case nil, Bool, Int, Float, String, Function:
 		return expr, nil
 	case Symbol:
 		return env.Get(expr)
@@ -39,23 +39,12 @@ func Eval(expr Any, env *environment.Env) (Any, error) {
 			return List{}, nil
 		}
 
-		name, ok := expr.Head().(Symbol)
-		if !ok {
-			return nil, fmt.Errorf("%v is not callable", expr.Head())
-		}
-
-		fn, err := env.Get(name)
+		fn, err := getFunction(expr.Head(), env)
 		if err != nil {
 			return nil, err
 		}
-
-		switch fn := fn.(type) {
-		case Function:
-			args := expr.Tail()
-			return fn.Call(args, env)
-		default:
-			return nil, fmt.Errorf("%v is not callable", fn)
-		}
+		args := expr.Tail()
+		return fn.Call(args, env)
 	default:
 		return nil, fmt.Errorf("cannot evaluate %v of type %T", expr, expr)
 	}
@@ -71,4 +60,27 @@ func EvalAll(exprs []Any, env *environment.Env) ([]Any, error) {
 		evaluated = append(evaluated, val)
 	}
 	return evaluated, nil
+}
+
+func getFunction(obj Any, env *environment.Env) (Function, error) {
+	var fn Function
+
+	switch obj := obj.(type) {
+	case Symbol:
+		o, err := env.Get(obj)
+		if err != nil {
+			return nil, err
+		}
+		f, ok := o.(Function)
+		if !ok {
+			return nil, fmt.Errorf("%v is not callable", o)
+		}
+		fn = f
+	case Function:
+		fn = obj
+	default:
+		return nil, fmt.Errorf("%v is not callable", obj)
+	}
+
+	return fn, nil
 }

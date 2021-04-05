@@ -39,18 +39,21 @@ func TestEval(t *testing.T) {
 		{`(eval (+ 2 2))`, Int(4)},
 		{`(eval '(+ 2 2))`, Int(4)},
 		{`(eval (list + 2 2))`, Int(4)},
+		{`((fn (a) a) 123)`, Int(123)},
+		{`((fn (a b) (+ a b)) 1 2)`, Int(3)},
 	}
 
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		result, err := e.Eval(tt.input)
+		results, err := e.Eval(tt.input)
+		result := last(results)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-		if !cmp.Equal(result[0], tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result[0], result[0])
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
 		}
 	}
 }
@@ -80,13 +83,14 @@ func TestCore(t *testing.T) {
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		result, err := e.Eval(tt.input)
+		results, err := e.Eval(tt.input)
+		result := last(results)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-		if !cmp.Equal(result[0], tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result[0], result[0])
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
 		}
 	}
 }
@@ -117,13 +121,14 @@ func TestBooleans(t *testing.T) {
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		result, err := e.Eval(tt.input)
+		results, err := e.Eval(tt.input)
+		result := last(results)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-		if !cmp.Equal(result[0], tt.expected) {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result[0], result[0])
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
 		}
 	}
 }
@@ -148,13 +153,14 @@ func TestMath(t *testing.T) {
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		result, err := e.Eval(tt.input)
+		results, err := e.Eval(tt.input)
+		result := last(results)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-		if !cmp.Equal(result[0], tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result[0], result[0])
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
 		}
 	}
 }
@@ -175,20 +181,22 @@ func TestDefAndDel(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 	}
 
-	result, err := e.Eval("x")
+	results, err := e.Eval("x")
+	result := last(results)
 	if err != nil {
 		t.Errorf("variable x not set")
 	}
-	if result[0] != Int(42) {
+	if result != Int(42) {
 		t.Errorf("unable to read the variable")
 	}
 
-	result, err = e.Eval("(del x)")
+	results, err = e.Eval("(del x)")
+	result = last(results)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
-	if result[0] != Int(42) {
-		t.Errorf("expected %v, got %v", Int(42), result[0])
+	if result != Int(42) {
+		t.Errorf("expected %v, got %v", Int(42), result)
 	}
 
 	_, err = e.Eval("x")
@@ -252,13 +260,14 @@ func TestCheckers(t *testing.T) {
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		result, err := e.Eval(tt.input)
+		results, err := e.Eval(tt.input)
+		result := last(results)
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
-		if !cmp.Equal(result[0], tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result[0], result[0])
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
 		}
 	}
 }

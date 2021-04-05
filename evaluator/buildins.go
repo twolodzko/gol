@@ -74,6 +74,11 @@ var buildins = map[Symbol]Any{
 			return last(objs), nil
 		},
 	},
+	"fn": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			return NewLambda(args, env)
+		},
+	},
 	"first": &SimpleFunction{
 		firstFn,
 	},
@@ -373,16 +378,4 @@ var buildins = map[Symbol]Any{
 			return nil, nil
 		},
 	},
-}
-
-type Function interface {
-	Call([]Any, *environment.Env) (Any, error)
-}
-
-type SimpleFunction struct {
-	fn func([]Any, *environment.Env) (Any, error)
-}
-
-func (f *SimpleFunction) Call(args []Any, env *environment.Env) (Any, error) {
-	return f.fn(args, env)
 }

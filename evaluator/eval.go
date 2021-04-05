@@ -38,8 +38,11 @@ func Eval(expr Any, env *environment.Env) (Any, error) {
 		if len(expr) == 0 {
 			return List{}, nil
 		}
-
-		fn, err := getFunction(expr.Head(), env)
+		obj, err := Eval(expr.Head(), env)
+		if err != nil {
+			return nil, err
+		}
+		fn, err := getFunction(obj, env)
 		if err != nil {
 			return nil, err
 		}
@@ -64,6 +67,8 @@ func EvalAll(exprs []Any, env *environment.Env) ([]Any, error) {
 
 func getFunction(obj Any, env *environment.Env) (Function, error) {
 	switch obj := obj.(type) {
+	case Function:
+		return obj, nil
 	case Symbol:
 		o, err := env.Get(obj)
 		if err != nil {
@@ -74,8 +79,6 @@ func getFunction(obj Any, env *environment.Env) (Function, error) {
 			return nil, fmt.Errorf("%v is not callable", o)
 		}
 		return fn, nil
-	case Function:
-		return obj, nil
 	default:
 		return nil, fmt.Errorf("%v is not callable", obj)
 	}

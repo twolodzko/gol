@@ -27,6 +27,8 @@ func TestParse(t *testing.T) {
 		{"  \n\t(\nfoo \n\n42\t\"bar\")", []Any{List{Symbol("foo"), Int(42), String("bar")}}},
 		{"(1 2) (3 4)", []Any{List{Int(1), Int(2)}, List{Int(3), Int(4)}}},
 		{"(1 2)\n\n(3\n4)", []Any{List{Int(1), Int(2)}, List{Int(3), Int(4)}}},
+		{"'bar", []Any{List{Symbol("quote"), Symbol("bar")}}},
+		{"'(1 2 3)", []Any{List{Symbol("quote"), List{Int(1), Int(2), Int(3)}}}},
 	}
 
 	for _, tt := range testCases {

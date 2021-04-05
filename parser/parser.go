@@ -57,6 +57,7 @@ func (p *Parser) Parse() ([]Any, error) {
 		parsed []Any
 		obj    Any
 		err    error
+		quoted bool
 	)
 
 	if len(p.tokens) == 0 {
@@ -67,6 +68,14 @@ func (p *Parser) Parse() ([]Any, error) {
 		t, ok := p.getToken()
 		if !ok {
 			return nil, errors.New("index out of bounds")
+		}
+
+		if t.Type == token.QUOTE {
+			quoted = true
+			if ok := p.nextToken(); !ok {
+				return parsed, errors.New("missing quoted object")
+			}
+			continue
 		}
 
 		switch t.Type {
@@ -100,6 +109,11 @@ func (p *Parser) Parse() ([]Any, error) {
 			return parsed, err
 		}
 
+		if quoted {
+			quoted = false
+			obj = quote(obj)
+		}
+
 		parsed = append(parsed, obj)
 
 		if ok := p.nextToken(); !ok {
@@ -122,4 +136,8 @@ func ParseFloat(s string) (Float, error) {
 func (p *Parser) parseList() (List, error) {
 	l, err := p.Parse()
 	return List(l), err
+}
+
+func quote(obj Any) List {
+	return List{Symbol("quote"), obj}
 }

@@ -44,7 +44,7 @@ func TestLexer(t *testing.T) {
 			},
 		},
 		{
-			"\n\n  \t()\n 42 3.1415 -45.7e-2 \"Hello World!\" \" \t\n\n\\\"\\)\" foo true",
+			"\n\n  \t()\n 42 3.1415 -45.7e-2 \"Hello World!\" \" \t\n\n\\\"\\)\" foo true 'bar",
 			[]token.Token{
 				{Literal: "(", Type: token.LPAREN},
 				{Literal: ")", Type: token.RPAREN},
@@ -55,6 +55,8 @@ func TestLexer(t *testing.T) {
 				{Literal: " \t\n\n\")", Type: token.STRING},
 				{Literal: "foo", Type: token.SYMBOL},
 				{Literal: "true", Type: token.BOOL},
+				{Literal: "'", Type: token.QUOTE},
+				{Literal: "bar", Type: token.SYMBOL},
 			},
 		},
 		{

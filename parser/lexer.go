@@ -73,6 +73,8 @@ func (l *Lexer) nextToken() (token.Token, error) {
 		return token.New(string(r), token.LPAREN), err
 	case IsListEnd(r):
 		return token.New(string(r), token.RPAREN), err
+	case r == '\'':
+		return token.New(string(r), token.QUOTE), err
 	case IsQuotationMark(r):
 		str, err = l.readString()
 		if err != nil {

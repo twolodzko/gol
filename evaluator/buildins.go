@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/twolodzko/goal/environment"
 	. "github.com/twolodzko/goal/types"
 )
@@ -298,16 +297,13 @@ var buildins = map[Symbol]Any{
 		},
 	},
 	"=": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 2 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			objs, err := EvalAll(args, env)
-			if err != nil {
-				return nil, err
-			}
-			return Bool(cmp.Equal(objs[0], objs[1])), nil
-		},
+		equalFn,
+	},
+	">": &SimpleFunction{
+		gtFn,
+	},
+	"<": &SimpleFunction{
+		ltFn,
 	},
 	"error": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {

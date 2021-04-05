@@ -78,6 +78,10 @@ func TestCore(t *testing.T) {
 		{`(= 2 "2")`, Bool(false)},
 		{`(= (list 1 2 3) (list 1 2 3))`, Bool(true)},
 		{`(= (list 1 2 3) (list 1 "2" 3))`, Bool(false)},
+		{`(< 1 2)`, Bool(true)},
+		{`(< 1.0 2)`, Bool(true)},
+		{`(> 1 2)`, Bool(false)},
+		{`(> 1.0 2)`, Bool(false)},
 	}
 
 	e := NewEvaluator()

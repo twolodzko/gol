@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/twolodzko/goal/environment"
 	. "github.com/twolodzko/goal/types"
 )
@@ -173,6 +174,123 @@ func orFn(args []Any) Bool {
 		}
 	}
 	return Bool(false)
+}
+
+func equalFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+
+	switch first := objs[0].(type) {
+	case Bool:
+		second, ok := objs[1].(Bool)
+		if !ok {
+			return Bool(false), nil
+		}
+		return Bool(first == second), nil
+	case Int:
+		switch second := objs[1].(type) {
+		case Int:
+			return Bool(first == second), nil
+		case Float:
+			return Bool(Float(first) == second), nil
+		default:
+			return Bool(false), nil
+		}
+	case Float:
+		switch second := objs[1].(type) {
+		case Float:
+			return Bool(first == second), nil
+		case Int:
+			return Bool(first == Float(second)), nil
+		default:
+			return Bool(false), nil
+		}
+	case String:
+		second, ok := objs[1].(String)
+		if !ok {
+			return Bool(false), nil
+		}
+		return Bool(first == second), nil
+	case Function:
+		second, ok := objs[1].(Function)
+		if !ok {
+			return Bool(false), nil
+		}
+		return Bool(first == second), nil
+	default:
+		return Bool(cmp.Equal(objs[0], objs[1])), nil
+	}
+}
+
+func gtFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+
+	switch first := objs[0].(type) {
+	case Int:
+		switch second := objs[1].(type) {
+		case Int:
+			return Bool(first > second), nil
+		case Float:
+			return Bool(Float(first) > second), nil
+		default:
+			return nil, &ErrWrongType{objs[1]}
+		}
+	case Float:
+		switch second := objs[1].(type) {
+		case Float:
+			return Bool(first > second), nil
+		case Int:
+			return Bool(first > Float(second)), nil
+		default:
+			return nil, &ErrWrongType{objs[1]}
+		}
+	default:
+		return nil, &ErrWrongType{objs[0]}
+	}
+}
+
+func ltFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+
+	switch first := objs[0].(type) {
+	case Int:
+		switch second := objs[1].(type) {
+		case Int:
+			return Bool(first < second), nil
+		case Float:
+			return Bool(Float(first) < second), nil
+		default:
+			return nil, &ErrWrongType{objs[1]}
+		}
+	case Float:
+		switch second := objs[1].(type) {
+		case Float:
+			return Bool(first < second), nil
+		case Int:
+			return Bool(first < Float(second)), nil
+		default:
+			return nil, &ErrWrongType{objs[1]}
+		}
+	default:
+		return nil, &ErrWrongType{objs[0]}
+	}
 }
 
 func printEnv(env *environment.Env, depth int) {

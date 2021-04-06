@@ -3,7 +3,7 @@ package environment
 import (
 	"fmt"
 
-	. "github.com/twolodzko/goal/types"
+	. "github.com/twolodzko/gol/types"
 )
 
 type Env struct {

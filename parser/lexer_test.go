@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/twolodzko/goal/token"
+	"github.com/twolodzko/gol/token"
 )
 
 func Test_isWordBoundary(t *testing.T) {

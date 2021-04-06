@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/twolodzko/goal/repl"
+	"github.com/twolodzko/gol/repl"
 )
 
 const (

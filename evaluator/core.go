@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/twolodzko/goal/environment"
-	"github.com/twolodzko/goal/parser"
-	. "github.com/twolodzko/goal/types"
+	"github.com/twolodzko/gol/environment"
+	"github.com/twolodzko/gol/parser"
+	. "github.com/twolodzko/gol/types"
 )
 
 func isTrue(obj Any) bool {

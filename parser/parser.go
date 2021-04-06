@@ -5,8 +5,8 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/twolodzko/goal/token"
-	. "github.com/twolodzko/goal/types"
+	"github.com/twolodzko/gol/token"
+	. "github.com/twolodzko/gol/types"
 )
 
 func Parse(r io.Reader) ([]Any, error) {

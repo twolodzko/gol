@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	. "github.com/twolodzko/goal/types"
+	. "github.com/twolodzko/gol/types"
 )
 
 func TestEval(t *testing.T) {

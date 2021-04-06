@@ -1,4 +1,4 @@
-module github.com/twolodzko/goal
+module github.com/twolodzko/gol
 
 go 1.16
 

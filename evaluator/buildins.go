@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/twolodzko/goal/environment"
-	. "github.com/twolodzko/goal/types"
+	"github.com/twolodzko/gol/environment"
+	. "github.com/twolodzko/gol/types"
 )
 
 var buildins = map[Symbol]Any{

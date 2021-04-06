@@ -1,8 +1,8 @@
 package evaluator
 
 import (
-	"github.com/twolodzko/goal/environment"
-	. "github.com/twolodzko/goal/types"
+	"github.com/twolodzko/gol/environment"
+	. "github.com/twolodzko/gol/types"
 )
 
 type Function interface {

@@ -3,7 +3,7 @@ package evaluator
 import (
 	"fmt"
 
-	. "github.com/twolodzko/goal/types"
+	. "github.com/twolodzko/gol/types"
 )
 
 type ErrNumArgs struct {

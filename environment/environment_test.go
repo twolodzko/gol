@@ -3,7 +3,7 @@ package environment
 import (
 	"testing"
 
-	. "github.com/twolodzko/goal/types"
+	. "github.com/twolodzko/gol/types"
 )
 
 func TestEnv(t *testing.T) {

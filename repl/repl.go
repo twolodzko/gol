@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"io"
 
-	"github.com/twolodzko/goal/evaluator"
-	. "github.com/twolodzko/goal/types"
+	"github.com/twolodzko/gol/evaluator"
+	. "github.com/twolodzko/gol/types"
 )
 
 type Repl struct {

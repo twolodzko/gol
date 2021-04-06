@@ -3,8 +3,8 @@ package evaluator
 import (
 	"fmt"
 
-	"github.com/twolodzko/goal/parser"
-	. "github.com/twolodzko/goal/types"
+	"github.com/twolodzko/gol/parser"
+	. "github.com/twolodzko/gol/types"
 )
 
 func toString(obj Any) (Any, error) {

@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"unicode"
 
-	"github.com/twolodzko/goal/token"
+	"github.com/twolodzko/gol/token"
 )
 
 var (

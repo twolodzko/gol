@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/twolodzko/goal/parser"
+	"github.com/twolodzko/gol/parser"
 )
 
 type BlockReader struct {

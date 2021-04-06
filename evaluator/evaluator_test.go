@@ -111,6 +111,47 @@ func TestCore(t *testing.T) {
 	}
 }
 
+func TestRecursion(t *testing.T) {
+	e := NewEvaluator()
+
+	code := `
+	(def fibo (fn (n)
+		(if (= n 0) 0
+			(if (= n 1) 1
+				(+ (fibo (- n 1))
+				   (fibo (- n 2)))))))
+	`
+
+	_, err := e.EvalString(code)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+
+	var testCases = []struct {
+		input    string
+		expected Int
+	}{
+		{`(fibo 0)`, 0},
+		{`(fibo 1)`, 1},
+		{`(fibo 2)`, 1},
+		// {`(fibo 3)`, 2},
+		// {`(fibo 7)`, 8},
+		// {`(fibo 9)`, 34},
+	}
+
+	for _, tt := range testCases {
+		results, err := e.EvalString(tt.input)
+		result := last(results)
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
 func TestBooleans(t *testing.T) {
 	var testCases = []struct {
 		input    string

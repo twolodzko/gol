@@ -40,11 +40,7 @@ func Eval(expr Any, env *environment.Env) (Any, error) {
 		if len(expr) == 0 {
 			return List{}, nil
 		}
-		obj, err := Eval(expr.Head(), env)
-		if err != nil {
-			return nil, err
-		}
-		fn, err := getFunction(obj, env)
+		fn, err := getFunction(expr.Head(), env)
 		if err != nil {
 			return nil, err
 		}
@@ -78,10 +74,16 @@ func getFunction(obj Any, env *environment.Env) (Function, error) {
 		}
 		fn, ok := o.(Function)
 		if !ok {
-			return nil, fmt.Errorf("%v is not callable", o)
+			return nil, fmt.Errorf("%v (%T) is not callable", o, o)
 		}
 		return fn, nil
+	case List:
+		val, err := Eval(obj, env)
+		if err != nil {
+			return nil, err
+		}
+		return getFunction(val, env)
 	default:
-		return nil, fmt.Errorf("%v is not callable", obj)
+		return nil, fmt.Errorf("%v (%T) is not callable", obj, obj)
 	}
 }

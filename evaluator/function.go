@@ -46,6 +46,7 @@ func (f *Lambda) Call(args []Any, env *environment.Env) (Any, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	for i, val := range args {
 		f.env.Set(f.args[i], val)
 	}

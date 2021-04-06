@@ -1,5 +1,8 @@
 .DEFAULT_GOAL := test
-.PHONY: test cov staticcheck vet cycl cogn fmt clean repl
+.PHONY: build test cov staticcheck vet cycl cogn fmt clean repl
+
+build:
+	go build -o gol main.go
 
 test: staticcheck vet
 	go test ./...

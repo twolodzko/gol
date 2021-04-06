@@ -31,5 +31,5 @@ fmt:
 clean:
 	rm -rf *.out *.html ./gol
 
-repl:
-	go run main.go
+repl: build
+	./gol

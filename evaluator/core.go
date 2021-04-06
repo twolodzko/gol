@@ -1,9 +1,7 @@
 package evaluator
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
@@ -390,7 +388,8 @@ func readStringFn(args []Any, env *environment.Env) (Any, error) {
 	if !ok {
 		return nil, &ErrWrongType{obj}
 	}
-	expr, err := parser.Parse(strings.NewReader(string(code)))
+	reader := strings.NewReader(string(code))
+	expr, err := parser.Parse(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -405,24 +404,46 @@ func readStringFn(args []Any, env *environment.Env) (Any, error) {
 	}
 }
 
-func readFile(name String) (String, error) {
-	var lines []string
+func toInt(obj Any) (Any, error) {
+	switch obj := obj.(type) {
+	case Int:
+		return obj, nil
+	case Float:
+		return Int(obj), nil
+	case String:
+		switch {
+		case parser.IsInt(string(obj)):
+			return parser.ParseInt(string(obj))
+		case parser.IsFloat(string(obj)):
+			f, err := parser.ParseFloat(string(obj))
+			if err != nil {
+				return nil, err
+			}
+			return Int(f), nil
+		default:
+			return nil, fmt.Errorf("cannot convert %v to int", obj)
+		}
+	default:
+		return nil, fmt.Errorf("cannot convert %v of type %T to int", obj, obj)
+	}
+}
 
-	file, err := os.Open(string(name))
-	if err != nil {
-		return "", err
+func toFloat(obj Any) (Any, error) {
+	switch obj := obj.(type) {
+	case Float:
+		return obj, nil
+	case Int:
+		return Float(obj), nil
+	case String:
+		switch {
+		case parser.IsFloat(string(obj)):
+			return parser.ParseFloat(string(obj))
+		default:
+			return nil, fmt.Errorf("cannot convert %v to float", obj)
+		}
+	default:
+		return nil, fmt.Errorf("cannot convert %v of type %T to float", obj, obj)
 	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		lines = append(lines, line)
-	}
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-	return String(strings.Join(lines, "\n")), nil
 }
 
 func printEnv(env *environment.Env, depth int) {

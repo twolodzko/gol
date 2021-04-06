@@ -16,6 +16,8 @@ type Evaluator struct {
 func NewEvaluator() *Evaluator {
 	baseEnv := environment.NewEnv(nil)
 	baseEnv.Objects = buildins
+
+	// so that we shadow rather than overwrite the buildins
 	workEnv := environment.NewEnv(baseEnv)
 	return &Evaluator{workEnv}
 }

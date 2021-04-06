@@ -88,6 +88,7 @@ func TestCore(t *testing.T) {
 		{`(> 1 2)`, Bool(false)},
 		{`(> 1.0 2)`, Bool(false)},
 		{`(eval (read-string "(+ 2 2)"))`, Int(4)},
+		{`(read-string (str '(1 2 "3")))`, List{Int(1), Int(2), String("3")}},
 	}
 
 	e := NewEvaluator()

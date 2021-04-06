@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/twolodzko/gol/environment"
+	"github.com/twolodzko/gol/parser"
 	. "github.com/twolodzko/gol/types"
 )
 
@@ -194,14 +195,19 @@ var buildins = map[Symbol]Any{
 	},
 	"str": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
+			if len(args) == 0 {
 				return nil, &ErrNumArgs{len(args)}
 			}
-			obj, err := Eval(args[0], env)
+			objs, err := EvalAll(args, env)
 			if err != nil {
 				return nil, err
 			}
-			return toString(obj)
+
+			str := ""
+			for _, obj := range objs {
+				str += fmt.Sprintf("%v", obj)
+			}
+			return String(str), nil
 		},
 	},
 	"list?": &SimpleFunction{
@@ -294,7 +300,8 @@ var buildins = map[Symbol]Any{
 			if !ok {
 				return nil, &ErrWrongType{obj}
 			}
-			return readFile(name)
+			lines, err := parser.ReadFile(string(name))
+			return String(lines), err
 		},
 	},
 	"read-string": &SimpleFunction{

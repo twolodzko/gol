@@ -1,10 +1,6 @@
 package evaluator
 
-import (
-	"fmt"
-
-	. "github.com/twolodzko/gol/types"
-)
+import "fmt"
 
 type ErrNumArgs struct {
 	num int

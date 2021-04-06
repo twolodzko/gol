@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	. "github.com/twolodzko/gol/types"
 )
 
 func TestParse(t *testing.T) {

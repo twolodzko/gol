@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-
-	. "github.com/twolodzko/gol/types"
 )
 
 func TestEval(t *testing.T) {

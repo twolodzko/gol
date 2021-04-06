@@ -8,7 +8,6 @@ import (
 
 	"github.com/twolodzko/gol/environment"
 	"github.com/twolodzko/gol/parser"
-	. "github.com/twolodzko/gol/types"
 )
 
 var buildins = map[Symbol]Any{

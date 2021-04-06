@@ -6,7 +6,6 @@ import (
 
 	"github.com/twolodzko/gol/environment"
 	"github.com/twolodzko/gol/parser"
-	. "github.com/twolodzko/gol/types"
 )
 
 type Evaluator struct {

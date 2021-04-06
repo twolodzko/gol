@@ -1,9 +1,6 @@
 package evaluator
 
-import (
-	"github.com/twolodzko/gol/environment"
-	. "github.com/twolodzko/gol/types"
-)
+import "github.com/twolodzko/gol/environment"
 
 type Function interface {
 	Call([]Any, *environment.Env) (Any, error)

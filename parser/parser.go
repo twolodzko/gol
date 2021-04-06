@@ -6,7 +6,17 @@ import (
 	"strconv"
 
 	"github.com/twolodzko/gol/token"
-	. "github.com/twolodzko/gol/types"
+	"github.com/twolodzko/gol/types"
+)
+
+type (
+	Any    = types.Any
+	Bool   = types.Bool
+	Int    = types.Int
+	Float  = types.Float
+	String = types.String
+	Symbol = types.Symbol
+	List   = types.List
 )
 
 func Parse(r io.Reader) ([]Any, error) {

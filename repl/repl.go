@@ -5,8 +5,10 @@ import (
 	"io"
 
 	"github.com/twolodzko/gol/evaluator"
-	. "github.com/twolodzko/gol/types"
+	"github.com/twolodzko/gol/types"
 )
+
+type Any = types.Any
 
 type Repl struct {
 	reader *bufio.Reader

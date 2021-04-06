@@ -1,10 +1,6 @@
 package environment
 
-import (
-	"testing"
-
-	. "github.com/twolodzko/gol/types"
-)
+import "testing"
 
 func TestEnv(t *testing.T) {
 	var (

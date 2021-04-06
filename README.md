@@ -5,7 +5,7 @@ internals, *Go, and LISP*. It all started with reading the classic [*Structure a
 by Abelson, Sussman, and Sussman. I decided I want to write my own LISP to go even deeper into the rabbit hole.
 I found the [*Build Your Own LISP*][build-lisp] book by Daniel Holden that teaches you C while building a LISP
 interpreter. However I didn't like the idea of doing it in C. Nonetheless, the idea of learning another language
-while building an interpreter sounded interesting, so I found the great [*Writing An Interpreter In Go*][interpreter-go]
+while building an interpreter sounded interesting. This is how I found the great [*Writing An Interpreter In Go*][interpreter-go]
 by Thorsten Ball. To catch up with Go, I've read also [*Learning Go*][learn-go] by Jon Bodner, which was very
 helpful for me. While working on it, I also found the great [Make a LISP][mal] repository that helped me to
 structure my work.

@@ -47,10 +47,11 @@ func (f *Lambda) Call(args []Any, env *environment.Env) (Any, error) {
 		return nil, err
 	}
 
+	localEnv := environment.NewEnv(f.env)
 	for i, val := range args {
-		f.env.Set(f.args[i], val)
+		localEnv.Set(f.args[i], val)
 	}
-	objs, err := EvalAll(f.expr, f.env)
+	objs, err := EvalAll(f.expr, localEnv)
 	return last(objs), err
 }
 
@@ -58,7 +59,6 @@ func NewLambda(args []Any, env *environment.Env) (*Lambda, error) {
 	if len(args) < 2 {
 		return &Lambda{}, &ErrNumArgs{len(args)}
 	}
-	localEnv := environment.NewEnv(env)
 	argList, ok := args[0].(List)
 	if !ok {
 		return &Lambda{}, &ErrWrongType{args[0]}
@@ -67,7 +67,7 @@ func NewLambda(args []Any, env *environment.Env) (*Lambda, error) {
 	if err != nil {
 		return &Lambda{}, err
 	}
-	return &Lambda{localEnv, argNames, args[1:]}, nil
+	return &Lambda{env, argNames, args[1:]}, nil
 }
 
 func toSymbols(objs List) ([]Symbol, error) {

@@ -45,15 +45,28 @@ func TestEval(t *testing.T) {
 		{`(eval '(+ 2 2))`, Int(4)},
 		{`(eval (list + 2 2))`, Int(4)},
 		{`((fn (a) a) 123)`, Int(123)},
-		{`((fn (a b) (+ a b)) 1 2)`, Int(3)},
-		{`((fn (x y) (or (= x y) (> x y))) 2 1)`, Bool(true)},
+		{`((fn (a b)
+			(+ a b))
+		  1 2)`, Int(3)},
+		{`((fn (x y)
+			(or (= x y)
+				(> x y)))
+		  2 1)`, Bool(true)},
 		{`((fn () 5))`, Int(5)},
-		{`(def x 2) ((fn (x) (+ x 5)) (+ x 3))`, Int(10)},
+		{`(def x 2)
+		  ((fn (x)
+		  	(+ x 5))
+			(+ x 3))`, Int(10)},
+		{`(def factorial (fn (n)
+			(if (= n 1) 1
+				(* n (factorial (- n 1))))))
+		  (factorial 10)`, Int(3628800)},
+		{`(def foo (fn (x) (fn (y) (+ x y))))
+		  ((foo 5) 6)`, Int(11)},
 	}
 
-	e := NewEvaluator()
-
 	for _, tt := range testCases {
+		e := NewEvaluator()
 		results, err := e.EvalString(tt.input)
 		result := last(results)
 
@@ -96,9 +109,8 @@ func TestCore(t *testing.T) {
 		{`(read-string (str '(1 2 "3")))`, List{Int(1), Int(2), String("3")}},
 	}
 
-	e := NewEvaluator()
-
 	for _, tt := range testCases {
+		e := NewEvaluator()
 		results, err := e.EvalString(tt.input)
 		result := last(results)
 
@@ -134,9 +146,9 @@ func TestRecursion(t *testing.T) {
 		{`(fibo 0)`, 0},
 		{`(fibo 1)`, 1},
 		{`(fibo 2)`, 1},
-		// {`(fibo 3)`, 2},
-		// {`(fibo 7)`, 8},
-		// {`(fibo 9)`, 34},
+		{`(fibo 3)`, 2},
+		{`(fibo 7)`, 13},
+		{`(fibo 9)`, 34},
 	}
 
 	for _, tt := range testCases {
@@ -175,9 +187,8 @@ func TestBooleans(t *testing.T) {
 		{`(or false nil)`, false},
 	}
 
-	e := NewEvaluator()
-
 	for _, tt := range testCases {
+		e := NewEvaluator()
 		results, err := e.EvalString(tt.input)
 		result := last(results)
 
@@ -207,9 +218,8 @@ func TestMath(t *testing.T) {
 		{`(// 100 2 5 2)`, Int(5)},
 	}
 
-	e := NewEvaluator()
-
 	for _, tt := range testCases {
+		e := NewEvaluator()
 		results, err := e.EvalString(tt.input)
 		result := last(results)
 
@@ -295,9 +305,8 @@ func TestCheckers(t *testing.T) {
 		{`(fn? nil)`, false},
 	}
 
-	e := NewEvaluator()
-
 	for _, tt := range testCases {
+		e := NewEvaluator()
 		results, err := e.EvalString(tt.input)
 		result := last(results)
 

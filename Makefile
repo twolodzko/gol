@@ -1,4 +1,3 @@
-.DEFAULT_GOAL := test
 .PHONY: build test cov staticcheck vet cycl cogn fmt clean repl
 
 build:
@@ -30,7 +29,7 @@ fmt:
 	go fmt ./...
 
 clean:
-	rm -rf *.out *.html
+	rm -rf *.out *.html ./gol
 
 repl:
 	go run main.go

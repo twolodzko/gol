@@ -74,6 +74,8 @@ func letFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, fmt.Errorf("invalid variable bindings %v", bindings)
 	}
 
+	// odd entries are keys, even are the values
+	// e.g. (let (x 1 y 2) (+ x y)) => 3
 	for i := 0; i < n; i += 2 {
 		name, ok := bindings[i].(Symbol)
 		if !ok {

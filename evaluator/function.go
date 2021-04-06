@@ -57,20 +57,20 @@ func (f *Lambda) Call(args []Any, env *environment.Env) (Any, error) {
 
 func NewLambda(args []Any, env *environment.Env) (*Lambda, error) {
 	if len(args) < 2 {
-		return &Lambda{}, &ErrNumArgs{len(args)}
+		return nil, &ErrNumArgs{len(args)}
 	}
 	argList, ok := args[0].(List)
 	if !ok {
-		return &Lambda{}, &ErrWrongType{args[0]}
+		return nil, &ErrWrongType{args[0]}
 	}
-	argNames, err := toSymbols(argList)
+	argNames, err := areSymbols(argList)
 	if err != nil {
-		return &Lambda{}, err
+		return nil, err
 	}
 	return &Lambda{env, argNames, args[1:]}, nil
 }
 
-func toSymbols(objs List) ([]Symbol, error) {
+func areSymbols(objs List) ([]Symbol, error) {
 	var symbols []Symbol
 	for _, obj := range objs {
 		s, ok := obj.(Symbol)

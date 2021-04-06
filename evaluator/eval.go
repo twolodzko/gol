@@ -22,8 +22,8 @@ func NewEvaluator() *Evaluator {
 	return &Evaluator{workEnv}
 }
 
-func (e *Evaluator) EvalString(cmd string) ([]Any, error) {
-	expr, err := parser.Parse(strings.NewReader(cmd))
+func (e *Evaluator) EvalString(code string) ([]Any, error) {
+	expr, err := parser.Parse(strings.NewReader(code))
 	if err != nil {
 		return nil, err
 	}

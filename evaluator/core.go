@@ -62,29 +62,35 @@ func letFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, &ErrNumArgs{len(args)}
 	}
 
-	vars, ok := args[0].(List)
+	localEnv := environment.NewEnv(env)
+
+	bindings, ok := args[0].(List)
 	if !ok {
 		return nil, &ErrWrongType{args[0]}
 	}
-	if len(vars) != 2 {
-		return nil, fmt.Errorf("invalid variable assignment %v", vars)
+
+	n := len(bindings)
+	if (n % 2) != 0 {
+		return nil, fmt.Errorf("invalid variable bindings %v", bindings)
 	}
 
-	localEnv := environment.NewEnv(env)
-
-	name, ok := vars[0].(Symbol)
-	if !ok {
-		return nil, &ErrWrongType{vars[0]}
+	for i := 0; i < n; i += 2 {
+		name, ok := bindings[i].(Symbol)
+		if !ok {
+			return nil, &ErrWrongType{bindings[0]}
+		}
+		val, err := Eval(bindings[i+1], localEnv)
+		if err != nil {
+			return nil, err
+		}
+		localEnv.Set(name, val)
 	}
-
-	localEnv.Set(name, vars[1])
 
 	res, err := EvalAll(args[1:], localEnv)
 
 	if len(res) == 0 {
 		return nil, err
 	}
-
 	return last(res), err
 }
 

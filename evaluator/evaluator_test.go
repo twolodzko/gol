@@ -28,6 +28,8 @@ func TestEval(t *testing.T) {
 		{`(let (c 2) c)`, Int(2)},
 		{`(let (x 10) (+ 5 x))`, Int(15)},
 		{`(let (x 5) (let (y 6) (+ x y)))`, Int(11)},
+		{`(let (x 1 y (+ 2 3)) (+ x y))`, Int(6)},
+		{`(let (x 1 y (+ 1 x)) (+ x y))`, Int(3)},
 		{`(do (+ 2 2) (+ 3 5))`, Int(8)},
 		{`(do (def x 2) (+ x 4))`, Int(6)},
 		{`'(1 2 3)`, List{Int(1), Int(2), Int(3)}},

@@ -2,7 +2,7 @@
 .PHONY: build test cov staticcheck vet cycl cogn fmt clean repl
 
 build:
-	go build -o gol main.go
+	go build
 
 test: staticcheck vet
 	go test ./...

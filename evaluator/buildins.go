@@ -195,17 +195,9 @@ var buildins = map[Symbol]Any{
 	},
 	"str": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) == 0 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			objs, err := EvalAll(args, env)
+			str, err := toString(args, env, "")
 			if err != nil {
 				return nil, err
-			}
-
-			str := ""
-			for _, obj := range objs {
-				str += fmt.Sprintf("%v", obj)
 			}
 			return String(str), nil
 		},
@@ -309,17 +301,15 @@ var buildins = map[Symbol]Any{
 	},
 	"println": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			objs, err := EvalAll(args, env)
+			if len(args) == 0 {
+				fmt.Println()
+				return nil, nil
+			}
+			str, err := toString(args, env, " ")
 			if err != nil {
 				return nil, err
 			}
-
-			out := ""
-			for _, o := range objs {
-				out += fmt.Sprintf("%v", o)
-			}
-			fmt.Printf("%s\n", out)
-
+			fmt.Printf("%s\n", str)
 			return nil, nil
 		},
 	},

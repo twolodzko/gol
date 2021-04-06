@@ -404,6 +404,22 @@ func readStringFn(args []Any, env *environment.Env) (Any, error) {
 	}
 }
 
+func toString(args []Any, env *environment.Env, sep String) (string, error) {
+	if len(args) == 0 {
+		return "", &ErrNumArgs{len(args)}
+	}
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return "", err
+	}
+
+	var str []string
+	for _, obj := range objs {
+		str = append(str, fmt.Sprintf("%v", obj))
+	}
+	return strings.Join(str, string(sep)), nil
+}
+
 func toInt(obj Any) (Any, error) {
 	switch obj := obj.(type) {
 	case Int:

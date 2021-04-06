@@ -20,7 +20,7 @@ func NewEvaluator() *Evaluator {
 	return &Evaluator{workEnv}
 }
 
-func (e *Evaluator) Eval(cmd string) ([]Any, error) {
+func (e *Evaluator) EvalString(cmd string) ([]Any, error) {
 	expr, err := parser.Parse(strings.NewReader(cmd))
 	if err != nil {
 		return nil, err

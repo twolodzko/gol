@@ -23,5 +23,5 @@ func (repl *Repl) Repl() ([]Any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return repl.Eval(cmd)
+	return repl.EvalString(cmd)
 }

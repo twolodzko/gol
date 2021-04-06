@@ -49,7 +49,7 @@ func TestEval(t *testing.T) {
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		results, err := e.Eval(tt.input)
+		results, err := e.EvalString(tt.input)
 		result := last(results)
 
 		if err != nil {
@@ -93,7 +93,7 @@ func TestCore(t *testing.T) {
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		results, err := e.Eval(tt.input)
+		results, err := e.EvalString(tt.input)
 		result := last(results)
 
 		if err != nil {
@@ -131,7 +131,7 @@ func TestBooleans(t *testing.T) {
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		results, err := e.Eval(tt.input)
+		results, err := e.EvalString(tt.input)
 		result := last(results)
 
 		if err != nil {
@@ -163,7 +163,7 @@ func TestMath(t *testing.T) {
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		results, err := e.Eval(tt.input)
+		results, err := e.EvalString(tt.input)
 		result := last(results)
 
 		if err != nil {
@@ -177,7 +177,7 @@ func TestMath(t *testing.T) {
 
 func TestErrorFn(t *testing.T) {
 	e := NewEvaluator()
-	result, err := e.Eval(`(list 1 (error "ok!") 2)`)
+	result, err := e.EvalString(`(list 1 (error "ok!") 2)`)
 
 	if err == nil {
 		t.Errorf("expected error, got result: %v", result)
@@ -187,11 +187,11 @@ func TestErrorFn(t *testing.T) {
 func TestDefAndDel(t *testing.T) {
 	e := NewEvaluator()
 
-	if _, err := e.Eval("(def x 42)"); err != nil {
+	if _, err := e.EvalString("(def x 42)"); err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
 
-	results, err := e.Eval("x")
+	results, err := e.EvalString("x")
 	result := last(results)
 	if err != nil {
 		t.Errorf("variable x not set")
@@ -200,7 +200,7 @@ func TestDefAndDel(t *testing.T) {
 		t.Errorf("unable to read the variable")
 	}
 
-	results, err = e.Eval("(del x)")
+	results, err = e.EvalString("(del x)")
 	result = last(results)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
@@ -209,12 +209,12 @@ func TestDefAndDel(t *testing.T) {
 		t.Errorf("expected %v, got %v", Int(42), result)
 	}
 
-	_, err = e.Eval("x")
+	_, err = e.EvalString("x")
 	if err == nil {
 		t.Errorf("expected not to see x, got %v", result)
 	}
 
-	_, err = e.Eval("(del y)")
+	_, err = e.EvalString("(del y)")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -270,7 +270,7 @@ func TestCheckers(t *testing.T) {
 	e := NewEvaluator()
 
 	for _, tt := range testCases {
-		results, err := e.Eval(tt.input)
+		results, err := e.EvalString(tt.input)
 		result := last(results)
 
 		if err != nil {

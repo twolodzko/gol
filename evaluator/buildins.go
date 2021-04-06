@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/twolodzko/gol/environment"
 	"github.com/twolodzko/gol/parser"
@@ -301,6 +302,22 @@ var buildins = map[Symbol]Any{
 	"rem": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			return applyFloatFn(args, math.Remainder, 1)
+		},
+	},
+	"time": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			start := time.Now()
+
+			obj, err := Eval(obj, env)
+			if err != nil {
+				return nil, err
+			}
+
+			end := time.Now()
+			elapsed := end.Sub(start)
+			fmt.Printf("%s\n", elapsed)
+
+			return obj, nil
 		},
 	},
 	"env": &SimpleFunction{

@@ -22,7 +22,7 @@ func TestEnv(t *testing.T) {
 		{Symbol("x"), Int(3)},
 	}
 
-	env := NewEnv()
+	env := NewEnv(nil)
 
 	for _, tt := range testCases {
 		err = env.Set(tt.name, tt.value)
@@ -39,7 +39,7 @@ func TestEnv(t *testing.T) {
 		}
 	}
 
-	newEnv := NewEnclosedEnv(env)
+	newEnv := NewEnv(env)
 
 	name := Symbol("w")
 	value := Int(4)

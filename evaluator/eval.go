@@ -14,9 +14,9 @@ type Evaluator struct {
 }
 
 func NewEvaluator() *Evaluator {
-	baseEnv := environment.NewEnv()
+	baseEnv := environment.NewEnv(nil)
 	baseEnv.Objects = buildins
-	workEnv := environment.NewEnclosedEnv(baseEnv)
+	workEnv := environment.NewEnv(baseEnv)
 	return &Evaluator{workEnv}
 }
 

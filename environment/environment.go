@@ -11,12 +11,7 @@ type Env struct {
 	Parent  *Env
 }
 
-func NewEnv() *Env {
-	objs := make(map[Symbol]Any)
-	return &Env{Objects: objs, Parent: nil}
-}
-
-func NewEnclosedEnv(env *Env) *Env {
+func NewEnv(env *Env) *Env {
 	objs := make(map[Symbol]Any)
 	return &Env{Objects: objs, Parent: env}
 }

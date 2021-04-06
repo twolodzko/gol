@@ -72,7 +72,7 @@ func letFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, fmt.Errorf("invalid variable assignment %v", vars)
 	}
 
-	localEnv := environment.NewEnclosedEnv(env)
+	localEnv := environment.NewEnv(env)
 
 	name, ok := vars[0].(Symbol)
 	if !ok {

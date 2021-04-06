@@ -38,7 +38,7 @@ func NewLambda(args []Any, env *environment.Env) (*Lambda, error) {
 	if len(args) < 2 {
 		return &Lambda{}, &ErrNumArgs{len(args)}
 	}
-	localEnv := environment.NewEnclosedEnv(env)
+	localEnv := environment.NewEnv(env)
 	argList, ok := args[0].(List)
 	if !ok {
 		return &Lambda{}, &ErrWrongType{args[0]}

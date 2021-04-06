@@ -28,14 +28,16 @@ func TestEval(t *testing.T) {
 		{`(let (c 2) c)`, Int(2)},
 		{`(let (x 10) (+ 5 x))`, Int(15)},
 		{`(let (x 5) (let (y 6) (+ x y)))`, Int(11)},
-		{`(do ((+ 2 2) (+ 3 5)))`, Int(8)},
-		{`(do ((def x 2) (+ x 4)))`, Int(6)},
+		{`(do (+ 2 2) (+ 3 5))`, Int(8)},
+		{`(do (def x 2) (+ x 4))`, Int(6)},
 		{`'(1 2 3)`, List{Int(1), Int(2), Int(3)}},
 		{`'foo`, Symbol("foo")},
 		{`(append '(1 2) 3)`, List{Int(1), Int(2), Int(3)}},
 		{`(append '(1) 2)`, List{Int(1), Int(2)}},
 		{`(append '(1) 2 3)`, List{Int(1), Int(2), Int(3)}},
 		{`(append '(1) '(2 3))`, List{Int(1), List{Int(2), Int(3)}}},
+		{`(cons 1 '(2 3 4))`, List{Int(1), Int(2), Int(3), Int(4)}},
+		{`(cons '(1 2) '(3 4))`, List{List{Int(1), Int(2)}, Int(3), Int(4)}},
 		{`(concat '(1 2) '(3 4))`, List{Int(1), Int(2), Int(3), Int(4)}},
 		{`(eval (+ 2 2))`, Int(4)},
 		{`(eval '(+ 2 2))`, Int(4)},
@@ -44,6 +46,7 @@ func TestEval(t *testing.T) {
 		{`((fn (a b) (+ a b)) 1 2)`, Int(3)},
 		{`((fn (x y) (or (= x y) (> x y))) 2 1)`, Bool(true)},
 		{`((fn () 5))`, Int(5)},
+		{`(def x 2) ((fn (x) (+ x 5)) (+ x 3))`, Int(10)},
 	}
 
 	e := NewEvaluator()
@@ -185,7 +188,7 @@ func TestErrorFn(t *testing.T) {
 	}
 }
 
-func TestDefAndDel(t *testing.T) {
+func TestDef(t *testing.T) {
 	e := NewEvaluator()
 
 	if _, err := e.EvalString("(def x 42)"); err != nil {
@@ -199,25 +202,6 @@ func TestDefAndDel(t *testing.T) {
 	}
 	if result != Int(42) {
 		t.Errorf("unable to read the variable")
-	}
-
-	results, err = e.EvalString("(del x)")
-	result = last(results)
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
-	}
-	if result != Int(42) {
-		t.Errorf("expected %v, got %v", Int(42), result)
-	}
-
-	_, err = e.EvalString("x")
-	if err == nil {
-		t.Errorf("expected not to see x, got %v", result)
-	}
-
-	_, err = e.EvalString("(del y)")
-	if err != nil {
-		t.Errorf("unexpected error: %s", err)
 	}
 }
 

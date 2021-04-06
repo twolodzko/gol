@@ -11,13 +11,9 @@ import (
 	"github.com/twolodzko/gol/repl"
 )
 
-const (
-	inputPrompt  string = "> "
-	outputPrompt string = "=> "
-)
+const prompt string = "> "
 
 func main() {
-
 	if len(os.Args) == 2 {
 		if os.Args[1] == "-h" || os.Args[1] == "--help" {
 			printHelp()
@@ -27,31 +23,7 @@ func main() {
 		return
 	}
 
-	// REPL
-
-	repl := repl.NewRepl(os.Stdin)
-
-	fmt.Println("Press ^C to exit.")
-	fmt.Println()
-
-	for {
-		fmt.Printf("%s", inputPrompt)
-
-		objs, err := repl.Repl()
-
-		if err != nil {
-			print(fmt.Sprintf("ERROR: %s", err))
-			continue
-		}
-
-		for _, obj := range objs {
-			print(fmt.Sprintf("%v", obj))
-		}
-	}
-}
-
-func print(msg string) {
-	io.WriteString(os.Stdout, fmt.Sprintf("%s%s\n", outputPrompt, msg))
+	startRepl()
 }
 
 func printHelp() {
@@ -77,4 +49,30 @@ func evalScript() {
 	if len(objs) > 0 {
 		fmt.Printf("%v\n", objs[len(objs)-1])
 	}
+}
+
+func startRepl() {
+	repl := repl.NewRepl(os.Stdin)
+
+	fmt.Println("Press ^C to exit.")
+	fmt.Println()
+
+	for {
+		fmt.Printf("%s", prompt)
+
+		objs, err := repl.Repl()
+
+		if err != nil {
+			print(fmt.Sprintf("ERROR: %s", err))
+			continue
+		}
+
+		for _, obj := range objs {
+			print(fmt.Sprintf("%v", obj))
+		}
+	}
+}
+
+func print(msg string) {
+	io.WriteString(os.Stdout, fmt.Sprintf("%s\n", msg))
 }

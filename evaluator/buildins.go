@@ -28,15 +28,8 @@ var buildins = map[Symbol]Any{
 			return args[0], nil
 		},
 	},
-	"eval": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"eval": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			return Eval(obj, env)
 		},
 	},
@@ -46,33 +39,12 @@ var buildins = map[Symbol]Any{
 	"def": &SimpleFunction{
 		defFn,
 	},
-	"del": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			name, ok := args[0].(Symbol)
-			if !ok {
-				return nil, &ErrWrongType{args[0]}
-			}
-			obj, _ := env.Get(name)
-			delete(env.Objects, name)
-			return obj, nil
-		},
-	},
 	"let": &SimpleFunction{
 		letFn,
 	},
 	"do": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, ok := args[0].(List)
-			if !ok {
-				return nil, &ErrWrongType{args[0]}
-			}
-			objs, err := EvalAll(obj, env)
+			objs, err := EvalAll(args, env)
 			if err != nil {
 				return nil, err
 			}
@@ -84,112 +56,105 @@ var buildins = map[Symbol]Any{
 			return NewLambda(args, env)
 		},
 	},
-	"first": &SimpleFunction{
-		firstFn,
+	"first": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			l, ok := obj.(List)
+			if !ok {
+				return nil, fmt.Errorf("%v is not a list", obj)
+			}
+			return l.Head(), nil
+		},
 	},
-	"rest": &SimpleFunction{
-		restFn,
+	"rest": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			l, ok := obj.(List)
+			if !ok {
+				return nil, fmt.Errorf("%v is not a list", obj)
+			}
+			return l.Tail(), nil
+		},
 	},
-	"init": &SimpleFunction{
-		initFn,
+	"init": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			l, ok := obj.(List)
+			if !ok {
+				return nil, fmt.Errorf("%v is not a list", obj)
+			}
+			if len(l) == 0 {
+				return List{}, nil
+			}
+			return l[:len(l)-1], nil
+		},
 	},
-	"last": &SimpleFunction{
-		lastFn,
+	"last": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			l, ok := obj.(List)
+			if !ok {
+				return nil, fmt.Errorf("%v is not a list", obj)
+			}
+			if len(l) == 0 {
+				return nil, nil
+			}
+			return l[len(l)-1], nil
+		},
+	},
+	"nth": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 2 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			args, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+			return nthFn(args)
+		},
 	},
 	"append": &SimpleFunction{
 		appendFn,
 	},
+	"cons": &SimpleFunction{
+		prependFn,
+	},
 	"concat": &SimpleFunction{
 		concatFn,
 	},
-	"nth": &SimpleFunction{
-		nthFn,
-	},
-	"nil?": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"nil?": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			return Bool(obj == nil), nil
 		},
 	},
-	"int?": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"int?": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			_, ok := obj.(Int)
 			return Bool(ok), nil
 		},
 	},
-	"float?": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"float?": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			_, ok := obj.(Float)
 			return Bool(ok), nil
 		},
 	},
-	"str?": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"str?": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			_, ok := obj.(String)
 			return Bool(ok), nil
 		},
 	},
-	"fn?": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"fn?": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			_, ok := obj.(Function)
 			return Bool(ok), nil
 		},
 	},
-	"int": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"int": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			return toInt(obj)
 		},
 	},
-	"float": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"float": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			return toFloat(obj)
 		},
 	},
@@ -202,28 +167,14 @@ var buildins = map[Symbol]Any{
 			return String(str), nil
 		},
 	},
-	"list?": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"list?": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			_, ok := obj.(List)
 			return Bool(ok), nil
 		},
 	},
-	"atom?": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"atom?": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			switch obj.(type) {
 			case Bool, Int, Float, String:
 				return Bool(true), nil
@@ -232,27 +183,13 @@ var buildins = map[Symbol]Any{
 			}
 		},
 	},
-	"true?": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"true?": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			return Bool(isTrue(obj)), nil
 		},
 	},
-	"not": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
-			if err != nil {
-				return nil, err
-			}
+	"not": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			return Bool(!isTrue(obj)), nil
 		},
 	},
@@ -263,31 +200,48 @@ var buildins = map[Symbol]Any{
 		orFn,
 	},
 	"=": &SimpleFunction{
-		equalFn,
-	},
-	">": &SimpleFunction{
-		gtFn,
-	},
-	"<": &SimpleFunction{
-		ltFn,
-	},
-	"error": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
+			if len(args) != 2 {
 				return nil, &ErrNumArgs{len(args)}
 			}
-			return nil, fmt.Errorf("%s", fmt.Sprintf("%v", args[0]))
-		},
-	},
-	"slurp": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 1 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			obj, err := Eval(args[0], env)
+			objs, err := EvalAll(args, env)
 			if err != nil {
 				return nil, err
 			}
+			return equalFn(objs)
+		},
+	},
+	">": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 2 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			objs, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+			return gtFn(objs)
+		},
+	},
+	"<": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) != 2 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			objs, err := EvalAll(args, env)
+			if err != nil {
+				return nil, err
+			}
+			return ltFn(objs)
+		},
+	},
+	"error": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			return nil, fmt.Errorf("%s", fmt.Sprintf("%v", obj))
+		},
+	},
+	"slurp": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
 			name, ok := obj.(String)
 			if !ok {
 				return nil, &ErrWrongType{obj}
@@ -296,7 +250,7 @@ var buildins = map[Symbol]Any{
 			return String(lines), err
 		},
 	},
-	"read-string": &SimpleFunction{
+	"read-string": &SingleArgFunction{
 		readStringFn,
 	},
 	"println": &SimpleFunction{

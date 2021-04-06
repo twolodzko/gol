@@ -88,93 +88,15 @@ func letFn(args []Any, env *environment.Env) (Any, error) {
 	return last(res), err
 }
 
-func firstFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 1 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	obj, err := Eval(args[0], env)
-	if err != nil {
-		return nil, err
-	}
-
-	l, ok := obj.(List)
-	if !ok {
-		return nil, fmt.Errorf("%v is not a list", obj)
-	}
-	return l.Head(), nil
-}
-
-func restFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 1 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	obj, err := Eval(args[0], env)
-	if err != nil {
-		return nil, err
-	}
-
-	l, ok := obj.(List)
-	if !ok {
-		return nil, fmt.Errorf("%v is not a list", obj)
-	}
-	return l.Tail(), nil
-}
-
-func initFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 1 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	obj, err := Eval(args[0], env)
-	if err != nil {
-		return nil, err
-	}
-
-	l, ok := obj.(List)
-	if !ok {
-		return nil, fmt.Errorf("%v is not a list", obj)
-	}
-	if len(l) == 0 {
-		return nil, nil
-	}
-	return l[:len(l)-1], nil
-}
-
-func lastFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 1 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	obj, err := Eval(args[0], env)
-	if err != nil {
-		return nil, err
-	}
-
-	l, ok := obj.(List)
-	if !ok {
-		return nil, fmt.Errorf("%v is not a list", obj)
-	}
-	if len(l) == 0 {
-		return nil, nil
-	}
-	return l[len(l)-1], nil
-}
-
-func nthFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 2 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	args, err := EvalAll(args, env)
-	if err != nil {
-		return nil, err
-	}
-
+func nthFn(args []Any) (Any, error) {
 	switch l := args[0].(type) {
 	case List:
 		var n int
-		switch val := args[1].(type) {
+		switch arg := args[1].(type) {
 		case Int:
-			n = val
+			n = arg
 		case Float:
-			n = int(val)
+			n = int(arg)
 		default:
 			return nil, &ErrWrongType{args[1]}
 		}
@@ -182,7 +104,6 @@ func nthFn(args []Any, env *environment.Env) (Any, error) {
 		if n < len(l) {
 			return l[n], nil
 		}
-
 		return nil, fmt.Errorf("arrempting to access %d element of %d", n, len(l))
 	default:
 		return nil, &ErrWrongType{args[0]}
@@ -202,6 +123,21 @@ func appendFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, &ErrWrongType{args[0]}
 	}
 	return List(append(l, objs[1:]...)), nil
+}
+
+func prependFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) < 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+	l, ok := objs[1].(List)
+	if !ok {
+		return nil, &ErrWrongType{args[0]}
+	}
+	return List(append([]Any{objs[0]}, l...)), nil
 }
 
 func concatFn(args []Any, env *environment.Env) (Any, error) {
@@ -225,16 +161,15 @@ func concatFn(args []Any, env *environment.Env) (Any, error) {
 }
 
 func andFn(args []Any, env *environment.Env) (Any, error) {
-	objs, err := EvalAll(args, env)
-	if err != nil {
-		return nil, err
-	}
-	if len(objs) == 0 {
+	if len(args) == 0 {
 		return Bool(false), nil
 	}
-
-	for _, x := range objs {
-		if !isTrue(x) {
+	for _, arg := range args {
+		arg, err := Eval(arg, env)
+		if err != nil {
+			return nil, err
+		}
+		if !isTrue(arg) {
 			return Bool(false), nil
 		}
 	}
@@ -242,31 +177,22 @@ func andFn(args []Any, env *environment.Env) (Any, error) {
 }
 
 func orFn(args []Any, env *environment.Env) (Any, error) {
-	objs, err := EvalAll(args, env)
-	if err != nil {
-		return nil, err
-	}
-	if len(objs) == 0 {
+	if len(args) == 0 {
 		return Bool(false), nil
 	}
-
-	for _, x := range objs {
-		if isTrue(x) {
+	for _, arg := range args {
+		obj, err := Eval(arg, env)
+		if err != nil {
+			return nil, err
+		}
+		if isTrue(obj) {
 			return Bool(true), nil
 		}
 	}
 	return Bool(false), nil
 }
 
-func equalFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 2 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	objs, err := EvalAll(args, env)
-	if err != nil {
-		return nil, err
-	}
-
+func equalFn(objs []Any) (Any, error) {
 	switch first := objs[0].(type) {
 	case Bool:
 		second, ok := objs[1].(Bool)
@@ -309,15 +235,7 @@ func equalFn(args []Any, env *environment.Env) (Any, error) {
 	}
 }
 
-func gtFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 2 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	objs, err := EvalAll(args, env)
-	if err != nil {
-		return nil, err
-	}
-
+func gtFn(objs []Any) (Any, error) {
 	switch first := objs[0].(type) {
 	case Int:
 		switch second := objs[1].(type) {
@@ -342,15 +260,7 @@ func gtFn(args []Any, env *environment.Env) (Any, error) {
 	}
 }
 
-func ltFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 2 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	objs, err := EvalAll(args, env)
-	if err != nil {
-		return nil, err
-	}
-
+func ltFn(objs []Any) (Any, error) {
 	switch first := objs[0].(type) {
 	case Int:
 		switch second := objs[1].(type) {
@@ -375,15 +285,7 @@ func ltFn(args []Any, env *environment.Env) (Any, error) {
 	}
 }
 
-func readStringFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 1 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	obj, err := Eval(args[0], env)
-	if err != nil {
-		return nil, err
-	}
-
+func readStringFn(obj Any, env *environment.Env) (Any, error) {
 	code, ok := obj.(String)
 	if !ok {
 		return nil, &ErrWrongType{obj}

@@ -10,10 +10,6 @@ by Thorsten Ball. To catch up with Go, I've read the [*Learning Go*][learn-go] b
 helpful for me. While working on it, I also found the [Make a LISP][mal] repository that helped me with structuring
 my work.
 
-While building **gol** I decided to make small changes as compared to Clojure syntax, for example, I didn't write the
-`cons` function that prepends an element to a list, but instead, there is an `append` function, since internally
-I'm using Go's slices for lists.
-
  [sicp]: https://www.goodreads.com/book/show/43713.Structure_and_Interpretation_of_Computer_Programs
  [build-lisp]: http://buildyourownlisp.com/
  [interpreter-go]: https://interpreterbook.com/

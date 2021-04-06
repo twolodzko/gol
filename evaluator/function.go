@@ -17,6 +17,21 @@ func (f *SimpleFunction) Call(args []Any, env *environment.Env) (Any, error) {
 	return f.fn(args, env)
 }
 
+type SingleArgFunction struct {
+	fn func(Any, *environment.Env) (Any, error)
+}
+
+func (f *SingleArgFunction) Call(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 1 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	obj, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+	return f.fn(obj, env)
+}
+
 type Lambda struct {
 	env  *environment.Env
 	args []Symbol
@@ -26,6 +41,10 @@ type Lambda struct {
 func (f *Lambda) Call(args []Any, env *environment.Env) (Any, error) {
 	if len(args) != len(f.args) {
 		return nil, &ErrNumArgs{len(args)}
+	}
+	args, err := EvalAll(args, env)
+	if err != nil {
+		return nil, err
 	}
 	for i, val := range args {
 		f.env.Set(f.args[i], val)

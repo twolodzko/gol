@@ -17,9 +17,6 @@ var buildins = map[Symbol]Any{
 	"let": &TcoFunction{
 		letFn,
 	},
-	"do": &TcoFunction{
-		doFn,
-	},
 	"fn": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			return NewLambda(args, env)
@@ -30,6 +27,9 @@ var buildins = map[Symbol]Any{
 	},
 	"set!": &SimpleFunction{
 		setFn,
+	},
+	"begin": &SimpleFunction{
+		beginFn,
 	},
 	"list": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {

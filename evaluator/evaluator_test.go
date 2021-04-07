@@ -37,10 +37,10 @@ func TestEval(t *testing.T) {
 			(+ x y))`, Int(6)},
 		{`(let (x 1 y (+ 1 x))
 			(+ x y))`, Int(3)},
-		{`(do (+ 2 2)
-			  (+ 3 5))`, Int(8)},
-		{`(do (def x 2)
-			  (+ x 4))`, Int(6)},
+		{`(begin (+ 2 2)
+			     (+ 3 5))`, Int(8)},
+		{`(begin (def x 2)
+			     (+ x 4))`, Int(6)},
 		{`(eval (+ 2 2))`, Int(4)},
 		{`(eval '(+ 2 2))`, Int(4)},
 		{`(eval (list + 2 2))`, Int(4)},

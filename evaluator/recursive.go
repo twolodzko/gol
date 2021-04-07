@@ -125,11 +125,6 @@ func letFn(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 	return last(exprs), localEnv, err
 }
 
-func doFn(args []Any, env *environment.Env) (Any, *environment.Env, error) {
-	_, err := EvalAll(exceptLast(args), env)
-	return last(args), env, err
-}
-
 func exceptLast(objs []Any) []Any {
 	if len(objs) > 1 {
 		return objs[:len(objs)-1]

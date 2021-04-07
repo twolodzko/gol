@@ -65,6 +65,11 @@ func setFn(args []Any, env *environment.Env) (Any, error) {
 	return val, err
 }
 
+func beginFn(args []Any, env *environment.Env) (Any, error) {
+	objs, err := EvalAll(args, env)
+	return last(objs), err
+}
+
 func nthFn(args []Any) (Any, error) {
 	switch l := args[0].(type) {
 	case List:

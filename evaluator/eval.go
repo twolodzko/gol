@@ -26,10 +26,10 @@ func (e *Evaluator) EvalString(code string) ([]Any, error) {
 	if err != nil {
 		return nil, err
 	}
-	return EvalAll(expr, e.env)
+	return evalAll(expr, e.env)
 }
 
-func Eval(expr Any, env *environment.Env) (Any, error) {
+func eval(expr Any, env *environment.Env) (Any, error) {
 	var (
 		newExpr Any
 		newEnv  *environment.Env
@@ -37,7 +37,7 @@ func Eval(expr Any, env *environment.Env) (Any, error) {
 
 	for {
 		switch expr := expr.(type) {
-		case nil, Bool, Int, Float, String, Function, TailCallOptimized:
+		case nil, Bool, Int, Float, String, function, tailCallOptimized:
 			return expr, nil
 		case Symbol:
 			return env.Get(expr)
@@ -51,10 +51,10 @@ func Eval(expr Any, env *environment.Env) (Any, error) {
 			}
 
 			switch fn := fn.(type) {
-			case Function:
+			case function:
 				args := expr.Tail()
 				return fn.Call(args, env)
-			case TailCallOptimized:
+			case tailCallOptimized:
 				args := expr.Tail()
 				newExpr, newEnv, err = fn.Call(args, env)
 				if err != nil {
@@ -70,10 +70,10 @@ func Eval(expr Any, env *environment.Env) (Any, error) {
 	}
 }
 
-func EvalAll(exprs []Any, env *environment.Env) ([]Any, error) {
+func evalAll(exprs []Any, env *environment.Env) ([]Any, error) {
 	var evaluated []Any
 	for _, expr := range exprs {
-		val, err := Eval(expr, env)
+		val, err := eval(expr, env)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +84,7 @@ func EvalAll(exprs []Any, env *environment.Env) ([]Any, error) {
 
 func getFunction(obj Any, env *environment.Env) (Any, error) {
 	switch obj := obj.(type) {
-	case Function, TailCallOptimized:
+	case function, tailCallOptimized:
 		return obj, nil
 	case Symbol:
 		o, err := env.Get(obj)
@@ -92,13 +92,13 @@ func getFunction(obj Any, env *environment.Env) (Any, error) {
 			return nil, err
 		}
 		switch fn := o.(type) {
-		case Function, TailCallOptimized:
+		case function, tailCallOptimized:
 			return fn, nil
 		default:
 			return nil, fmt.Errorf("%v (%T) is not callable", o, o)
 		}
 	case List:
-		val, err := Eval(obj, env)
+		val, err := eval(obj, env)
 		if err != nil {
 			return nil, err
 		}

@@ -17,7 +17,7 @@ func TestRead_InvalidInput(t *testing.T) {
 
 	for _, input := range testCases {
 		repl := NewRepl(strings.NewReader(input))
-		result, err := repl.Read()
+		result, err := repl.read()
 
 		if err == nil {
 			t.Errorf("for %s expected an error, got '%s'", input, result)

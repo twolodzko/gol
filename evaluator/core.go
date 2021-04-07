@@ -20,7 +20,7 @@ func defFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, &ErrWrongType{args[0]}
 	}
 
-	val, err := Eval(args[1], env)
+	val, err := eval(args[1], env)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func setFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, &ErrWrongType{args[0]}
 	}
 
-	val, err := Eval(args[1], env)
+	val, err := eval(args[1], env)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func setFn(args []Any, env *environment.Env) (Any, error) {
 }
 
 func beginFn(args []Any, env *environment.Env) (Any, error) {
-	objs, err := EvalAll(args, env)
+	objs, err := evalAll(args, env)
 	return last(objs), err
 }
 
@@ -87,7 +87,7 @@ func appendFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) < 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
-	objs, err := EvalAll(args, env)
+	objs, err := evalAll(args, env)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func prependFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) < 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
-	objs, err := EvalAll(args, env)
+	objs, err := evalAll(args, env)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func concatFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) < 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
-	objs, err := EvalAll(args, env)
+	objs, err := evalAll(args, env)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func andFn(args []Any, env *environment.Env) (Any, error) {
 		return Bool(false), nil
 	}
 	for _, arg := range args {
-		arg, err := Eval(arg, env)
+		arg, err := eval(arg, env)
 		if !isTrue(arg) {
 			return Bool(false), err
 		}
@@ -151,7 +151,7 @@ func orFn(args []Any, env *environment.Env) (Any, error) {
 		return Bool(false), nil
 	}
 	for _, arg := range args {
-		obj, err := Eval(arg, env)
+		obj, err := eval(arg, env)
 		if isTrue(obj) {
 			return Bool(true), err
 		}
@@ -163,13 +163,13 @@ func equalFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) < 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
-	first, err := Eval(args[0], env)
+	first, err := eval(args[0], env)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, second := range args[1:] {
-		second, err := Eval(second, env)
+		second, err := eval(second, env)
 		if err != nil {
 			return nil, err
 		}
@@ -211,8 +211,8 @@ func equalFn(args []Any, env *environment.Env) (Any, error) {
 			if !ok || first != second {
 				return Bool(false), nil
 			}
-		case Function:
-			second, ok := second.(Function)
+		case function:
+			second, ok := second.(function)
 			if !ok || first != second {
 				return Bool(false), nil
 			}
@@ -230,13 +230,13 @@ func gtFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) < 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
-	first, err := Eval(args[0], env)
+	first, err := eval(args[0], env)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, second := range args[1:] {
-		second, err := Eval(second, env)
+		second, err := eval(second, env)
 		if err != nil {
 			return nil, err
 		}
@@ -282,7 +282,7 @@ func ltFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) < 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
-	first, err := Eval(args[0], env)
+	first, err := eval(args[0], env)
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +405,7 @@ func toString(args []Any, env *environment.Env, sep String) (string, error) {
 	if len(args) == 0 {
 		return "", &ErrNumArgs{len(args)}
 	}
-	objs, err := EvalAll(args, env)
+	objs, err := evalAll(args, env)
 	if err != nil {
 		return "", err
 	}

@@ -21,7 +21,7 @@ func NewRepl(in io.Reader) *Repl {
 }
 
 func (repl *Repl) Repl() ([]Any, error) {
-	cmd, err := repl.Read()
+	cmd, err := repl.read()
 	if err != nil {
 		return nil, err
 	}

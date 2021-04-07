@@ -33,9 +33,8 @@ func (env *Env) Find(sym Symbol) (*Env, error) {
 	if !ok {
 		if env.Parent != nil {
 			return env.Parent.Find(sym)
-		} else {
-			return nil, fmt.Errorf("unable to resolve %s in this context", sym)
 		}
+		return nil, fmt.Errorf("unable to resolve %s in this context", sym)
 	}
 
 	return env, nil

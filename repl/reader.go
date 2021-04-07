@@ -8,19 +8,19 @@ import (
 	"github.com/twolodzko/gol/parser"
 )
 
-type BlockReader struct {
+type blockReader struct {
 	*bufio.Reader
 	openBlocksCount int
 	isQuoted        bool
 }
 
-func (repl *Repl) Read() (string, error) {
+func (repl *Repl) read() (string, error) {
 	var (
 		err       error
 		out, line string
 	)
 
-	reader := BlockReader{repl.reader, 0, false}
+	reader := blockReader{repl.reader, 0, false}
 
 	for {
 		line, err = reader.ReadString('\n')
@@ -46,7 +46,7 @@ func (repl *Repl) Read() (string, error) {
 	return out, err
 }
 
-func (reader *BlockReader) shouldStop(line string) bool {
+func (reader *blockReader) shouldStop(line string) bool {
 	for _, r := range line {
 
 		if r == '\\' {

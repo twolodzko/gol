@@ -6,17 +6,17 @@ import (
 	"github.com/twolodzko/gol/environment"
 )
 
-type TailCallOptimized interface {
+type tailCallOptimized interface {
 	Call([]Any, *environment.Env) (Any, *environment.Env, error)
 }
 
-type Lambda struct {
+type lambda struct {
 	env  *environment.Env
 	args []Symbol
 	expr []Any
 }
 
-func (f *Lambda) Call(args []Any, env *environment.Env) (Any, *environment.Env, error) {
+func (f *lambda) Call(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 	var (
 		err  error
 		objs []Any
@@ -24,7 +24,7 @@ func (f *Lambda) Call(args []Any, env *environment.Env) (Any, *environment.Env, 
 	if len(args) != len(f.args) {
 		return nil, env, &ErrNumArgs{len(args)}
 	}
-	objs, err = EvalAll(args, env)
+	objs, err = evalAll(args, env)
 	if err != nil {
 		return nil, env, err
 	}
@@ -33,11 +33,11 @@ func (f *Lambda) Call(args []Any, env *environment.Env) (Any, *environment.Env, 
 	for i, val := range objs {
 		localEnv.Set(f.args[i], val)
 	}
-	_, err = EvalAll(exceptLast(f.expr), localEnv)
+	_, err = evalAll(exceptLast(f.expr), localEnv)
 	return last(f.expr), localEnv, err
 }
 
-func NewLambda(args []Any, env *environment.Env) (*Lambda, error) {
+func newLambda(args []Any, env *environment.Env) (*lambda, error) {
 	if len(args) < 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
@@ -49,7 +49,7 @@ func NewLambda(args []Any, env *environment.Env) (*Lambda, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Lambda{env, argNames, args[1:]}, nil
+	return &lambda{env, argNames, args[1:]}, nil
 }
 
 func areSymbols(objs List) ([]Symbol, error) {
@@ -64,11 +64,11 @@ func areSymbols(objs List) ([]Symbol, error) {
 	return symbols, nil
 }
 
-type TcoFunction struct {
+type tcoFunction struct {
 	fn func([]Any, *environment.Env) (Any, *environment.Env, error)
 }
 
-func (f *TcoFunction) Call(args []Any, env *environment.Env) (Any, *environment.Env, error) {
+func (f *tcoFunction) Call(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 	return f.fn(args, env)
 }
 
@@ -77,7 +77,7 @@ func ifFn(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 		return nil, env, &ErrNumArgs{len(args)}
 	}
 
-	cond, err := Eval(args[0], env)
+	cond, err := eval(args[0], env)
 	if err != nil {
 		return nil, env, err
 	}
@@ -112,14 +112,14 @@ func letFn(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 		if !ok {
 			return nil, env, &ErrWrongType{bindings[0]}
 		}
-		val, err := Eval(bindings[i+1], localEnv)
+		val, err := eval(bindings[i+1], localEnv)
 		if err != nil {
 			return nil, env, err
 		}
 		localEnv.Set(name, val)
 	}
 
-	_, err := EvalAll(exceptLast(args[1:]), localEnv)
+	_, err := evalAll(exceptLast(args[1:]), localEnv)
 	return last(args), localEnv, err
 }
 
@@ -130,13 +130,13 @@ func condFun(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 			return nil, env, fmt.Errorf("invalid condition: %v (%T)", arg, arg)
 		}
 
-		cond, err := Eval(obj[0], env)
+		cond, err := eval(obj[0], env)
 		if err != nil {
 			return nil, env, err
 		}
 		if isTrue(cond) {
 			if len(obj) > 1 {
-				_, err := EvalAll(exceptLast(obj[1:]), env)
+				_, err := evalAll(exceptLast(obj[1:]), env)
 				return last(obj), env, err
 			}
 			return nil, env, nil

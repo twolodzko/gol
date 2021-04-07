@@ -2,21 +2,21 @@ package evaluator
 
 import "github.com/twolodzko/gol/environment"
 
-type ArithmeticFunction struct {
+type arithmeticFunction struct {
 	intFn   func(x, y Int) Int
 	floatFn func(x, y Float) Float
 	start   Float
 }
 
-func (f *ArithmeticFunction) Call(args []Any, env *environment.Env) (Any, error) {
-	args, err := EvalAll(args, env)
+func (f *arithmeticFunction) Call(args []Any, env *environment.Env) (Any, error) {
+	args, err := evalAll(args, env)
 	if err != nil {
 		return nil, err
 	}
 	return f.apply(args)
 }
 
-func (f *ArithmeticFunction) apply(arr []Any) (Any, error) {
+func (f *arithmeticFunction) apply(arr []Any) (Any, error) {
 	if len(arr) == 0 {
 		return nil, &ErrNumArgs{len(arr)}
 	}

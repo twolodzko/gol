@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 
@@ -59,10 +60,10 @@ func (p *Parser) nextToken() bool {
 
 func (p *Parser) Parse() ([]Any, error) {
 	var (
-		parsed []Any
-		obj    Any
-		err    error
-		quoted bool
+		parsed     []Any
+		obj        Any
+		err        error
+		tokenStack []token.Token
 	)
 
 	if len(p.tokens) == 0 {
@@ -75,11 +76,11 @@ func (p *Parser) Parse() ([]Any, error) {
 			return nil, errors.New("index out of bounds")
 		}
 
-		if t.Type == token.QUOTE {
-			quoted = true
+		if t.Type == token.QUOTE || t.Type == token.TICK || t.Type == token.COMMA {
 			if ok := p.nextToken(); !ok {
-				return parsed, errors.New("missing quoted object")
+				return parsed, fmt.Errorf("missing next object after %v", t)
 			}
+			tokenStack = append(tokenStack, t)
 			continue
 		}
 
@@ -89,8 +90,8 @@ func (p *Parser) Parse() ([]Any, error) {
 			if p.openBlocksCount < 0 {
 				return parsed, errors.New("missing opening brackets")
 			}
-			if quoted {
-				return parsed, errors.New("missing quoted object")
+			if len(tokenStack) > 0 {
+				return parsed, fmt.Errorf("missing next object after %v", t)
 			}
 			return parsed, nil
 		case token.LPAREN:
@@ -117,9 +118,21 @@ func (p *Parser) Parse() ([]Any, error) {
 			return parsed, err
 		}
 
-		if quoted {
-			quoted = false
-			obj = quote(obj)
+		for {
+			if len(tokenStack) == 0 {
+				break
+			}
+
+			switch tokenStack[len(tokenStack)-1].Type {
+			case token.QUOTE:
+				obj = quote(obj)
+			case token.TICK:
+				obj = quasiquote(obj)
+			case token.COMMA:
+				obj = unquote(obj)
+			}
+
+			tokenStack = tokenStack[:len(tokenStack)-1]
 		}
 
 		parsed = append(parsed, obj)
@@ -148,4 +161,12 @@ func (p *Parser) parseList() (List, error) {
 
 func quote(obj Any) List {
 	return List{Symbol("quote"), obj}
+}
+
+func quasiquote(obj Any) List {
+	return List{Symbol("quasiquote"), obj}
+}
+
+func unquote(obj Any) List {
+	return List{Symbol("unquote"), obj}
 }

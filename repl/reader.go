@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-
-	"github.com/twolodzko/gol/parser"
 )
 
 type blockReader struct {
@@ -53,16 +51,16 @@ func (reader *blockReader) shouldStop(line string) bool {
 			continue
 		}
 
-		switch {
-		case parser.IsQuotationMark(r):
+		switch r {
+		case '"':
 			reader.isQuoted = !reader.isQuoted
 		// comment - ignore rest of the line
-		case parser.IsCommentStart(r):
+		case ';':
 			return false
 		// list - wait till closing brace
-		case parser.IsListStart(r):
+		case '(':
 			reader.openBlocksCount++
-		case parser.IsListEnd(r):
+		case ')':
 			reader.openBlocksCount--
 
 			if reader.openBlocksCount <= 0 {

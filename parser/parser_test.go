@@ -28,6 +28,8 @@ func TestParse(t *testing.T) {
 		{"(1 2)\n\n(3\n4)", []Any{List{Int(1), Int(2)}, List{Int(3), Int(4)}}},
 		{"'bar", []Any{List{Symbol("quote"), Symbol("bar")}}},
 		{"'(1 2 3)", []Any{List{Symbol("quote"), List{Int(1), Int(2), Int(3)}}}},
+		{"`('1 ,2 3)", []Any{List{Symbol("quasiquote"), List{List{Symbol("quote"), Int(1)}, List{Symbol("unquote"), Int(2)}, Int(3)}}}},
+		{"'`,foo", []Any{List{Symbol("quote"), List{Symbol("quasiquote"), List{Symbol("unquote"), Symbol("foo")}}}}},
 	}
 
 	for _, tt := range testCases {

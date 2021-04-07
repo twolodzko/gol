@@ -12,6 +12,8 @@ const (
 	RPAREN = ")"
 	NIL    = "nil"
 	QUOTE  = "'"
+	TICK   = "`"
+	COMMA  = ","
 )
 
 type Token struct {
@@ -25,7 +27,7 @@ func New(l string, t string) Token {
 
 func (t Token) String() string {
 	switch t.Type {
-	case LPAREN, RPAREN, NIL, QUOTE:
+	case LPAREN, RPAREN, NIL, QUOTE, TICK, COMMA:
 		return t.Type
 	case BOOL, INT, FLOAT, STRING, SYMBOL:
 		return fmt.Sprintf("%q:%s", t.Literal, t.Type)

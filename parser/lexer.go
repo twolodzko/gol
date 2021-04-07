@@ -15,22 +15,6 @@ var (
 	floatRegex = regexp.MustCompile(`^[+-]?\d*\.?(?:\d+[eE]?[+-]?)?\d+$`)
 )
 
-func IsListStart(r rune) bool {
-	return r == '('
-}
-
-func IsListEnd(r rune) bool {
-	return r == ')'
-}
-
-func IsQuotationMark(r rune) bool {
-	return r == '"'
-}
-
-func IsWordBoundary(r rune) bool {
-	return unicode.IsSpace(r) || IsListEnd(r) || IsListStart(r)
-}
-
 type Lexer struct {
 	*CodeReader
 }
@@ -68,14 +52,18 @@ func (l *Lexer) nextToken() (token.Token, error) {
 
 	r := l.Head
 
-	switch {
-	case IsListStart(r):
+	switch r {
+	case '(':
 		return token.New(string(r), token.LPAREN), err
-	case IsListEnd(r):
+	case ')':
 		return token.New(string(r), token.RPAREN), err
-	case r == '\'':
+	case '\'':
 		return token.New(string(r), token.QUOTE), err
-	case IsQuotationMark(r):
+	case '`':
+		return token.New(string(r), token.TICK), err
+	case ',':
+		return token.New(string(r), token.COMMA), err
+	case '"':
 		str, err = l.readString()
 		return token.New(str, token.STRING), err
 	default:
@@ -125,7 +113,7 @@ func (l *Lexer) readString() (string, error) {
 		isEscaped bool = false
 	)
 
-	if !IsQuotationMark(l.Head) {
+	if l.Head != '"' {
 		return "", errors.New("missing opening quotation mark")
 	}
 
@@ -146,7 +134,7 @@ func (l *Lexer) readString() (string, error) {
 				continue
 			}
 			// end of string, unless it was escaped \"
-			if IsQuotationMark(l.Head) {
+			if l.Head == '"' {
 				break
 			}
 		}
@@ -189,4 +177,8 @@ func (l *Lexer) readWord() (string, error) {
 	}
 
 	return string(runes), err
+}
+
+func IsWordBoundary(r rune) bool {
+	return unicode.IsSpace(r) || r == '(' || r == ')'
 }

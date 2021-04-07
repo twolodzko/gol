@@ -11,6 +11,16 @@ import (
 )
 
 var buildins = map[Symbol]Any{
+
+	// core functions
+	"def": &simpleFunction{
+		defFn,
+	},
+	"fn": &simpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			return newLambda(args, env)
+		},
+	},
 	"if": &tcoFunction{
 		ifFn,
 	},
@@ -20,26 +30,14 @@ var buildins = map[Symbol]Any{
 	"let": &tcoFunction{
 		letFn,
 	},
-	"fn": &simpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			return newLambda(args, env)
-		},
-	},
-	"def": &simpleFunction{
-		defFn,
+	"begin": &simpleFunction{
+		beginFn,
 	},
 	"set!": &simpleFunction{
 		setFn,
 	},
-	"begin": &simpleFunction{
-		beginFn,
-	},
-	"list": &simpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			args, err := evalAll(args, env)
-			return List(args), err
-		},
-	},
+
+	// metaprogramming
 	"quote": &simpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			if len(args) != 1 {
@@ -51,6 +49,35 @@ var buildins = map[Symbol]Any{
 	"eval": &singleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
 			return eval(obj, env)
+		},
+	},
+
+	// logical checks
+	"=": &simpleFunction{
+		equalFn,
+	},
+	"true?": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			return Bool(isTrue(obj)), nil
+		},
+	},
+	"not": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			return Bool(!isTrue(obj)), nil
+		},
+	},
+	"and": &simpleFunction{
+		andFn,
+	},
+	"or": &simpleFunction{
+		orFn,
+	},
+
+	// lists
+	"list": &simpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			args, err := evalAll(args, env)
+			return List(args), err
 		},
 	},
 	"first": &singleArgFunction{
@@ -125,6 +152,8 @@ var buildins = map[Symbol]Any{
 			return Bool(len(l) == 0), nil
 		},
 	},
+
+	// type checks
 	"nil?": &singleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
 			return Bool(obj == nil), nil
@@ -148,28 +177,6 @@ var buildins = map[Symbol]Any{
 			return Bool(ok), nil
 		},
 	},
-	"fn?": &singleArgFunction{
-		func(obj Any, env *environment.Env) (Any, error) {
-			_, ok := obj.(function)
-			return Bool(ok), nil
-		},
-	},
-	"int": &singleArgFunction{
-		func(obj Any, env *environment.Env) (Any, error) {
-			return toInt(obj)
-		},
-	},
-	"float": &singleArgFunction{
-		func(obj Any, env *environment.Env) (Any, error) {
-			return toFloat(obj)
-		},
-	},
-	"str": &simpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			str, err := toString(args, env, "")
-			return String(str), err
-		},
-	},
 	"list?": &singleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
 			_, ok := obj.(List)
@@ -186,62 +193,37 @@ var buildins = map[Symbol]Any{
 			}
 		},
 	},
-	"true?": &singleArgFunction{
+	"fn?": &singleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
-			return Bool(isTrue(obj)), nil
+			_, ok := obj.(function)
+			return Bool(ok), nil
 		},
 	},
-	"not": &singleArgFunction{
+
+	// type conversions
+	"int": &singleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
-			return Bool(!isTrue(obj)), nil
+			return toInt(obj)
 		},
 	},
-	"and": &simpleFunction{
-		andFn,
+	"float": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			return toFloat(obj)
+		},
 	},
-	"or": &simpleFunction{
-		orFn,
+	"str": &simpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			str, err := toString(args, env, "")
+			return String(str), err
+		},
 	},
-	"=": &simpleFunction{
-		equalFn,
-	},
+
+	// math
 	">": &simpleFunction{
 		gtFn,
 	},
 	"<": &simpleFunction{
 		ltFn,
-	},
-	"error": &singleArgFunction{
-		func(obj Any, env *environment.Env) (Any, error) {
-			return nil, fmt.Errorf("%s", fmt.Sprintf("%v", obj))
-		},
-	},
-	"slurp": &singleArgFunction{
-		func(obj Any, env *environment.Env) (Any, error) {
-			name, ok := obj.(String)
-			if !ok {
-				return nil, &ErrWrongType{obj}
-			}
-			lines, err := parser.ReadFile(string(name))
-			return String(lines), err
-		},
-	},
-	"read-string": &singleArgFunction{
-		readStringFn,
-	},
-	"println": &simpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) == 0 {
-				fmt.Println()
-				return nil, nil
-			}
-			str, err := toString(args, env, " ")
-			if err != nil {
-				return nil, err
-			}
-			fmt.Printf("%s\n", str)
-			return nil, nil
-		},
 	},
 	"+": &arithmeticFunction{
 		func(x, y Int) Int { return x + y },
@@ -279,6 +261,27 @@ var buildins = map[Symbol]Any{
 			return applyFloatFn(args, math.Remainder, 1)
 		},
 	},
+
+	// other
+	"println": &simpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			if len(args) == 0 {
+				fmt.Println()
+				return nil, nil
+			}
+			str, err := toString(args, env, " ")
+			if err != nil {
+				return nil, err
+			}
+			fmt.Printf("%s\n", str)
+			return nil, nil
+		},
+	},
+	"error": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			return nil, fmt.Errorf("%s", fmt.Sprintf("%v", obj))
+		},
+	},
 	"time": &singleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
 			start := time.Now()
@@ -294,6 +297,19 @@ var buildins = map[Symbol]Any{
 
 			return obj, nil
 		},
+	},
+	"slurp": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			name, ok := obj.(String)
+			if !ok {
+				return nil, &ErrWrongType{obj}
+			}
+			lines, err := parser.ReadFile(string(name))
+			return String(lines), err
+		},
+	},
+	"read-string": &singleArgFunction{
+		readStringFn,
 	},
 	"env": &simpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {

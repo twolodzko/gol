@@ -116,6 +116,15 @@ var buildins = map[Symbol]Any{
 	"concat": &SimpleFunction{
 		concatFn,
 	},
+	"empty?": &SingleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			l, ok := obj.(List)
+			if !ok {
+				return nil, &ErrWrongType{obj}
+			}
+			return Bool(len(l) == 0), nil
+		},
+	},
 	"nil?": &SingleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
 			return Bool(obj == nil), nil

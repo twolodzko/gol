@@ -343,6 +343,9 @@ func TestCheckers(t *testing.T) {
 		{`(fn? +)`, true},
 		{`(fn? ())`, false},
 		{`(fn? nil)`, false},
+		{`(empty? '())`, true},
+		{`(empty? '(1 2))`, false},
+		{`(empty? (list))`, true},
 	}
 
 	for _, tt := range testCases {

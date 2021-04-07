@@ -18,22 +18,6 @@ func isTrue(obj Any) bool {
 	}
 }
 
-func ifFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 3 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-
-	cond, err := Eval(args[0], env)
-	if err != nil {
-		return nil, err
-	}
-
-	if isTrue(cond) {
-		return Eval(args[1], env)
-	}
-	return Eval(args[2], env)
-}
-
 func defFn(args []Any, env *environment.Env) (Any, error) {
 	var err error
 
@@ -54,45 +38,6 @@ func defFn(args []Any, env *environment.Env) (Any, error) {
 	err = env.Set(name, val)
 
 	return val, err
-}
-
-func letFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) < 2 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-
-	localEnv := environment.NewEnv(env)
-
-	bindings, ok := args[0].(List)
-	if !ok {
-		return nil, &ErrWrongType{args[0]}
-	}
-
-	n := len(bindings)
-	if (n % 2) != 0 {
-		return nil, fmt.Errorf("invalid variable bindings %v", bindings)
-	}
-
-	// odd entries are keys, even are the values
-	// e.g. (let (x 1 y 2) (+ x y)) => 3
-	for i := 0; i < n; i += 2 {
-		name, ok := bindings[i].(Symbol)
-		if !ok {
-			return nil, &ErrWrongType{bindings[0]}
-		}
-		val, err := Eval(bindings[i+1], localEnv)
-		if err != nil {
-			return nil, err
-		}
-		localEnv.Set(name, val)
-	}
-
-	res, err := EvalAll(args[1:], localEnv)
-
-	if len(res) == 0 {
-		return nil, err
-	}
-	return last(res), err
 }
 
 func nthFn(args []Any) (Any, error) {

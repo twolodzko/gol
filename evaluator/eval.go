@@ -30,23 +30,43 @@ func (e *Evaluator) EvalString(code string) ([]Any, error) {
 }
 
 func Eval(expr Any, env *environment.Env) (Any, error) {
-	switch expr := expr.(type) {
-	case nil, Bool, Int, Float, String, Function:
-		return expr, nil
-	case Symbol:
-		return env.Get(expr)
-	case List:
-		if len(expr) == 0 {
-			return List{}, nil
+	var (
+		newExpr Any
+		newEnv  *environment.Env
+	)
+
+	for {
+		switch expr := expr.(type) {
+		case nil, Bool, Int, Float, String, Function, TailCallOptimized:
+			return expr, nil
+		case Symbol:
+			return env.Get(expr)
+		case List:
+			if len(expr) == 0 {
+				return List{}, nil
+			}
+			fn, err := getFunction(expr.Head(), env)
+			if err != nil {
+				return nil, err
+			}
+
+			switch fn := fn.(type) {
+			case Function:
+				args := expr.Tail()
+				return fn.Call(args, env)
+			case TailCallOptimized:
+				args := expr.Tail()
+				newExpr, newEnv, err = fn.Call(args, env)
+				if err != nil {
+					return nil, err
+				}
+			}
+		default:
+			return nil, fmt.Errorf("cannot evaluate %v of type %T", expr, expr)
 		}
-		fn, err := getFunction(expr.Head(), env)
-		if err != nil {
-			return nil, err
-		}
-		args := expr.Tail()
-		return fn.Call(args, env)
-	default:
-		return nil, fmt.Errorf("cannot evaluate %v of type %T", expr, expr)
+
+		env = newEnv
+		expr = newExpr
 	}
 }
 
@@ -62,20 +82,21 @@ func EvalAll(exprs []Any, env *environment.Env) ([]Any, error) {
 	return evaluated, nil
 }
 
-func getFunction(obj Any, env *environment.Env) (Function, error) {
+func getFunction(obj Any, env *environment.Env) (Any, error) {
 	switch obj := obj.(type) {
-	case Function:
+	case Function, TailCallOptimized:
 		return obj, nil
 	case Symbol:
 		o, err := env.Get(obj)
 		if err != nil {
 			return nil, err
 		}
-		fn, ok := o.(Function)
-		if !ok {
+		switch fn := o.(type) {
+		case Function, TailCallOptimized:
+			return fn, nil
+		default:
 			return nil, fmt.Errorf("%v (%T) is not callable", o, o)
 		}
-		return fn, nil
 	case List:
 		val, err := Eval(obj, env)
 		if err != nil {

@@ -11,6 +11,23 @@ import (
 )
 
 var buildins = map[Symbol]Any{
+	"if": &TcoFunction{
+		ifFn,
+	},
+	"let": &TcoFunction{
+		letFn,
+	},
+	"do": &TcoFunction{
+		doFn,
+	},
+	"fn": &SimpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			return NewLambda(args, env)
+		},
+	},
+	"def": &SimpleFunction{
+		defFn,
+	},
 	"list": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			args, err := EvalAll(args, env)
@@ -31,29 +48,6 @@ var buildins = map[Symbol]Any{
 	"eval": &SingleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
 			return Eval(obj, env)
-		},
-	},
-	"if": &SimpleFunction{
-		ifFn,
-	},
-	"def": &SimpleFunction{
-		defFn,
-	},
-	"let": &SimpleFunction{
-		letFn,
-	},
-	"do": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			objs, err := EvalAll(args, env)
-			if err != nil {
-				return nil, err
-			}
-			return last(objs), nil
-		},
-	},
-	"fn": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			return NewLambda(args, env)
 		},
 	},
 	"first": &SingleArgFunction{

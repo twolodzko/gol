@@ -162,6 +162,30 @@ func TestRecursion(t *testing.T) {
 	}
 }
 
+func TestTailRecursion(t *testing.T) {
+	code := `(def rec (fn (n)
+				(if (> n 0)
+					(rec (- n 1))
+					nil)))`
+
+	e := NewEvaluator()
+	_, err := e.EvalString(code)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+
+	_, err = e.EvalString(`(rec 10)`)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+
+	// this stack overflows w/o tail call optimization
+	_, err = e.EvalString(`(rec 1000000)`)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+}
+
 func TestBooleans(t *testing.T) {
 	var testCases = []struct {
 		input    string

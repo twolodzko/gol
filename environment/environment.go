@@ -26,19 +26,27 @@ func NewEnv(env *Env) *Env {
 	return &Env{Objects: objs, Parent: env}
 }
 
-func (env *Env) Get(sym Symbol) (Any, error) {
-	val, ok := env.Objects[sym]
+func (env *Env) Find(sym Symbol) (*Env, error) {
+	_, ok := env.Objects[sym]
 
 	// recursive search over enviroment
 	if !ok {
 		if env.Parent != nil {
-			return env.Parent.Get(sym)
+			return env.Parent.Find(sym)
 		} else {
 			return nil, fmt.Errorf("unable to resolve %s in this context", sym)
 		}
 	}
 
-	return val, nil
+	return env, nil
+}
+
+func (env *Env) Get(sym Symbol) (Any, error) {
+	env, err := env.Find(sym)
+	if err != nil {
+		return nil, err
+	}
+	return env.Objects[sym], nil
 }
 
 func (env *Env) Set(sym Symbol, val Any) error {

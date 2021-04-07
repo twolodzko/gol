@@ -63,4 +63,34 @@ func TestEnv(t *testing.T) {
 		t.Errorf("expected: %v, got: %v", value, expected)
 	}
 
+	// find variable in top env
+	foundEnv, err := newEnv.Find(Symbol("w"))
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+	// it contains the searched object
+	if _, ok := foundEnv.Objects[Symbol("w")]; !ok {
+		t.Errorf("did not find the correct env: %v", foundEnv)
+	}
+	// it doesn't contain the object from parent env
+	if _, ok := foundEnv.Objects[Symbol("x")]; ok {
+		t.Errorf("did not find the correct env: %v", foundEnv)
+	}
+
+	// find object in parent env
+	foundEnv, err = newEnv.Find(Symbol("x"))
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+	if _, ok := foundEnv.Objects[Symbol("x")]; !ok {
+		t.Errorf("did not find the correct env: %v", foundEnv)
+	}
+	if _, ok := foundEnv.Objects[Symbol("y")]; !ok {
+		t.Errorf("did not find the correct env: %v", foundEnv)
+	}
+	// it doesn't contain the object from child env
+	if _, ok := foundEnv.Objects[Symbol("w")]; ok {
+		t.Errorf("did not find the correct env: %v", foundEnv)
+	}
+
 }

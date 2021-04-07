@@ -17,28 +17,30 @@ func TestEval(t *testing.T) {
 		{`3.14`, Float(3.14)},
 		{`"Hello World!"`, String("Hello World!")},
 		{`true`, Bool(true)},
-		{`(if true 1 2)`, Int(1)},
-		{`(if false 1 2)`, Int(2)},
-		{`(if (true? false) (error "this should not fail!") "ok")`, String("ok")},
-		{`(quote (+ 1 2))`, List{Symbol("+"), Int(1), Int(2)}},
-		{`(- 7 (* 2 (+ 1 2)) 1)`, Int(0)},
-		{`(def b (+ 1 2))`, Int(3)},
-		{`(let (c 2) c)`, Int(2)},
-		{`(let (x 10) (+ 5 x))`, Int(15)},
-		{`(let (x 5) (let (y 6) (+ x y)))`, Int(11)},
-		{`(let (x 1 y (+ 2 3)) (+ x y))`, Int(6)},
-		{`(let (x 1 y (+ 1 x)) (+ x y))`, Int(3)},
-		{`(do (+ 2 2) (+ 3 5))`, Int(8)},
-		{`(do (def x 2) (+ x 4))`, Int(6)},
 		{`'(1 2 3)`, List{Int(1), Int(2), Int(3)}},
 		{`'foo`, Symbol("foo")},
-		{`(append '(1 2) 3)`, List{Int(1), Int(2), Int(3)}},
-		{`(append '(1) 2)`, List{Int(1), Int(2)}},
-		{`(append '(1) 2 3)`, List{Int(1), Int(2), Int(3)}},
-		{`(append '(1) '(2 3))`, List{Int(1), List{Int(2), Int(3)}}},
-		{`(cons 1 '(2 3 4))`, List{Int(1), Int(2), Int(3), Int(4)}},
-		{`(cons '(1 2) '(3 4))`, List{List{Int(1), Int(2)}, Int(3), Int(4)}},
-		{`(concat '(1 2) '(3 4))`, List{Int(1), Int(2), Int(3), Int(4)}},
+		{`(if true 1 2)`, Int(1)},
+		{`(if false 1 2)`, Int(2)},
+		{`(if (true? false)
+			  (error "this should not fail!")
+			  "ok")`, String("ok")},
+		{`(quote (+ 1 2))`, List{Symbol("+"), Int(1), Int(2)}},
+		{`(- 7 (* 2 (+ 1 2)) 1)`, Int(0)},
+		{`(def b (+ 1 2)) b`, Int(3)},
+		{`(let (c 2) c)`, Int(2)},
+		{`(let (x 10)
+			(+ 5 x))`, Int(15)},
+		{`(let (x 5)
+			(let (y 6)
+				 (+ x y)))`, Int(11)},
+		{`(let (x 1 y (+ 2 3))
+			(+ x y))`, Int(6)},
+		{`(let (x 1 y (+ 1 x))
+			(+ x y))`, Int(3)},
+		{`(do (+ 2 2)
+			  (+ 3 5))`, Int(8)},
+		{`(do (def x 2)
+			  (+ x 4))`, Int(6)},
 		{`(eval (+ 2 2))`, Int(4)},
 		{`(eval '(+ 2 2))`, Int(4)},
 		{`(eval (list + 2 2))`, Int(4)},
@@ -59,8 +61,17 @@ func TestEval(t *testing.T) {
 			(if (= n 1) 1
 				(* n (factorial (- n 1))))))
 		  (factorial 10)`, Int(3628800)},
-		{`(def foo (fn (x) (fn (y) (+ x y))))
+		{`(def foo (fn (x)
+			(fn (y) (+ x y))))
 		  ((foo 5) 6)`, Int(11)},
+		{`(def foo (fn (x)
+			(+ x 1)))
+		  (let (x foo)
+		  	(let (y x)
+			  (y 4)))`, Int(5)},
+		{`(def x nil)
+		  (let () (set! x 4))
+		  x`, Int(4)},
 	}
 
 	for _, tt := range testCases {
@@ -94,6 +105,13 @@ func TestCore(t *testing.T) {
 		{`(init (list 1 2 3))`, List{Int(1), Int(2)}},
 		{`(last (list 1 2 3))`, Int(3)},
 		{`(nth (list 1 2 3) 1)`, Int(2)},
+		{`(append '(1 2) 3)`, List{Int(1), Int(2), Int(3)}},
+		{`(append '(1) 2)`, List{Int(1), Int(2)}},
+		{`(append '(1) 2 3)`, List{Int(1), Int(2), Int(3)}},
+		{`(append '(1) '(2 3))`, List{Int(1), List{Int(2), Int(3)}}},
+		{`(cons 1 '(2 3 4))`, List{Int(1), Int(2), Int(3), Int(4)}},
+		{`(cons '(1 2) '(3 4))`, List{List{Int(1), Int(2)}, Int(3), Int(4)}},
+		{`(concat '(1 2) '(3 4))`, List{Int(1), Int(2), Int(3), Int(4)}},
 		{`(= 2 2)`, Bool(true)},
 		{`(= 2 3)`, Bool(false)},
 		{`(= 2 "2")`, Bool(false)},

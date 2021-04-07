@@ -19,7 +19,6 @@ func isTrue(obj Any) bool {
 }
 
 func defFn(args []Any, env *environment.Env) (Any, error) {
-	var err error
 
 	if len(args) != 2 {
 		return nil, &ErrNumArgs{len(args)}
@@ -36,6 +35,32 @@ func defFn(args []Any, env *environment.Env) (Any, error) {
 	}
 
 	err = env.Set(name, val)
+
+	return val, err
+}
+
+func setFn(args []Any, env *environment.Env) (Any, error) {
+
+	if len(args) != 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+
+	name, ok := args[0].(Symbol)
+	if !ok {
+		return nil, &ErrWrongType{args[0]}
+	}
+
+	val, err := Eval(args[1], env)
+	if err != nil {
+		return nil, err
+	}
+
+	foundEnv, err := env.Find(name)
+	if err != nil {
+		return nil, err
+	}
+
+	err = foundEnv.Set(name, val)
 
 	return val, err
 }

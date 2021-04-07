@@ -28,6 +28,9 @@ var buildins = map[Symbol]Any{
 	"def": &SimpleFunction{
 		defFn,
 	},
+	"set!": &SimpleFunction{
+		setFn,
+	},
 	"list": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			args, err := EvalAll(args, env)

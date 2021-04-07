@@ -139,11 +139,8 @@ func andFn(args []Any, env *environment.Env) (Any, error) {
 	}
 	for _, arg := range args {
 		arg, err := Eval(arg, env)
-		if err != nil {
-			return nil, err
-		}
 		if !isTrue(arg) {
-			return Bool(false), nil
+			return Bool(false), err
 		}
 	}
 	return Bool(true), nil
@@ -155,107 +152,177 @@ func orFn(args []Any, env *environment.Env) (Any, error) {
 	}
 	for _, arg := range args {
 		obj, err := Eval(arg, env)
-		if err != nil {
-			return nil, err
-		}
 		if isTrue(obj) {
-			return Bool(true), nil
+			return Bool(true), err
 		}
 	}
 	return Bool(false), nil
 }
 
-func equalFn(objs []Any) (Any, error) {
-	switch first := objs[0].(type) {
-	case Bool:
-		second, ok := objs[1].(Bool)
-		if !ok {
-			return Bool(false), nil
-		}
-		return Bool(first == second), nil
-	case Int:
-		switch second := objs[1].(type) {
-		case Int:
-			return Bool(first == second), nil
-		case Float:
-			return Bool(Float(first) == second), nil
-		default:
-			return Bool(false), nil
-		}
-	case Float:
-		switch second := objs[1].(type) {
-		case Float:
-			return Bool(first == second), nil
-		case Int:
-			return Bool(first == Float(second)), nil
-		default:
-			return Bool(false), nil
-		}
-	case String:
-		second, ok := objs[1].(String)
-		if !ok {
-			return Bool(false), nil
-		}
-		return Bool(first == second), nil
-	case Function:
-		second, ok := objs[1].(Function)
-		if !ok {
-			return Bool(false), nil
-		}
-		return Bool(first == second), nil
-	default:
-		return Bool(cmp.Equal(objs[0], objs[1])), nil
+func equalFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) < 2 {
+		return nil, &ErrNumArgs{len(args)}
 	}
+	first, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, second := range args[1:] {
+		second, err := Eval(second, env)
+		if err != nil {
+			return nil, err
+		}
+
+		switch first := first.(type) {
+		case Bool:
+			second, ok := second.(Bool)
+			if !ok || first != second {
+				return Bool(false), nil
+			}
+		case Int:
+			switch second := second.(type) {
+			case Int:
+				if first != second {
+					return Bool(false), nil
+				}
+			case Float:
+				if Float(first) != second {
+					return Bool(false), nil
+				}
+			default:
+				return Bool(false), nil
+			}
+		case Float:
+			switch second := second.(type) {
+			case Float:
+				if first != second {
+					return Bool(false), nil
+				}
+			case Int:
+				if first != Float(second) {
+					return Bool(false), nil
+				}
+			default:
+				return Bool(false), nil
+			}
+		case String:
+			second, ok := second.(String)
+			if !ok || first != second {
+				return Bool(false), nil
+			}
+		case Function:
+			second, ok := second.(Function)
+			if !ok || first != second {
+				return Bool(false), nil
+			}
+		default:
+			if !cmp.Equal(first, second) {
+				return Bool(false), nil
+			}
+		}
+	}
+
+	return Bool(true), nil
 }
 
-func gtFn(objs []Any) (Any, error) {
-	switch first := objs[0].(type) {
-	case Int:
-		switch second := objs[1].(type) {
-		case Int:
-			return Bool(first > second), nil
-		case Float:
-			return Bool(Float(first) > second), nil
-		default:
-			return nil, &ErrWrongType{objs[1]}
-		}
-	case Float:
-		switch second := objs[1].(type) {
-		case Float:
-			return Bool(first > second), nil
-		case Int:
-			return Bool(first > Float(second)), nil
-		default:
-			return nil, &ErrWrongType{objs[1]}
-		}
-	default:
-		return nil, &ErrWrongType{objs[0]}
+func gtFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) < 2 {
+		return nil, &ErrNumArgs{len(args)}
 	}
+	first, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, second := range args[1:] {
+		second, err := Eval(second, env)
+		if err != nil {
+			return nil, err
+		}
+
+		switch first := first.(type) {
+		case Int:
+			switch second := second.(type) {
+			case Int:
+				if first <= second {
+					return Bool(false), nil
+				}
+			case Float:
+				if Float(first) <= second {
+					return Bool(false), nil
+				}
+			default:
+				return nil, &ErrWrongType{second}
+			}
+		case Float:
+			switch second := second.(type) {
+			case Float:
+				if first <= second {
+					return Bool(false), nil
+				}
+			case Int:
+				if first <= Float(second) {
+					return Bool(false), nil
+				}
+			default:
+				return nil, &ErrWrongType{second}
+			}
+		default:
+			return nil, &ErrWrongType{first}
+		}
+
+		first = second
+	}
+
+	return Bool(true), nil
 }
 
-func ltFn(objs []Any) (Any, error) {
-	switch first := objs[0].(type) {
-	case Int:
-		switch second := objs[1].(type) {
-		case Int:
-			return Bool(first < second), nil
-		case Float:
-			return Bool(Float(first) < second), nil
-		default:
-			return nil, &ErrWrongType{objs[1]}
-		}
-	case Float:
-		switch second := objs[1].(type) {
-		case Float:
-			return Bool(first < second), nil
-		case Int:
-			return Bool(first < Float(second)), nil
-		default:
-			return nil, &ErrWrongType{objs[1]}
-		}
-	default:
-		return nil, &ErrWrongType{objs[0]}
+func ltFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) < 2 {
+		return nil, &ErrNumArgs{len(args)}
 	}
+	first, err := Eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, second := range args[1:] {
+		switch first := first.(type) {
+		case Int:
+			switch second := second.(type) {
+			case Int:
+				if first >= second {
+					return Bool(false), nil
+				}
+			case Float:
+				if Float(first) >= second {
+					return Bool(false), nil
+				}
+			default:
+				return nil, &ErrWrongType{second}
+			}
+		case Float:
+			switch second := second.(type) {
+			case Float:
+				if first >= second {
+					return Bool(false), nil
+				}
+			case Int:
+				if first >= Float(second) {
+					return Bool(false), nil
+				}
+			default:
+				return nil, &ErrWrongType{second}
+			}
+		default:
+			return nil, &ErrWrongType{first}
+		}
+
+		first = second
+	}
+
+	return Bool(true), nil
 }
 
 func readStringFn(obj Any, env *environment.Env) (Any, error) {
@@ -277,22 +344,6 @@ func readStringFn(obj Any, env *environment.Env) (Any, error) {
 	default:
 		return List(expr), nil
 	}
-}
-
-func toString(args []Any, env *environment.Env, sep String) (string, error) {
-	if len(args) == 0 {
-		return "", &ErrNumArgs{len(args)}
-	}
-	objs, err := EvalAll(args, env)
-	if err != nil {
-		return "", err
-	}
-
-	var str []string
-	for _, obj := range objs {
-		str = append(str, fmt.Sprintf("%v", obj))
-	}
-	return strings.Join(str, string(sep)), nil
 }
 
 func toInt(obj Any) (Any, error) {
@@ -348,6 +399,22 @@ func printEnv(env *environment.Env, depth int) {
 	}
 
 	fmt.Printf("%d: { %v }\n", depth, strings.Join(out, ", "))
+}
+
+func toString(args []Any, env *environment.Env, sep String) (string, error) {
+	if len(args) == 0 {
+		return "", &ErrNumArgs{len(args)}
+	}
+	objs, err := EvalAll(args, env)
+	if err != nil {
+		return "", err
+	}
+
+	var str []string
+	for _, obj := range objs {
+		str = append(str, fmt.Sprintf("%v", obj))
+	}
+	return strings.Join(str, string(sep)), nil
 }
 
 func isTrue(obj Any) bool {

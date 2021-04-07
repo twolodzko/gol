@@ -37,10 +37,7 @@ var buildins = map[Symbol]Any{
 	"list": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			args, err := EvalAll(args, env)
-			if err != nil {
-				return nil, err
-			}
-			return List(args), nil
+			return List(args), err
 		},
 	},
 	"quote": &SimpleFunction{
@@ -170,10 +167,7 @@ var buildins = map[Symbol]Any{
 	"str": &SimpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			str, err := toString(args, env, "")
-			if err != nil {
-				return nil, err
-			}
-			return String(str), nil
+			return String(str), err
 		},
 	},
 	"list?": &SingleArgFunction{
@@ -209,40 +203,13 @@ var buildins = map[Symbol]Any{
 		orFn,
 	},
 	"=": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 2 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			objs, err := EvalAll(args, env)
-			if err != nil {
-				return nil, err
-			}
-			return equalFn(objs)
-		},
+		equalFn,
 	},
 	">": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 2 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			objs, err := EvalAll(args, env)
-			if err != nil {
-				return nil, err
-			}
-			return gtFn(objs)
-		},
+		gtFn,
 	},
 	"<": &SimpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			if len(args) != 2 {
-				return nil, &ErrNumArgs{len(args)}
-			}
-			objs, err := EvalAll(args, env)
-			if err != nil {
-				return nil, err
-			}
-			return ltFn(objs)
-		},
+		ltFn,
 	},
 	"error": &SingleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {

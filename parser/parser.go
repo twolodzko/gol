@@ -28,13 +28,8 @@ func Parse(r io.Reader) ([]Any, error) {
 	}
 
 	parser := NewParser(tokens)
-	parsed, err := parser.Parse()
 
-	if err != nil {
-		return nil, err
-	}
-
-	return parsed, nil
+	return parser.Parse()
 }
 
 type Parser struct {

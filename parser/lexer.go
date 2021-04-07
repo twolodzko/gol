@@ -77,15 +77,9 @@ func (l *Lexer) nextToken() (token.Token, error) {
 		return token.New(string(r), token.QUOTE), err
 	case IsQuotationMark(r):
 		str, err = l.readString()
-		if err != nil {
-			return token.Token{}, err
-		}
 		return token.New(str, token.STRING), err
 	default:
 		str, err = l.readWord()
-		if err != nil {
-			return token.Token{}, err
-		}
 		return token.New(str, guessType(str)), err
 	}
 }
@@ -118,7 +112,6 @@ func (l *Lexer) skipWhitespace() error {
 		if !unicode.IsSpace(l.Head) {
 			return nil
 		}
-
 		if err := l.NextRune(); err != nil {
 			return err
 		}
@@ -128,7 +121,7 @@ func (l *Lexer) skipWhitespace() error {
 func (l *Lexer) readString() (string, error) {
 	var (
 		err       error
-		str       []rune
+		runes     []rune
 		isEscaped bool = false
 	)
 
@@ -160,10 +153,10 @@ func (l *Lexer) readString() (string, error) {
 
 		isEscaped = false
 
-		str = append(str, l.Head)
+		runes = append(runes, l.Head)
 	}
 
-	return string(str), err
+	return string(runes), err
 }
 
 func (l *Lexer) readWord() (string, error) {

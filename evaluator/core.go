@@ -9,15 +9,6 @@ import (
 	"github.com/twolodzko/gol/parser"
 )
 
-func isTrue(obj Any) bool {
-	switch obj := obj.(type) {
-	case Bool:
-		return obj
-	default:
-		return obj != nil
-	}
-}
-
 func defFn(args []Any, env *environment.Env) (Any, error) {
 
 	if len(args) != 2 {
@@ -357,6 +348,15 @@ func printEnv(env *environment.Env, depth int) {
 	}
 
 	fmt.Printf("%d: { %v }\n", depth, strings.Join(out, ", "))
+}
+
+func isTrue(obj Any) bool {
+	switch obj := obj.(type) {
+	case Bool:
+		return obj
+	default:
+		return obj != nil
+	}
 }
 
 func last(args []Any) Any {

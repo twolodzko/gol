@@ -119,10 +119,30 @@ func letFn(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 		localEnv.Set(name, val)
 	}
 
-	exprs := args[1:]
-	_, err := EvalAll(exceptLast(exprs), localEnv)
+	_, err := EvalAll(exceptLast(args[1:]), localEnv)
+	return last(args), localEnv, err
+}
 
-	return last(exprs), localEnv, err
+func condFun(args []Any, env *environment.Env) (Any, *environment.Env, error) {
+	for _, arg := range args {
+		obj, ok := arg.(List)
+		if !ok || len(obj) == 0 {
+			return nil, env, fmt.Errorf("invalid condition: %v (%T)", arg, arg)
+		}
+
+		cond, err := Eval(obj[0], env)
+		if err != nil {
+			return nil, env, err
+		}
+		if isTrue(cond) {
+			if len(obj) > 1 {
+				_, err := EvalAll(exceptLast(obj[1:]), env)
+				return last(obj), env, err
+			}
+			return nil, env, nil
+		}
+	}
+	return nil, env, nil
 }
 
 func exceptLast(objs []Any) []Any {

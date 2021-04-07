@@ -24,7 +24,16 @@ func TestEval(t *testing.T) {
 		{`(if (true? false)
 			  (error "this should not fail!")
 			  "ok")`, String("ok")},
+		{`(cond ((= 2 1) "wrong"))`, nil},
+		{`(cond
+			((= 2 1) "wrong")
+			(true "correct"))`, String("correct")},
+		{`(cond
+			(false 1)
+			(true 2)
+			(true (error "Oh, no!")))`, Int(2)},
 		{`(quote (+ 1 2))`, List{Symbol("+"), Int(1), Int(2)}},
+		{`(eval '(+ 2 2))`, Int(4)},
 		{`(- 7 (* 2 (+ 1 2)) 1)`, Int(0)},
 		{`(def b (+ 1 2)) b`, Int(3)},
 		{`(let (c 2) c)`, Int(2)},

@@ -14,6 +14,9 @@ var buildins = map[Symbol]Any{
 	"if": &TcoFunction{
 		ifFn,
 	},
+	"cond": &TcoFunction{
+		condFun,
+	},
 	"let": &TcoFunction{
 		letFn,
 	},

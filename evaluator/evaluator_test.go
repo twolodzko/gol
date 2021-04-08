@@ -39,6 +39,8 @@ func TestEval(t *testing.T) {
 		  (quasiquote
 			(+ 1 2 (unquote (+ 1 2)) (unquote x)))`, List{Symbol("+"), Int(1), Int(2), Int(3), Int(4)}},
 		{"(def x 4) `(+ 1 2 ,(+ 1 2) (- ,x))", List{Symbol("+"), Int(1), Int(2), Int(3), List{Symbol("-"), Int(4)}}},
+		{"``,x", List{Symbol("quasiquote"), List{Symbol("unquote"), Symbol("x")}}},
+		{"(def x 5) (eval (eval ```,x))", Int(5)},
 		{`(eval '(+ 2 2))`, Int(4)},
 		{`(- 7 (* 2 (+ 1 2)) 1)`, Int(0)},
 		{`(def b (+ 1 2)) b`, Int(3)},

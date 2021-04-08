@@ -78,7 +78,7 @@ func (p *Parser) Parse() ([]Any, error) {
 
 		if t.Type == token.QUOTE || t.Type == token.TICK || t.Type == token.COMMA {
 			if ok := p.nextToken(); !ok {
-				return parsed, fmt.Errorf("missing next object after %v", t)
+				return parsed, fmt.Errorf("missing an object after %v", t)
 			}
 			tokenStack = append(tokenStack, t)
 			continue
@@ -91,7 +91,7 @@ func (p *Parser) Parse() ([]Any, error) {
 				return parsed, errors.New("missing opening brackets")
 			}
 			if len(tokenStack) > 0 {
-				return parsed, fmt.Errorf("missing next object after %v", t)
+				return parsed, fmt.Errorf("missing an object after %v", tokenStack[len(tokenStack)-1])
 			}
 			return parsed, nil
 		case token.LPAREN:

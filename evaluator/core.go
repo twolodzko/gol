@@ -63,17 +63,22 @@ func beginFn(args []Any, env *environment.Env) (Any, error) {
 }
 
 func quasiquote(arg Any, env *environment.Env) (Any, error) {
+	var list List
+
 	switch obj := arg.(type) {
 	case List:
 		if len(obj) == 0 {
 			return obj, nil
 		}
-
-		sym, ok := obj[0].(Symbol)
-
-		// check for unquote's recursively
-		if !ok || sym != "unquote" {
-			var list List
+		switch obj[0] {
+		case Symbol("unquote"):
+			if len(obj) != 2 {
+				return nil, errors.New("nothing to unquote")
+			}
+			return eval(obj[1], env)
+		case Symbol("quasiquote"):
+			return obj, nil
+		default:
 			for _, o := range obj {
 				val, err := quasiquote(o, env)
 				if err != nil {
@@ -83,12 +88,6 @@ func quasiquote(arg Any, env *environment.Env) (Any, error) {
 			}
 			return list, nil
 		}
-
-		// unquote
-		if len(obj) != 2 {
-			return nil, errors.New("nothing to unquote")
-		}
-		return eval(obj[1], env)
 	default:
 		return obj, nil
 	}

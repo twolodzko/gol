@@ -246,11 +246,6 @@ func equalFn(args []Any, env *environment.Env) (Any, error) {
 			if !ok || first != second {
 				return Bool(false), nil
 			}
-		case tailCallOptimized:
-			second, ok := second.(tailCallOptimized)
-			if !ok || first != second {
-				return Bool(false), nil
-			}
 		default:
 			if !cmp.Equal(first, second) {
 				return Bool(false), nil

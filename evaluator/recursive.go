@@ -7,7 +7,8 @@ import (
 )
 
 type tailCallOptimized interface {
-	Call([]Any, *environment.Env) (Any, *environment.Env, error)
+	function
+	PartialEval([]Any, *environment.Env) (Any, *environment.Env, error)
 }
 
 type lambda struct {
@@ -16,7 +17,15 @@ type lambda struct {
 	expr []Any
 }
 
-func (f *lambda) Call(args []Any, env *environment.Env) (Any, *environment.Env, error) {
+func (f *lambda) Eval(args []Any, env *environment.Env) (Any, error) {
+	expr, env, err := f.PartialEval(args, env)
+	if err != nil {
+		return nil, err
+	}
+	return eval(expr, env)
+}
+
+func (f *lambda) PartialEval(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 	var (
 		err  error
 		objs []Any
@@ -68,7 +77,15 @@ type tcoFunction struct {
 	fn func([]Any, *environment.Env) (Any, *environment.Env, error)
 }
 
-func (f *tcoFunction) Call(args []Any, env *environment.Env) (Any, *environment.Env, error) {
+func (f *tcoFunction) Eval(args []Any, env *environment.Env) (Any, error) {
+	expr, env, err := f.PartialEval(args, env)
+	if err != nil {
+		return nil, err
+	}
+	return eval(expr, env)
+}
+
+func (f *tcoFunction) PartialEval(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 	return f.fn(args, env)
 }
 

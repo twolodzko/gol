@@ -37,7 +37,7 @@ func eval(expr Any, env *environment.Env) (Any, error) {
 
 	for {
 		switch expr := expr.(type) {
-		case nil, Bool, Int, Float, String, function, tailCallOptimized:
+		case nil, Bool, Int, Float, String, function:
 			return expr, nil
 		case Symbol:
 			return env.Get(expr)
@@ -51,16 +51,17 @@ func eval(expr Any, env *environment.Env) (Any, error) {
 			}
 
 			switch fn := fn.(type) {
-			case function:
-				args := expr.Tail()
-				return fn.Call(args, env)
 			case tailCallOptimized:
 				args := expr.Tail()
-				newExpr, newEnv, err = fn.Call(args, env)
+				newExpr, newEnv, err = fn.PartialEval(args, env)
 				if err != nil {
 					return nil, err
 				}
+			case function:
+				args := expr.Tail()
+				return fn.Eval(args, env)
 			}
+
 		default:
 			return nil, fmt.Errorf("cannot evaluate %v of type %T", expr, expr)
 		}
@@ -84,7 +85,7 @@ func evalAll(exprs []Any, env *environment.Env) ([]Any, error) {
 
 func getFunction(obj Any, env *environment.Env) (Any, error) {
 	switch obj := obj.(type) {
-	case function, tailCallOptimized:
+	case function:
 		return obj, nil
 	case Symbol:
 		o, err := env.Get(obj)
@@ -92,7 +93,7 @@ func getFunction(obj Any, env *environment.Env) (Any, error) {
 			return nil, err
 		}
 		switch fn := o.(type) {
-		case function, tailCallOptimized:
+		case function:
 			return fn, nil
 		default:
 			return nil, fmt.Errorf("%v (%T) is not callable", o, o)

@@ -8,7 +8,7 @@ type arithmeticFunction struct {
 	start   Float
 }
 
-func (f *arithmeticFunction) Call(args []Any, env *environment.Env) (Any, error) {
+func (f *arithmeticFunction) Eval(args []Any, env *environment.Env) (Any, error) {
 	args, err := evalAll(args, env)
 	if err != nil {
 		return nil, err

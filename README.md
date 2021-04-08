@@ -11,9 +11,26 @@ helpful for me. While working on it, I also found the [*Make a LISP*][mal] repos
 my work. Another resource worth mentioning is the [*(How to Write a (Lisp) Interpreter (in Python))*][lispy] article
 by Peter Norvig.
 
+## Features
+
+ * `int`, `float`, `string`, `symbol`, `list` data types.
+ * Assigning variables: `(def x 42)`.
+ * Defining anonymous functions: `(fn (x y) (+ x y))`.
+ * Contexts: `(let (x 2 y 3) (/ x y))`.
+ * Mutating values of a variables with `set!`.
+ * `begin`, `apply`, `map` functions from Scheme.
+ * `if` and `cond` conditionals.
+ * `quote` (`'`), `quasiquote` (``` ` ```), `unquote` (`,`), and `eval` metaprogramming utilities.
+ * `first`, `rest`, `init`, `rest`, `nth`, `cons`, `append`, `concat` functions for working with lists.
+ * Basic arithmetic operators.
+ * [Tail call optimization][tco] (see [github.com/kanaka/mal][mal-tco] for technical details).
+
+
  [sicp]: https://www.goodreads.com/book/show/43713.Structure_and_Interpretation_of_Computer_Programs
  [build-lisp]: http://buildyourownlisp.com/
  [interpreter-go]: https://interpreterbook.com/
  [learn-go]: https://www.goodreads.com/book/show/55841848
  [mal]: https://github.com/kanaka/mal/
  [lispy]: https://norvig.com/lispy.html
+ [tco]: https://stackoverflow.com/questions/310974/what-is-tail-call-optimization
+ [mal-tco]: https://github.com/kanaka/mal/blob/master/process/guide.md#step-5-tail-call-optimization

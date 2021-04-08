@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -61,6 +62,38 @@ func beginFn(args []Any, env *environment.Env) (Any, error) {
 	return last(objs), err
 }
 
+func quasiquote(arg Any, env *environment.Env) (Any, error) {
+	switch obj := arg.(type) {
+	case List:
+		if len(obj) == 0 {
+			return obj, nil
+		}
+
+		sym, ok := obj[0].(Symbol)
+
+		// check for unquote's recursively
+		if !ok || sym != "unquote" {
+			var list List
+			for _, o := range obj {
+				val, err := quasiquote(o, env)
+				if err != nil {
+					return list, err
+				}
+				list = append(list, val)
+			}
+			return list, nil
+		}
+
+		// unquote
+		if len(obj) != 2 {
+			return nil, errors.New("nothing to unquote")
+		}
+		return eval(obj[1], env)
+	default:
+		return obj, nil
+	}
+}
+
 func nthFn(args []Any) (Any, error) {
 	switch l := args[0].(type) {
 	case List:
@@ -114,9 +147,6 @@ func prependFn(args []Any, env *environment.Env) (Any, error) {
 }
 
 func concatFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) < 2 {
-		return nil, &ErrNumArgs{len(args)}
-	}
 	objs, err := evalAll(args, env)
 	if err != nil {
 		return nil, err
@@ -213,6 +243,11 @@ func equalFn(args []Any, env *environment.Env) (Any, error) {
 			}
 		case function:
 			second, ok := second.(function)
+			if !ok || first != second {
+				return Bool(false), nil
+			}
+		case tailCallOptimized:
+			second, ok := second.(tailCallOptimized)
 			if !ok || first != second {
 				return Bool(false), nil
 			}

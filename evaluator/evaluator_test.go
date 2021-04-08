@@ -33,6 +33,12 @@ func TestEval(t *testing.T) {
 			(true 2)
 			(true (error "Oh, no!")))`, Int(2)},
 		{`(quote (+ 1 2))`, List{Symbol("+"), Int(1), Int(2)}},
+		{`(quasiquote (unquote (+ 1 2)))`, Int(3)},
+		{"`,(+ 1 2)", Int(3)},
+		{`(def x 4)
+		  (quasiquote
+			(+ 1 2 (unquote (+ 1 2)) (unquote x)))`, List{Symbol("+"), Int(1), Int(2), Int(3), Int(4)}},
+		{"(def x 4) `(+ 1 2 ,(+ 1 2) (- ,x))", List{Symbol("+"), Int(1), Int(2), Int(3), List{Symbol("-"), Int(4)}}},
 		{`(eval '(+ 2 2))`, Int(4)},
 		{`(- 7 (* 2 (+ 1 2)) 1)`, Int(0)},
 		{`(def b (+ 1 2)) b`, Int(3)},

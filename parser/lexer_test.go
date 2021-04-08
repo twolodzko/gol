@@ -102,6 +102,26 @@ func TestLexer(t *testing.T) {
 				{Literal: "0", Type: token.INT},
 			},
 		},
+		{
+			"`('(1 2 3) ,(+ 2 3))",
+			[]token.Token{
+				{Literal: "`", Type: token.TICK},
+				{Literal: "(", Type: token.LPAREN},
+				{Literal: "'", Type: token.QUOTE},
+				{Literal: "(", Type: token.LPAREN},
+				{Literal: "1", Type: token.INT},
+				{Literal: "2", Type: token.INT},
+				{Literal: "3", Type: token.INT},
+				{Literal: ")", Type: token.RPAREN},
+				{Literal: ",", Type: token.COMMA},
+				{Literal: "(", Type: token.LPAREN},
+				{Literal: "+", Type: token.SYMBOL},
+				{Literal: "2", Type: token.INT},
+				{Literal: "3", Type: token.INT},
+				{Literal: ")", Type: token.RPAREN},
+				{Literal: ")", Type: token.RPAREN},
+			},
+		},
 	}
 
 	for _, tt := range testCases {

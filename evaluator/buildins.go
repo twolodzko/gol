@@ -48,12 +48,15 @@ var buildins = map[Symbol]Any{
 	},
 	"quasiquote": &simpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			return nil, errors.New("not implemented")
+			if len(args) != 1 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			return quasiquote(args[0], env)
 		},
 	},
-	"unquote": &simpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			return nil, errors.New("not implemented")
+	"unquote": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			return obj, nil
 		},
 	},
 	"eval": &singleArgFunction{

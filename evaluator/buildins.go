@@ -33,6 +33,12 @@ var buildins = map[Symbol]Any{
 	"begin": &simpleFunction{
 		beginFn,
 	},
+	"apply": &simpleFunction{
+		applyFn,
+	},
+	"map": &simpleFunction{
+		mapFn,
+	},
 	"set!": &simpleFunction{
 		setFn,
 	},

@@ -63,7 +63,7 @@ func eval(expr Any, env *environment.Env) (Any, error) {
 			}
 
 		default:
-			return nil, fmt.Errorf("cannot evaluate %v of type %T", expr, expr)
+			return nil, fmt.Errorf("cannot evaluate %v (%T)", expr, expr)
 		}
 
 		env = newEnv
@@ -96,7 +96,7 @@ func getFunction(obj Any, env *environment.Env) (Any, error) {
 		case function:
 			return fn, nil
 		default:
-			return nil, fmt.Errorf("%v (%T) is not callable", o, o)
+			return nil, &ErrNotCallable{o}
 		}
 	case List:
 		val, err := eval(obj, env)
@@ -105,6 +105,6 @@ func getFunction(obj Any, env *environment.Env) (Any, error) {
 		}
 		return getFunction(val, env)
 	default:
-		return nil, fmt.Errorf("%v (%T) is not callable", obj, obj)
+		return nil, &ErrNotCallable{obj}
 	}
 }

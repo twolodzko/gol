@@ -62,6 +62,51 @@ func beginFn(args []Any, env *environment.Env) (Any, error) {
 	return last(objs), err
 }
 
+func applyFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+
+	obj, err := eval(args[1], env)
+	if err != nil {
+		return nil, err
+	}
+	l, ok := obj.(List)
+	if !ok {
+		return nil, &ErrWrongType{args[1]}
+	}
+
+	expr := append(List{args[0]}, l...)
+	return eval(expr, env)
+}
+
+func mapFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+
+	obj, err := eval(args[1], env)
+	if err != nil {
+		return nil, err
+	}
+	l, ok := obj.(List)
+	if !ok {
+		return nil, &ErrWrongType{args[1]}
+	}
+
+	expr := List{args[0]}
+	var out List
+	for _, arg := range l {
+		res, err := eval(append(expr, arg), env)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, res)
+	}
+
+	return out, nil
+}
+
 func quasiquote(arg Any, env *environment.Env) (Any, error) {
 	var list List
 

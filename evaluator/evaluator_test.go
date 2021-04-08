@@ -147,6 +147,10 @@ func TestCore(t *testing.T) {
 		{`(> 3 2 1 1)`, Bool(false)},
 		{`(eval (read-string "(+ 2 2)"))`, Int(4)},
 		{`(read-string (str '(1 2 "3")))`, List{Int(1), Int(2), String("3")}},
+		{`(apply (fn (x) x) '('test))`, Symbol("test")},
+		{`(apply + '(1 2 3))`, Int(6)},
+		{`(map (fn (x) x) '(1 2 3))`, List{Int(1), Int(2), Int(3)}},
+		{`(map - '(1 2 3))`, List{Int(-1), Int(-2), Int(-3)}},
 	}
 
 	for _, tt := range testCases {

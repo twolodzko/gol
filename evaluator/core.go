@@ -399,7 +399,7 @@ func ltFn(args []Any, env *environment.Env) (Any, error) {
 	return Bool(true), nil
 }
 
-func readStringFn(obj Any, env *environment.Env) (Any, error) {
+func parseStringFn(obj Any, env *environment.Env) (Any, error) {
 	code, ok := obj.(String)
 	if !ok {
 		return nil, &ErrWrongType{obj}

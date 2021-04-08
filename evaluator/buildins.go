@@ -317,7 +317,7 @@ var buildins = map[Symbol]Any{
 			return obj, nil
 		},
 	},
-	"slurp": &singleArgFunction{
+	"read-file": &singleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
 			name, ok := obj.(String)
 			if !ok {
@@ -327,8 +327,8 @@ var buildins = map[Symbol]Any{
 			return String(lines), err
 		},
 	},
-	"read-string": &singleArgFunction{
-		readStringFn,
+	"parse-string": &singleArgFunction{
+		parseStringFn,
 	},
 	"env": &simpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {

@@ -3,6 +3,7 @@ package evaluator
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
@@ -390,6 +391,33 @@ func toString(args []Any, env *environment.Env, sep String) (string, error) {
 		str = append(str, fmt.Sprintf("%v", obj))
 	}
 	return strings.Join(str, string(sep)), nil
+}
+
+func writeToFileFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	objs, err := evalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+	fileName, ok := objs[0].(String)
+	if !ok {
+		return nil, &ErrWrongType{objs[0]}
+	}
+
+	file, err := os.OpenFile(string(fileName), os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	_, err = fmt.Fprintf(file, "%v\n", objs[1])
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
 
 func isTrue(obj Any) bool {

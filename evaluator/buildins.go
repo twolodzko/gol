@@ -70,6 +70,9 @@ var buildins = map[Symbol]Any{
 			return eval(obj, env)
 		},
 	},
+	"parse-string": &singleArgFunction{
+		parseStringFn,
+	},
 
 	// logical checks
 	"=": &simpleFunction{
@@ -237,7 +240,7 @@ var buildins = map[Symbol]Any{
 		},
 	},
 
-	// other
+	// strings & i/o
 	"println": &simpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
 			if len(args) == 0 {
@@ -254,9 +257,37 @@ var buildins = map[Symbol]Any{
 	},
 	"error": &singleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
-			return nil, fmt.Errorf("%s", fmt.Sprintf("%v", obj))
+			return nil, fmt.Errorf("%v", obj)
 		},
 	},
+	"read-file": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			name, ok := obj.(String)
+			if !ok {
+				return nil, &ErrWrongType{obj}
+			}
+			lines, err := parser.ReadFile(string(name))
+			return String(lines), err
+		},
+	},
+	"chars": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			str, ok := obj.(String)
+			if !ok {
+				return nil, &ErrWrongType{obj}
+			}
+			var runes []Any
+			for _, r := range str {
+				runes = append(runes, String(string(r)))
+			}
+			return List(runes), nil
+		},
+	},
+	"write-to-file": &simpleFunction{
+		writeToFileFn,
+	},
+
+	// utils
 	"time": &singleArgFunction{
 		func(obj Any, env *environment.Env) (Any, error) {
 			start := time.Now()
@@ -272,19 +303,6 @@ var buildins = map[Symbol]Any{
 
 			return obj, nil
 		},
-	},
-	"read-file": &singleArgFunction{
-		func(obj Any, env *environment.Env) (Any, error) {
-			name, ok := obj.(String)
-			if !ok {
-				return nil, &ErrWrongType{obj}
-			}
-			lines, err := parser.ReadFile(string(name))
-			return String(lines), err
-		},
-	},
-	"parse-string": &singleArgFunction{
-		parseStringFn,
 	},
 	"env": &simpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {

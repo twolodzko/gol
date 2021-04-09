@@ -149,6 +149,7 @@ func TestCore(t *testing.T) {
 		{`(apply + '(1 2 3))`, Float(6)},
 		{`(map (fn (x) x) '(1 2 3))`, List{Int(1), Int(2), Int(3)}},
 		{`(map - '(1 2 3))`, List{Float(-1), Float(-2), Float(-3)}},
+		{`(chars "hello")`, List{String("h"), String("e"), String("l"), String("l"), String("o")}},
 	}
 
 	for _, tt := range testCases {

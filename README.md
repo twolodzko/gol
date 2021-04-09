@@ -14,16 +14,18 @@ by Peter Norvig.
 ## Features
 
  * Basic `int`, `float`, `string`, `list` data types.
- * Assigning variables to symbols: `(def x 42)`.
- * Anonymous, [first-class][first-class] functions: `(fn (x y) (+ x y))`, that can be named usign `def`.
- * Contexts handling with `let` using [Clojure's syntax][clj-let]: `(let (x 2 y (+ x 1)) (/ x y))`.
- * `begin`, `apply`, `map` functions from [Scheme][scheme].
- * `if` and `cond` conditionals.
- * `quote` (`'`), `quasiquote` (``` ` ```), `unquote` (`,`), and `eval` metaprogramming utilities.
+ * Booleans are represented as `true` and `false`.
+   [As in Clojure][clj-bool], and unlike Scheme, everything except `false` and `nil` is true.
+ * Values can be assigned to symbols using: `(def x 42)`.
+ * Anonymous, [first-class][first-class] use the syntax: `(fn (x y) (+ x y))`. They can be named
+   with `def`.
+ * Contexts handling with `let` uses [Clojure's syntax][clj-let]: `(let (x 2 y (+ x 1)) (/ x y))`.
+ * `begin`, `apply`, `map` work as in [Scheme][scheme].
+ * `if` and `cond` conditionals, e.g. `(cond (false "not this") (true "this!"))`.
  * Lists are internally [Go's slices][go-slice], so `append` is preferred to using `cons`. Lists can be
-   concatenated using `concat`. Their elements can be accessed using `first`, `rest`, `init`, `last`,
-   and `nth`. 
+   concatenated using `concat`. Their elements are accessed using `first`, `rest`, `init`, `last`, and `nth`. 
  * Basic arithmetic operators: `+`, `-`, `*`, `/`, `%` (modulo).
+ * `quote` (`'`), `quasiquote` (``` ` ```), `unquote` (`,`), and `eval` metaprogramming utilities.
  * Function arguments are passed by value [as in Go][pointers]. The only way to mutate a variable
    is by using `set!`.
  * Garbage collection is handled by Go's internal garbage collector.
@@ -34,6 +36,7 @@ by Peter Norvig.
  [build-lisp]: http://buildyourownlisp.com/
  [interpreter-go]: https://interpreterbook.com/
  [learn-go]: https://www.goodreads.com/book/show/55841848
+ [clj-bool]: https://clojuredocs.org/clojure.core/boolean
  [first-class]: https://en.wikipedia.org/wiki/First-class_function
  [go-slice]: https://blog.golang.org/slices-intro
  [clj-let]: https://clojuredocs.org/clojure.core/let

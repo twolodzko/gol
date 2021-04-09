@@ -1,3 +1,6 @@
 {
-    "go.lintTool": "staticcheck"
+    "go.lintTool": "staticcheck",
+    "files.associations": {
+        "lsp": "lisp"
+    }
 }

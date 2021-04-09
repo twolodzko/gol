@@ -13,24 +13,33 @@ by Peter Norvig.
 
 ## Features
 
- * `int`, `float`, `string`, `symbol`, `list` data types.
- * Assigning variables: `(def x 42)`.
- * Defining anonymous functions: `(fn (x y) (+ x y))`.
- * Contexts: `(let (x 2 y 3) (/ x y))`.
- * Mutating values of a variables with `set!`.
- * `begin`, `apply`, `map` functions from Scheme.
+ * Basic `int`, `float`, `string`, `list` data types.
+ * Assigning variables to symbols: `(def x 42)`.
+ * Anonymous, [first-class][first-class] functions: `(fn (x y) (+ x y))`, that can be named usign `def`.
+ * Contexts handling with `let` using [Clojure's syntax][clj-let]: `(let (x 2 y (+ x 1)) (/ x y))`.
+ * `begin`, `apply`, `map` functions from [Scheme][scheme].
  * `if` and `cond` conditionals.
  * `quote` (`'`), `quasiquote` (``` ` ```), `unquote` (`,`), and `eval` metaprogramming utilities.
- * `first`, `rest`, `init`, `rest`, `nth`, `cons`, `append`, `concat` functions for working with lists.
- * Basic arithmetic operators.
- * [Tail call optimization][tco] (see [github.com/kanaka/mal][mal-tco] for technical details).
+ * Lists are internally [Go's slices][go-slice], so `append` is preferred to using `cons`. Lists can be
+   concatenated using `concat`. Their elements can be accessed using `first`, `rest`, `init`, `last`,
+   and `nth`. 
+ * Basic arithmetic operators: `+`, `-`, `*`, `/`, `%` (modulo).
+ * Function arguments are passed by value [as in Go][pointers]. The only way to mutate a variable
+   is by using `set!`.
+ * Garbage collection is handled by Go's internal garbage collector.
+ * [Tail call optimization][tco] is based on [github.com/kanaka/mal][mal-tco].
 
 
  [sicp]: https://www.goodreads.com/book/show/43713.Structure_and_Interpretation_of_Computer_Programs
  [build-lisp]: http://buildyourownlisp.com/
  [interpreter-go]: https://interpreterbook.com/
  [learn-go]: https://www.goodreads.com/book/show/55841848
+ [first-class]: https://en.wikipedia.org/wiki/First-class_function
+ [go-slice]: https://blog.golang.org/slices-intro
+ [clj-let]: https://clojuredocs.org/clojure.core/let
+ [scheme]: https://www.cs.cmu.edu/Groups/AI/html/r4rs/r4rs_6.html
  [mal]: https://github.com/kanaka/mal/
  [lispy]: https://norvig.com/lispy.html
  [tco]: https://stackoverflow.com/questions/310974/what-is-tail-call-optimization
  [mal-tco]: https://github.com/kanaka/mal/blob/master/process/guide.md#step-5-tail-call-optimization
+ [pointers]: https://krancour.medium.com/go-pointers-when-to-use-pointers-4f29256ddff3

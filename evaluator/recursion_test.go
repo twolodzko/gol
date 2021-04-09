@@ -13,8 +13,8 @@ func TestRecursion(t *testing.T) {
 	(def fibo (fn (n)
 		(if (= n 0) 0
 			(if (= n 1) 1
-				(+ (fibo (- n 1))
-				   (fibo (- n 2)))))))
+				(int+ (fibo (int- n 1))
+				      (fibo (int- n 2)))))))
 	`
 
 	_, err := e.EvalString(code)
@@ -50,7 +50,7 @@ func TestRecursion(t *testing.T) {
 func TestTailRecursion(t *testing.T) {
 	code := `(def rec (fn (n)
 				(if (> n 0)
-					(rec (- n 1))
+					(rec (int- n 1))
 					nil)))`
 
 	e := NewEvaluator()
@@ -76,8 +76,8 @@ func BenchmarkFibonacciRecursive(b *testing.B) {
 	(def fib (fn (n)
 		(if (< n 2)
 			n
-			(+ (fib (- n 1))
-			   (fib (- n 2))))))
+			(int+ (fib (int- n 1))
+			      (fib (int- n 2))))))
 	`
 
 	e := NewEvaluator()
@@ -95,7 +95,7 @@ func BenchmarkFibonacciTailRecursive(b *testing.B) {
 	(def fib (fn (n)
 		(let (loop (fn (a b n)
 			(if (= n 0) a
-				(loop b (+ a b) (- n 1)))))
+				(loop b (int+ a b) (int- n 1)))))
 		(loop 0 1 n))))
 	`
 

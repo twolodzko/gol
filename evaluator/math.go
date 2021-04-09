@@ -1,118 +1,209 @@
 package evaluator
 
-import "github.com/twolodzko/gol/environment"
+import (
+	"fmt"
 
-type arithmeticFunction struct {
-	intFn   func(x, y Int) Int
-	floatFn func(x, y Float) Float
-	start   Float
+	"github.com/twolodzko/gol/environment"
+)
+
+func getFloat(obj Any, env *environment.Env) (Float, error) {
+	obj, err := eval(obj, env)
+	if err != nil {
+		return 0, err
+	}
+	switch obj := obj.(type) {
+	case Float:
+		return obj, nil
+	case Int:
+		return Float(obj), nil
+	default:
+		return 0, &ErrNaN{obj}
+	}
 }
 
-func (f *arithmeticFunction) Eval(args []Any, env *environment.Env) (Any, error) {
-	args, err := evalAll(args, env)
+type singleArgFloatFunction struct {
+	fn func(Float) Float
+}
+
+func (f *singleArgFloatFunction) Eval(args []Any, env *environment.Env) (Any, error) {
+	if len(args) != 1 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	num, err := getFloat(args[0], env)
 	if err != nil {
 		return nil, err
 	}
-	return f.apply(args)
+	return f.fn(num), nil
 }
 
-func (f *arithmeticFunction) apply(arr []Any) (Any, error) {
-	if len(arr) == 0 {
-		return nil, &ErrNumArgs{len(arr)}
-	}
-
-	switch x := arr[0].(type) {
-	case Int:
-		if len(arr) == 1 {
-			return f.intFn(Int(f.start), x), nil
-		}
-		acc := x
-		for i, x := range arr[1:] {
-			switch x := x.(type) {
-			case Int:
-				acc = f.intFn(acc, x)
-			case Float:
-				// fallback to floats
-				return applyFloatFn(arr[1+i:], f.floatFn, Float(acc))
-			default:
-				return 0, &ErrNaN{x}
-			}
-		}
-		return acc, nil
-
-	case Float:
-		if len(arr) == 1 {
-			return f.floatFn(f.start, x), nil
-		}
-		return applyFloatFn(arr[1:], f.floatFn, x)
-
-	default:
-		return nil, &ErrNaN{x}
-	}
+type multiArgFloatFunction struct {
+	fn    func(x, y Float) Float
+	start Float
 }
 
-func applyFloatFn(arr []Any, fn func(x, y Float) Float, start Float) (Float, error) {
-	acc := start
-	for _, x := range arr {
-		switch x := x.(type) {
-		case Float:
-			acc = fn(acc, x)
-		case Int:
-			acc = fn(acc, Float(x))
-		default:
-			return 0, &ErrNaN{x}
-		}
-	}
-	return acc, nil
-}
-
-func floatDivFn(args []Any, env *environment.Env) (Any, error) {
+func (f *multiArgFloatFunction) Eval(args []Any, env *environment.Env) (Any, error) {
 	if len(args) == 0 {
-		return nil, &ErrNumArgs{len(args)}
+		return f.start, nil
 	}
 
-	var start Float
-	switch x := args[0].(type) {
-	case Float:
-		start = x
-	case Int:
-		start = Float(x)
-	default:
-		return nil, &ErrNaN{x}
+	num, err := getFloat(args[0], env)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(args) == 1 {
-		return 1 / start, nil
+		return f.fn(f.start, num), nil
 	}
 
-	return applyFloatFn(args[1:], func(x, y Float) Float { return x / y }, start)
+	res := num
+	for _, obj := range args[1:] {
+		num, err := getFloat(obj, env)
+		if err != nil {
+			return nil, err
+		}
+		res = f.fn(res, num)
+	}
+	return res, nil
 }
 
-func intDivFn(args []Any, env *environment.Env) (Any, error) {
+func getInt(obj Any, env *environment.Env) (Int, error) {
+	obj, err := eval(obj, env)
+	if err != nil {
+		return 0, err
+	}
+	switch obj := obj.(type) {
+	case Int:
+		return obj, nil
+	default:
+		return 0, fmt.Errorf("%v (%T) is not an int", obj, obj)
+	}
+}
+
+type multiArgIntFunction struct {
+	fn    func(x, y Int) Int
+	start Int
+}
+
+func (f *multiArgIntFunction) Eval(args []Any, env *environment.Env) (Any, error) {
+	if len(args) == 0 {
+		return f.start, nil
+	}
+
+	num, err := getInt(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(args) == 1 {
+		return f.fn(f.start, num), nil
+	}
+
+	res := num
+	for _, obj := range args[1:] {
+		num, err := getInt(obj, env)
+		if err != nil {
+			return nil, err
+		}
+		res = f.fn(res, num)
+	}
+	return res, nil
+}
+
+func gtFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) < 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
-
-	var acc Int
-	switch x := args[0].(type) {
-	case Int:
-		acc = x
-	case Float:
-		return nil, &ErrWrongType{x}
-	default:
-		return nil, &ErrNaN{x}
+	first, err := eval(args[0], env)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, x := range args[1:] {
-		switch x := x.(type) {
-		case Int:
-			acc /= x
-		case Float:
-			return nil, &ErrWrongType{x}
-		default:
-			return nil, &ErrNaN{x}
+	for _, second := range args[1:] {
+		second, err := eval(second, env)
+		if err != nil {
+			return nil, err
 		}
+
+		switch first := first.(type) {
+		case Int:
+			switch second := second.(type) {
+			case Int:
+				if first <= second {
+					return Bool(false), nil
+				}
+			case Float:
+				if Float(first) <= second {
+					return Bool(false), nil
+				}
+			default:
+				return nil, &ErrWrongType{second}
+			}
+		case Float:
+			switch second := second.(type) {
+			case Float:
+				if first <= second {
+					return Bool(false), nil
+				}
+			case Int:
+				if first <= Float(second) {
+					return Bool(false), nil
+				}
+			default:
+				return nil, &ErrWrongType{second}
+			}
+		default:
+			return nil, &ErrWrongType{first}
+		}
+
+		first = second
 	}
 
-	return acc, nil
+	return Bool(true), nil
+}
+
+func ltFn(args []Any, env *environment.Env) (Any, error) {
+	if len(args) < 2 {
+		return nil, &ErrNumArgs{len(args)}
+	}
+	first, err := eval(args[0], env)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, second := range args[1:] {
+		switch first := first.(type) {
+		case Int:
+			switch second := second.(type) {
+			case Int:
+				if first >= second {
+					return Bool(false), nil
+				}
+			case Float:
+				if Float(first) >= second {
+					return Bool(false), nil
+				}
+			default:
+				return nil, &ErrWrongType{second}
+			}
+		case Float:
+			switch second := second.(type) {
+			case Float:
+				if first >= second {
+					return Bool(false), nil
+				}
+			case Int:
+				if first >= Float(second) {
+					return Bool(false), nil
+				}
+			default:
+				return nil, &ErrWrongType{second}
+			}
+		default:
+			return nil, &ErrWrongType{first}
+		}
+
+		first = second
+	}
+
+	return Bool(true), nil
 }

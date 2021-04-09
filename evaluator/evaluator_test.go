@@ -33,38 +33,36 @@ func TestEval(t *testing.T) {
 			(true 2)
 			(true (error "Oh, no!")))`, Int(2)},
 		{`(quote (+ 1 2))`, List{Symbol("+"), Int(1), Int(2)}},
-		{`(quasiquote (unquote (+ 1 2)))`, Int(3)},
-		{"`,(+ 1 2)", Int(3)},
+		{`(quasiquote (unquote (+ 1 2)))`, Float(3)},
+		{"`,(+ 1 2)", Float(3)},
 		{`(def x 4)
 		  (quasiquote
-			(+ 1 2 (unquote (+ 1 2)) (unquote x)))`, List{Symbol("+"), Int(1), Int(2), Int(3), Int(4)}},
-		{"(def x 4) `(+ 1 2 ,(+ 1 2) (- ,x))", List{Symbol("+"), Int(1), Int(2), Int(3), List{Symbol("-"), Int(4)}}},
+			(+ 1 2 (unquote (+ 1 2)) (unquote x)))`, List{Symbol("+"), Int(1), Int(2), Float(3), Int(4)}},
+		{"(def x 4) `(+ 1 2 ,(+ 1 2) (- ,x))", List{Symbol("+"), Int(1), Int(2), Float(3), List{Symbol("-"), Int(4)}}},
 		{"``,x", List{Symbol("quasiquote"), List{Symbol("unquote"), Symbol("x")}}},
 		{"(def x 5) (eval (eval ```,x))", Int(5)},
-		{`(eval '(+ 2 2))`, Int(4)},
-		{`(- 7 (* 2 (+ 1 2)) 1)`, Int(0)},
-		{`(def b (+ 1 2)) b`, Int(3)},
+		{`(eval '(+ 2 2))`, Float(4)},
+		{`(- 7 (* 2 (+ 1 2)) 1)`, Float(0)},
+		{`(def b (+ 1 2)) b`, Float(3)},
 		{`(let (c 2) c)`, Int(2)},
 		{`(let (x 10)
-			(+ 5 x))`, Int(15)},
+			(+ 5 x))`, Float(15)},
 		{`(let (x 5)
 			(let (y 6)
-				 (+ x y)))`, Int(11)},
+				 (+ x y)))`, Float(11)},
 		{`(let (x 1 y (+ 2 3))
-			(+ x y))`, Int(6)},
+			(+ x y))`, Float(6)},
 		{`(let (x 1 y (+ 1 x))
-			(+ x y))`, Int(3)},
+			(+ x y))`, Float(3)},
 		{`(begin (+ 2 2)
-			     (+ 3 5))`, Int(8)},
+			     (+ 3 5))`, Float(8)},
 		{`(begin (def x 2)
-			     (+ x 4))`, Int(6)},
-		{`(eval (+ 2 2))`, Int(4)},
-		{`(eval '(+ 2 2))`, Int(4)},
-		{`(eval (list + 2 2))`, Int(4)},
+			     (+ x 4))`, Float(6)},
+		{`(eval (+ 2 2))`, Float(4)},
+		{`(eval '(+ 2 2))`, Float(4)},
+		{`(eval (list + 2 2))`, Float(4)},
 		{`((fn (a) a) 123)`, Int(123)},
-		{`((fn (a b)
-			(+ a b))
-		  1 2)`, Int(3)},
+		{`((fn (a b) (+ a b)) 1 2)`, Float(3)},
 		{`((fn (x y)
 			(or (= x y)
 				(> x y)))
@@ -73,19 +71,19 @@ func TestEval(t *testing.T) {
 		{`(def x 2)
 		  ((fn (x)
 		  	(+ x 5))
-			(+ x 3))`, Int(10)},
+			(+ x 3))`, Float(10)},
 		{`(def factorial (fn (n)
 			(if (= n 1) 1
-				(* n (factorial (- n 1))))))
+				(int* n (factorial (int- n 1))))))
 		  (factorial 10)`, Int(3628800)},
 		{`(def foo (fn (x)
 			(fn (y) (+ x y))))
-		  ((foo 5) 6)`, Int(11)},
+		  ((foo 5) 6)`, Float(11)},
 		{`(def foo (fn (x)
 			(+ x 1)))
 		  (let (x foo)
 		  	(let (y x)
-			  (y 4)))`, Int(5)},
+			  (y 4)))`, Float(5)},
 		{`(def x nil)
 		  (let () (set! x 4))
 		  x`, Int(4)},
@@ -145,12 +143,12 @@ func TestCore(t *testing.T) {
 		{`(< 1 2 2 3)`, Bool(false)},
 		{`(> 3 2 1)`, Bool(true)},
 		{`(> 3 2 1 1)`, Bool(false)},
-		{`(eval (parse-string "(+ 2 2)"))`, Int(4)},
+		{`(eval (parse-string "(+ 2 2)"))`, Float(4)},
 		{`(parse-string (str '(1 2 "3")))`, List{Int(1), Int(2), String("3")}},
 		{`(apply (fn (x) x) '('test))`, Symbol("test")},
-		{`(apply + '(1 2 3))`, Int(6)},
+		{`(apply + '(1 2 3))`, Float(6)},
 		{`(map (fn (x) x) '(1 2 3))`, List{Int(1), Int(2), Int(3)}},
-		{`(map - '(1 2 3))`, List{Int(-1), Int(-2), Int(-3)}},
+		{`(map - '(1 2 3))`, List{Float(-1), Float(-2), Float(-3)}},
 	}
 
 	for _, tt := range testCases {
@@ -210,15 +208,15 @@ func TestMath(t *testing.T) {
 		expected Any
 	}{
 		{`(+ 2 2.0)`, Float(4.0)},
-		{`(- 3 2)`, Int(1)},
-		{`(* 2 3)`, Int(6)},
+		{`(int- 3 2)`, Int(1)},
+		{`(int* 2 3)`, Int(6)},
 		{`(/ 6 3)`, Float(2)},
 		{`(+ 2.1 4.15)`, Float(6.25)},
 		{`(- 2.1 4.0)`, Float(-1.9)},
 		{`(* 2.5 4.0)`, Float(10.0)},
 		{`(/ 10.2 5.1)`, Float(2.0)},
-		{`(+ 2 (- 4 (* 1 2)))`, Int(4)},
-		{`(// 100 2 5 2)`, Int(5)},
+		{`(+ 2 (- 4 (* 1 2)))`, Float(4)},
+		{`(int/ 100 2 5 2)`, Int(5)},
 	}
 
 	for _, tt := range testCases {

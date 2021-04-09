@@ -237,50 +237,6 @@ var buildins = map[Symbol]Any{
 		},
 	},
 
-	// math
-	">": &simpleFunction{
-		gtFn,
-	},
-	"<": &simpleFunction{
-		ltFn,
-	},
-	"+": &arithmeticFunction{
-		func(x, y Int) Int { return x + y },
-		func(x, y Float) Float { return x + y },
-		0,
-	},
-	"-": &arithmeticFunction{
-		func(x, y Int) Int { return x - y },
-		func(x, y Float) Float { return x - y },
-		0,
-	},
-	"*": &arithmeticFunction{
-		func(x, y Int) Int { return x * y },
-		func(x, y Float) Float { return x * y },
-		1,
-	},
-	"/": &simpleFunction{
-		floatDivFn,
-	},
-	"//": &simpleFunction{
-		intDivFn,
-	},
-	"%": &arithmeticFunction{
-		func(x, y Int) Int { return x % y },
-		math.Mod,
-		1,
-	},
-	"pow": &simpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			return applyFloatFn(args, math.Pow, 1)
-		},
-	},
-	"rem": &simpleFunction{
-		func(args []Any, env *environment.Env) (Any, error) {
-			return applyFloatFn(args, math.Remainder, 1)
-		},
-	},
-
 	// other
 	"println": &simpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
@@ -338,5 +294,154 @@ var buildins = map[Symbol]Any{
 			printEnv(env, 0)
 			return nil, nil
 		},
+	},
+
+	// math
+	">": &simpleFunction{
+		gtFn,
+	},
+	"<": &simpleFunction{
+		ltFn,
+	},
+	"+": &multiArgFloatFunction{
+		func(x, y Float) Float { return x + y },
+		0,
+	},
+	"-": &multiArgFloatFunction{
+		func(x, y Float) Float { return x - y },
+		0,
+	},
+	"*": &multiArgFloatFunction{
+		func(x, y Float) Float { return x * y },
+		1,
+	},
+	"/": &multiArgFloatFunction{
+		func(x, y Float) Float { return x / y },
+		1,
+	},
+	"%": &multiArgFloatFunction{
+		math.Mod,
+		1,
+	},
+	"pow": &multiArgFloatFunction{
+		math.Pow,
+		1,
+	},
+	"rem": &multiArgFloatFunction{
+		math.Remainder,
+		1,
+	},
+	"inf?": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			switch obj := obj.(type) {
+			case Float:
+				return math.IsInf(obj, 0), nil
+			case Int:
+				return false, nil
+			default:
+				return nil, &ErrNaN{obj}
+			}
+		},
+	},
+	"nan?": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			switch obj := obj.(type) {
+			case Float:
+				return math.IsNaN(obj), nil
+			case Int:
+				return false, nil
+			default:
+				return nil, &ErrNaN{obj}
+			}
+		},
+	},
+	"sqrt": &singleArgFloatFunction{
+		math.Sqrt,
+	},
+	"cbrt": &singleArgFloatFunction{
+		math.Cbrt,
+	},
+	"log": &singleArgFloatFunction{
+		math.Log,
+	},
+	"log2": &singleArgFloatFunction{
+		math.Log2,
+	},
+	"log10": &singleArgFloatFunction{
+		math.Log10,
+	},
+	"exp": &singleArgFloatFunction{
+		math.Exp,
+	},
+	"expm1": &singleArgFloatFunction{
+		math.Expm1,
+	},
+	"floor": &singleArgFloatFunction{
+		math.Floor,
+	},
+	"ceil": &singleArgFloatFunction{
+		math.Ceil,
+	},
+	"sin": &singleArgFloatFunction{
+		math.Sin,
+	},
+	"cos": &singleArgFloatFunction{
+		math.Cos,
+	},
+	"tan": &singleArgFloatFunction{
+		math.Tan,
+	},
+	"asin": &singleArgFloatFunction{
+		math.Asin,
+	},
+	"acos": &singleArgFloatFunction{
+		math.Acos,
+	},
+	"atan": &singleArgFloatFunction{
+		math.Atan,
+	},
+	"sinh": &singleArgFloatFunction{
+		math.Sinh,
+	},
+	"cosh": &singleArgFloatFunction{
+		math.Cosh,
+	},
+	"tanh": &singleArgFloatFunction{
+		math.Tanh,
+	},
+	"erf": &singleArgFloatFunction{
+		math.Erf,
+	},
+	"erfc": &singleArgFloatFunction{
+		math.Erfc,
+	},
+	"erfcinv": &singleArgFloatFunction{
+		math.Erfcinv,
+	},
+	"erfinv": &singleArgFloatFunction{
+		math.Erfinv,
+	},
+	"gamma": &singleArgFloatFunction{
+		math.Gamma,
+	},
+	"int+": &multiArgIntFunction{
+		func(x, y Int) Int { return x + y },
+		0,
+	},
+	"int-": &multiArgIntFunction{
+		func(x, y Int) Int { return x - y },
+		0,
+	},
+	"int*": &multiArgIntFunction{
+		func(x, y Int) Int { return x * y },
+		1,
+	},
+	"int/": &multiArgIntFunction{
+		func(x, y Int) Int { return x / y },
+		1,
+	},
+	"int%": &multiArgIntFunction{
+		func(x, y Int) Int { return x % y },
+		1,
 	},
 }

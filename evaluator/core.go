@@ -58,11 +58,6 @@ func setFn(args []Any, env *environment.Env) (Any, error) {
 	return val, err
 }
 
-func beginFn(args []Any, env *environment.Env) (Any, error) {
-	objs, err := evalAll(args, env)
-	return last(objs), err
-}
-
 func applyFn(args []Any, env *environment.Env) (Any, error) {
 	if len(args) != 2 {
 		return nil, &ErrNumArgs{len(args)}
@@ -191,11 +186,7 @@ func prependFn(args []Any, env *environment.Env) (Any, error) {
 	return List(append([]Any{objs[0]}, l...)), nil
 }
 
-func concatFn(args []Any, env *environment.Env) (Any, error) {
-	objs, err := evalAll(args, env)
-	if err != nil {
-		return nil, err
-	}
+func concatFn(objs []Any) (Any, error) {
 	var list List
 	for _, obj := range objs {
 		switch obj := obj.(type) {
@@ -301,7 +292,7 @@ func equalFn(args []Any, env *environment.Env) (Any, error) {
 	return Bool(true), nil
 }
 
-func parseStringFn(obj Any, env *environment.Env) (Any, error) {
+func parseStringFn(obj Any) (Any, error) {
 	code, ok := obj.(String)
 	if !ok {
 		return nil, &ErrWrongType{obj}
@@ -377,13 +368,9 @@ func printEnv(env *environment.Env, depth int) {
 	fmt.Printf("%d: { %v }\n", depth, strings.Join(out, ", "))
 }
 
-func toString(args []Any, env *environment.Env, sep String) (string, error) {
-	if len(args) == 0 {
-		return "", &ErrNumArgs{len(args)}
-	}
-	objs, err := evalAll(args, env)
-	if err != nil {
-		return "", err
+func toString(objs []Any, sep String) (string, error) {
+	if len(objs) == 0 {
+		return "", &ErrNumArgs{len(objs)}
 	}
 
 	var str []string
@@ -398,13 +385,9 @@ func toString(args []Any, env *environment.Env, sep String) (string, error) {
 	return strings.Join(str, string(sep)), nil
 }
 
-func writeToFileFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) != 2 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	objs, err := evalAll(args, env)
-	if err != nil {
-		return nil, err
+func writeToFileFn(objs []Any) (Any, error) {
+	if len(objs) != 2 {
+		return nil, &ErrNumArgs{len(objs)}
 	}
 	fileName, ok := objs[0].(String)
 	if !ok {

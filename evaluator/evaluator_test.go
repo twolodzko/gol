@@ -150,6 +150,9 @@ func TestCore(t *testing.T) {
 		{`(map (fn (x) x) '(1 2 3))`, List{Int(1), Int(2), Int(3)}},
 		{`(map - '(1 2 3))`, List{Float(-1), Float(-2), Float(-3)}},
 		{`(chars "hello")`, List{String("h"), String("e"), String("l"), String("l"), String("o")}},
+		{"(escaped-str \"\n\tHello World!\")", String(`\n\tHello World!`)},
+		{`(pretty-str "\n\tHello World!")`, String("\n\tHello World!")},
+		{"(pretty-str (escaped-str \"\n\tHello World!\"))", String("\n\tHello World!")},
 	}
 
 	for _, tt := range testCases {

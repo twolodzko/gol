@@ -15,7 +15,7 @@ func (f *simpleFunction) Eval(args []Any, env *environment.Env) (Any, error) {
 }
 
 type singleArgFunction struct {
-	fn func(Any, *environment.Env) (Any, error)
+	fn func(Any) (Any, error)
 }
 
 func (f *singleArgFunction) Eval(args []Any, env *environment.Env) (Any, error) {
@@ -26,5 +26,17 @@ func (f *singleArgFunction) Eval(args []Any, env *environment.Env) (Any, error) 
 	if err != nil {
 		return nil, err
 	}
-	return f.fn(obj, env)
+	return f.fn(obj)
+}
+
+type multiArgFunction struct {
+	fn func([]Any) (Any, error)
+}
+
+func (f *multiArgFunction) Eval(args []Any, env *environment.Env) (Any, error) {
+	objs, err := evalAll(args, env)
+	if err != nil {
+		return nil, err
+	}
+	return f.fn(objs)
 }

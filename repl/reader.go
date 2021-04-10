@@ -10,6 +10,7 @@ type blockReader struct {
 	*bufio.Reader
 	openBlocksCount int
 	isQuoted        bool
+	isEscaped       bool
 }
 
 func (repl *Repl) read() (string, error) {
@@ -18,7 +19,7 @@ func (repl *Repl) read() (string, error) {
 		out, line string
 	)
 
-	reader := blockReader{repl.reader, 0, false}
+	reader := blockReader{repl.reader, 0, false, false}
 
 	for {
 		line, err = reader.ReadString('\n')
@@ -47,13 +48,11 @@ func (repl *Repl) read() (string, error) {
 func (reader *blockReader) shouldStop(line string) bool {
 	for _, r := range line {
 
-		if r == '\\' {
-			continue
-		}
-
 		switch r {
 		case '"':
-			reader.isQuoted = !reader.isQuoted
+			if !reader.isEscaped {
+				reader.isQuoted = !reader.isQuoted
+			}
 		// comment - ignore rest of the line
 		case ';':
 			return false
@@ -66,6 +65,12 @@ func (reader *blockReader) shouldStop(line string) bool {
 			if reader.openBlocksCount <= 0 {
 				return true
 			}
+		}
+
+		if r == '\\' && !reader.isEscaped {
+			reader.isEscaped = true
+		} else {
+			reader.isEscaped = false
 		}
 	}
 

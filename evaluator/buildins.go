@@ -255,9 +255,13 @@ var buildins = map[Symbol]Any{
 			return nil, nil
 		},
 	},
-	"error": &singleArgFunction{
-		func(obj Any, env *environment.Env) (Any, error) {
-			return nil, fmt.Errorf("%v", obj)
+	"error": &simpleFunction{
+		func(args []Any, env *environment.Env) (Any, error) {
+			str, err := toString(args, env, "")
+			if err != nil {
+				return nil, fmt.Errorf("failed parsing error message: %s", err)
+			}
+			return nil, fmt.Errorf(str)
 		},
 	},
 	"read-file": &singleArgFunction{
@@ -276,11 +280,29 @@ var buildins = map[Symbol]Any{
 			if !ok {
 				return nil, &ErrWrongType{obj}
 			}
-			var runes []Any
+			var chars []Any
 			for _, r := range str {
-				runes = append(runes, String(string(r)))
+				chars = append(chars, String(string(r)).Quote())
 			}
-			return List(runes), nil
+			return List(chars), nil
+		},
+	},
+	"rich-str": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			str, ok := obj.(String)
+			if !ok {
+				return nil, &ErrWrongType{obj}
+			}
+			return str.Unquote()
+		},
+	},
+	"raw-str": &singleArgFunction{
+		func(obj Any, env *environment.Env) (Any, error) {
+			str, ok := obj.(String)
+			if !ok {
+				return nil, &ErrWrongType{obj}
+			}
+			return str.Quote(), nil
 		},
 	},
 	"write-to-file": &simpleFunction{

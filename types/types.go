@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -17,6 +18,21 @@ type (
 
 func (s String) String() string {
 	return fmt.Sprintf("\"%s\"", string(s))
+}
+
+func (s String) Raw() string {
+	return string(s)
+}
+
+func (s String) Quote() String {
+	str := strconv.Quote(s.Raw())
+	runes := []rune(str)
+	return String(runes[1 : len(runes)-1])
+}
+
+func (s String) Unquote() (String, error) {
+	str, err := strconv.Unquote(`"` + string(s) + `"`)
+	return String(str), err
 }
 
 func (l List) String() string {

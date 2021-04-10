@@ -44,7 +44,7 @@ func TestLexer(t *testing.T) {
 			},
 		},
 		{
-			"\n\n  \t()\n 42 3.1415 -45.7e-2 \"Hello World!\" \" \t\n\n\\\"\\)\" foo true 'bar",
+			"\n\n  \t()\n 42 3.1415 -45.7e-2 \"Hello World!\" \" \t\n\n\\\")\" foo true 'bar",
 			[]token.Token{
 				{Literal: "(", Type: token.LPAREN},
 				{Literal: ")", Type: token.RPAREN},
@@ -52,7 +52,7 @@ func TestLexer(t *testing.T) {
 				{Literal: "3.1415", Type: token.FLOAT},
 				{Literal: "-45.7e-2", Type: token.FLOAT},
 				{Literal: "Hello World!", Type: token.STRING},
-				{Literal: " \t\n\n\")", Type: token.STRING},
+				{Literal: " \t\n\n\\\")", Type: token.STRING},
 				{Literal: "foo", Type: token.SYMBOL},
 				{Literal: "true", Type: token.BOOL},
 				{Literal: "'", Type: token.QUOTE},
@@ -144,9 +144,9 @@ func Test_readString(t *testing.T) {
 	}{
 		{`"" ignore me`, ""},
 		{`"Hello World!" not this`, "Hello World!"},
-		{`"To escape a char use \\" "ignore me"`, `To escape a char use \`},
-		{`"Hello \"John\"!"`, "Hello \"John\"!"},
-		{`"It\'s alive!"`, "It's alive!"},
+		{`"To escape a char use \\" "ignore me"`, `To escape a char use \\`},
+		{`"Hello \"John\"!"`, `Hello \"John\"!`},
+		{`"It\'s alive!"`, `It\'s alive!`},
 	}
 
 	for _, tt := range testCases {

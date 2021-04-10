@@ -128,18 +128,15 @@ func (l *Lexer) readString() (string, error) {
 		}
 
 		if !isEscaped {
-			// skip the escape sign, unless it was escaped \\
 			if l.Head == '\\' {
 				isEscaped = true
-				continue
-			}
-			// end of string, unless it was escaped \"
-			if l.Head == '"' {
+			} else if l.Head == '"' {
+				// end of string, unless it was escaped \"
 				break
 			}
+		} else {
+			isEscaped = false
 		}
-
-		isEscaped = false
 
 		runes = append(runes, l.Head)
 	}

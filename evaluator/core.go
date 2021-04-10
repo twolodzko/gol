@@ -388,7 +388,12 @@ func toString(args []Any, env *environment.Env, sep String) (string, error) {
 
 	var str []string
 	for _, obj := range objs {
-		str = append(str, fmt.Sprintf("%v", obj))
+		switch obj := obj.(type) {
+		case String:
+			str = append(str, obj.Raw())
+		default:
+			str = append(str, fmt.Sprintf("%v", obj))
+		}
 	}
 	return strings.Join(str, string(sep)), nil
 }
@@ -412,7 +417,14 @@ func writeToFileFn(args []Any, env *environment.Env) (Any, error) {
 	}
 	defer file.Close()
 
-	_, err = fmt.Fprintf(file, "%v\n", objs[1])
+	var str string
+	switch obj := objs[1].(type) {
+	case String:
+		str = obj.Raw()
+	default:
+		str = fmt.Sprintf("%v", obj)
+	}
+	_, err = fmt.Fprintln(file, str)
 	if err != nil {
 		return nil, err
 	}

@@ -35,9 +35,27 @@ func TestList(t *testing.T) {
 func TestString(t *testing.T) {
 	input := List{true, 42, 3.14, Symbol("foo"), String("Hello World!")}
 	expected := `(true 42 3.14 foo "Hello World!")`
-	result := input.String()
 
-	if result != expected {
-		t.Errorf("expected %s, got: %s", expected, result)
+	if input.String() != expected {
+		t.Errorf("expected %s, got: %s", expected, input.String())
+	}
+
+	str := String("abc\n\t\"")
+	if str.Raw() != "abc\n\t\"" {
+		t.Errorf("expected %s, got: %s", "abc\n\t\"", str.Raw())
+	}
+	if str.Quote() != `abc\n\t\"` {
+		t.Errorf("expected %s, got: %s", `abc\n\t\"`, str.Quote())
+	}
+	if str.String() != "\"abc\n\t\"\"" {
+		t.Errorf("expected %s, got: %s", "\"abc\n\t\"\"", str.String())
+	}
+
+	unquoted, err := str.Quote().Unquote()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if unquoted != str {
+		t.Errorf("expected %s, got: %s", str, unquoted)
 	}
 }

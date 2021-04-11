@@ -14,7 +14,7 @@ var buildins = map[Symbol]Any{
 
 	// core functions
 	"def": &simpleFunction{
-		defFn,
+		setVariables,
 	},
 	"fn": &simpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {

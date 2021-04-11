@@ -153,6 +153,7 @@ func TestCore(t *testing.T) {
 		{"(escaped-str \"\n\tHello World!\")", String(`\n\tHello World!`)},
 		{`(pretty-str "\n\tHello World!")`, String("\n\tHello World!")},
 		{"(pretty-str (escaped-str \"\n\tHello World!\"))", String("\n\tHello World!")},
+		{`(def x 1 y 2) (list x y)`, List{Int(1), Int(2)}},
 	}
 
 	for _, tt := range testCases {

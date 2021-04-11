@@ -11,27 +11,6 @@ import (
 	"github.com/twolodzko/gol/parser"
 )
 
-func defFn(args []Any, env *environment.Env) (Any, error) {
-
-	if len(args) != 2 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-
-	name, ok := args[0].(Symbol)
-	if !ok {
-		return nil, &ErrWrongType{args[0]}
-	}
-
-	val, err := eval(args[1], env)
-	if err != nil {
-		return nil, err
-	}
-
-	err = env.Set(name, val)
-
-	return val, err
-}
-
 func setFn(args []Any, env *environment.Env) (Any, error) {
 
 	if len(args) != 2 {
@@ -429,4 +408,28 @@ func last(args []Any) Any {
 		return nil
 	}
 	return args[len(args)-1]
+}
+
+// odd entries are keys, even are the values
+func setVariables(args []Any, env *environment.Env) (Any, error) {
+	var val Any
+
+	n := len(args)
+	if (n % 2) != 0 {
+		return nil, fmt.Errorf("invalid variable bindings %v", args)
+	}
+
+	for i := 0; i < n; i += 2 {
+		name, ok := args[i].(Symbol)
+		if !ok {
+			return nil, &ErrWrongType{args[0]}
+		}
+		val, err := eval(args[i+1], env)
+		if err != nil {
+			return nil, err
+		}
+		env.Set(name, val)
+	}
+
+	return val, nil
 }

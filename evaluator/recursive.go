@@ -106,6 +106,8 @@ func ifFn(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 }
 
 func letFn(args []Any, env *environment.Env) (Any, *environment.Env, error) {
+	var err error
+
 	if len(args) < 2 {
 		return nil, env, &ErrNumArgs{len(args)}
 	}
@@ -116,27 +118,12 @@ func letFn(args []Any, env *environment.Env) (Any, *environment.Env, error) {
 	if !ok {
 		return nil, env, &ErrWrongType{args[0]}
 	}
-
-	n := len(bindings)
-	if (n % 2) != 0 {
-		return nil, env, fmt.Errorf("invalid variable bindings %v", bindings)
+	_, err = setVariables(bindings, localEnv)
+	if err != nil {
+		return nil, localEnv, err
 	}
 
-	// odd entries are keys, even are the values
-	// e.g. (let (x 1 y 2) (+ x y)) => 3
-	for i := 0; i < n; i += 2 {
-		name, ok := bindings[i].(Symbol)
-		if !ok {
-			return nil, env, &ErrWrongType{bindings[0]}
-		}
-		val, err := eval(bindings[i+1], localEnv)
-		if err != nil {
-			return nil, env, err
-		}
-		localEnv.Set(name, val)
-	}
-
-	_, err := evalAll(exceptLast(args[1:]), localEnv)
+	_, err = evalAll(exceptLast(args[1:]), localEnv)
 	return last(args), localEnv, err
 }
 

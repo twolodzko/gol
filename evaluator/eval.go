@@ -47,7 +47,7 @@ func eval(expr Any, env *environment.Env) (Any, error) {
 			}
 			fn, err := getFunction(expr.Head(), env)
 			if err != nil {
-				return nil, err
+				return nil, Trace(err, expr)
 			}
 
 			switch fn := fn.(type) {
@@ -55,13 +55,13 @@ func eval(expr Any, env *environment.Env) (Any, error) {
 				args := expr.Tail()
 				newExpr, newEnv, err = fn.PartialEval(args, env)
 				if err != nil {
-					return nil, fmt.Errorf("%s\n  %s", expr, err)
+					return nil, Trace(err, expr)
 				}
 			case function:
 				args := expr.Tail()
 				res, err := fn.Eval(args, env)
 				if err != nil {
-					return nil, fmt.Errorf("%s\n  %s", expr, err)
+					return nil, Trace(err, expr)
 				}
 				return res, nil
 			}
@@ -80,7 +80,7 @@ func evalAll(exprs []Any, env *environment.Env) ([]Any, error) {
 	for _, expr := range exprs {
 		val, err := eval(expr, env)
 		if err != nil {
-			return nil, err
+			return nil, Trace(err, expr)
 		}
 		evaluated = append(evaluated, val)
 	}

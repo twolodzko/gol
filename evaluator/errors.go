@@ -33,3 +33,27 @@ type ErrNotCallable struct {
 func (e *ErrNotCallable) Error() string {
 	return fmt.Sprintf("%v (%T) is not callable", e.val, e.val)
 }
+
+type ErrTrace struct {
+	callStack []Any
+	err       error
+}
+
+func (e *ErrTrace) Error() string {
+	msg := "\n"
+	for i := len(e.callStack) - 1; i >= 0; i-- {
+		msg += fmt.Sprintf("%d: %s\n", len(e.callStack)-i, e.callStack[i])
+	}
+	msg += fmt.Sprintf("\nraised: %s", e.err)
+	return msg
+}
+
+func Trace(err error, context Any) *ErrTrace {
+	switch err := err.(type) {
+	case *ErrTrace:
+		err.callStack = append(err.callStack, context)
+		return err
+	default:
+		return &ErrTrace{[]Any{context}, err}
+	}
+}

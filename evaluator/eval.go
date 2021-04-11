@@ -55,11 +55,15 @@ func eval(expr Any, env *environment.Env) (Any, error) {
 				args := expr.Tail()
 				newExpr, newEnv, err = fn.PartialEval(args, env)
 				if err != nil {
-					return nil, fmt.Errorf("\n\t%s\n\traised: %s", expr, err)
+					return nil, fmt.Errorf("%s\n  %s", expr, err)
 				}
 			case function:
 				args := expr.Tail()
-				return fn.Eval(args, env)
+				res, err := fn.Eval(args, env)
+				if err != nil {
+					return nil, fmt.Errorf("%s\n  %s", expr, err)
+				}
+				return res, nil
 			}
 
 		default:

@@ -22,8 +22,9 @@ by Peter Norvig.
  * Contexts handling with `let` uses [Clojure's syntax][clj-let]: `(let (x 2 y (+ x 1)) (/ x y))`.
  * `begin`, `apply`, `map` work as in [Scheme][scheme].
  * `if` and `cond` conditionals are available, e.g. `(cond (false "not this") (true "this!"))`.
- * Lists are internally Go's [slices][go-slice], so `append` is preferred to using `cons`. Lists can be
-   concatenated using `concat`. Their elements are accessed using `first`, `rest`, `init`, `last`, and `nth`. 
+ * Lists are internally Go's [slices][go-slice], so `conj` (append) is preferred to using `cons` (prepend).
+   Lists can be concatenated using `concat`. Their elements are accessed using `first`, `rest`, `init`,
+   `last`, and `nth`. 
  * Arithmetic operators: `+`, `-`, `*`, `/`, `%` (modulo) do floating point computations and internally
    convert `int` values to `float`. If you want to do integer arithmetics, use the `int+`, `int-`, `int*`,
    `int/`, `int%` counterparts. Additionally, most of the functions from Go's [math][go-math] package

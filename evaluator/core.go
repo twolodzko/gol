@@ -172,7 +172,7 @@ func appendFn(args []Any, env *environment.Env) (Any, error) {
 }
 
 func prependFn(args []Any, env *environment.Env) (Any, error) {
-	if len(args) < 2 {
+	if len(args) != 2 {
 		return nil, &ErrNumArgs{len(args)}
 	}
 	objs, err := evalAll(args, env)
@@ -181,7 +181,7 @@ func prependFn(args []Any, env *environment.Env) (Any, error) {
 	}
 	l, ok := objs[1].(List)
 	if !ok {
-		return nil, &ErrWrongType{args[0]}
+		return nil, &ErrWrongType{args[1]}
 	}
 	return List(append([]Any{objs[0]}, l...)), nil
 }

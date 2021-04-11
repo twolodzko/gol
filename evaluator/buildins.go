@@ -164,7 +164,7 @@ var buildins = map[Symbol]Any{
 			return nthFn(args)
 		},
 	},
-	"append": &simpleFunction{
+	"conj": &simpleFunction{
 		appendFn,
 	},
 	"cons": &simpleFunction{

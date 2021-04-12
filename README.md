@@ -18,10 +18,10 @@ by Peter Norvig.
    [As in Clojure][clj-bool], and unlike Scheme, everything except `false` and `nil` is true.
  * Values can be assigned to symbols using: `(def x 42)`.
  * Functions are [first-class][first-class] citizens. Anonymous functions use the syntax: `(fn (x y) (+ x y))`.
-   They can be named using `(def add1 (fn (x) (+ 1 x)))`, or the shorthand, Scheme-like syntax:
+   They can be named using `(def add1 (fn (x) (+ 1 x)))`, or the shorthand, [Scheme-like syntax][scheme-def]:
    `(def (add1 x) (+ x 1))`.
  * Contexts handling with `let` uses [Clojure's syntax][clj-let]: `(let (x 2 y (+ x 1)) (/ x y))`.
- * `begin`, `apply`, `map` work as in [Scheme][scheme].
+ * `begin`, `apply`, `map` work as in [Scheme][scheme-expr].
  * `if` and `cond` conditionals are available, e.g. `(cond (false "not this") (true "this!"))`.
  * Lists are internally Go's [slices][go-slice], so `conj` (append) is preferred to using `cons` (prepend).
    Lists can be concatenated using `concat`. Their elements are accessed using `first`, `rest`, `init`,
@@ -46,7 +46,8 @@ by Peter Norvig.
  [first-class]: https://en.wikipedia.org/wiki/First-class_function
  [go-slice]: https://blog.golang.org/slices-intro
  [clj-let]: https://clojuredocs.org/clojure.core/let
- [scheme]: https://www.cs.cmu.edu/Groups/AI/html/r4rs/r4rs_6.html
+ [scheme-def]: https://www.cs.cmu.edu/Groups/AI/html/r4rs/r4rs_7.html
+ [scheme-expr]: https://www.cs.cmu.edu/Groups/AI/html/r4rs/r4rs_6.html
  [mal]: https://github.com/kanaka/mal/
  [lispy]: https://norvig.com/lispy.html
  [tco]: https://stackoverflow.com/questions/310974/what-is-tail-call-optimization

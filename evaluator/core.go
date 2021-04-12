@@ -431,6 +431,17 @@ func writeToFileFn(objs []Any) (Any, error) {
 	return nil, nil
 }
 
+func reverse(arr []Any) []Any {
+	n := len(arr)
+	out := make([]Any, n)
+	copy(out, arr)
+	for i := 0; i < n/2; i++ {
+		j := n - i - 1
+		out[i], out[j] = out[j], out[i]
+	}
+	return out
+}
+
 func isTrue(obj Any) bool {
 	switch obj := obj.(type) {
 	case Bool:

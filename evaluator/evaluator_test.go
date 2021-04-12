@@ -6,11 +6,30 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+type evalTestCase struct {
+	input    string
+	expected Any
+}
+
+func runTests(testCases []evalTestCase, t *testing.T) {
+	t.Helper()
+
+	for _, tt := range testCases {
+		e := NewEvaluator()
+		results, err := e.EvalString(tt.input)
+		result := last(results)
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if !cmp.Equal(result, tt.expected) {
+			t.Errorf("for %v expected: %v (%T), got: %v (%T)", tt.input, tt.expected, tt.expected, result, result)
+		}
+	}
+}
+
 func TestEval(t *testing.T) {
-	var testCases = []struct {
-		input    string
-		expected Any
-	}{
+	var testCases = []evalTestCase{
 		{`nil`, nil},
 		{`()`, List{}},
 		{`2`, Int(2)},
@@ -89,25 +108,11 @@ func TestEval(t *testing.T) {
 		  x`, Int(4)},
 	}
 
-	for _, tt := range testCases {
-		e := NewEvaluator()
-		results, err := e.EvalString(tt.input)
-		result := last(results)
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
-		}
-	}
+	runTests(testCases, t)
 }
 
 func TestCore(t *testing.T) {
-	var testCases = []struct {
-		input    string
-		expected Any
-	}{
+	var testCases = []evalTestCase{
 		{`(str 3.14)`, String("3.14")},
 		{`(int "3.14")`, Int(3)},
 		{`(float "1e-5")`, Float(1e-5)},
@@ -155,27 +160,17 @@ func TestCore(t *testing.T) {
 		{"(pretty-str (escaped-str \"\n\tHello World!\"))", String("\n\tHello World!")},
 		{`(def (add1 x) (+ x 1)) (add1 1)`, Float(2)},
 		{`(def (foo) 1) (foo)`, Int(1)},
+		{`(reverse '())`, List{}},
+		{`(reverse '(1))`, List{Int(1)}},
+		{`(reverse '(1 2))`, List{Int(2), Int(1)}},
+		{`(reverse '(1 2 3))`, List{Int(3), Int(2), Int(1)}},
 	}
 
-	for _, tt := range testCases {
-		e := NewEvaluator()
-		results, err := e.EvalString(tt.input)
-		result := last(results)
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
-		}
-	}
+	runTests(testCases, t)
 }
 
 func TestBooleans(t *testing.T) {
-	var testCases = []struct {
-		input    string
-		expected Bool
-	}{
+	var testCases = []evalTestCase{
 		// booleans: everything is true
 		// the only false things are Bool(false) and nil
 		{`(true? "1")`, true},
@@ -194,25 +189,11 @@ func TestBooleans(t *testing.T) {
 		{`(or false nil)`, false},
 	}
 
-	for _, tt := range testCases {
-		e := NewEvaluator()
-		results, err := e.EvalString(tt.input)
-		result := last(results)
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("expected: %v (%T), got: %s (%T)", tt.expected, tt.expected, result, result)
-		}
-	}
+	runTests(testCases, t)
 }
 
 func TestMath(t *testing.T) {
-	var testCases = []struct {
-		input    string
-		expected Any
-	}{
+	var testCases = []evalTestCase{
 		{`(+ 2 2.0)`, Float(4.0)},
 		{`(int- 3 2)`, Int(1)},
 		{`(int* 2 3)`, Int(6)},
@@ -225,18 +206,7 @@ func TestMath(t *testing.T) {
 		{`(int/ 100 2 5 2)`, Int(5)},
 	}
 
-	for _, tt := range testCases {
-		e := NewEvaluator()
-		results, err := e.EvalString(tt.input)
-		result := last(results)
-
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
-		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
-		}
-	}
+	runTests(testCases, t)
 }
 
 func TestErrorFn(t *testing.T) {
@@ -266,10 +236,7 @@ func TestDef(t *testing.T) {
 }
 
 func TestCheckers(t *testing.T) {
-	var testCases = []struct {
-		input    string
-		expected Bool
-	}{
+	var testCases = []evalTestCase{
 		{`(nil? nil)`, true},
 		{`(nil? ())`, false},
 		{`(nil? 0)`, false},
@@ -315,16 +282,30 @@ func TestCheckers(t *testing.T) {
 		{`(empty? (list))`, true},
 	}
 
-	for _, tt := range testCases {
-		e := NewEvaluator()
-		results, err := e.EvalString(tt.input)
-		result := last(results)
+	runTests(testCases, t)
+}
 
-		if err != nil {
-			t.Errorf("unexpected error: %s", err)
-		}
+func TestReverse(t *testing.T) {
+	var testCases = []struct {
+		input    []Any
+		expected []Any
+	}{
+		{[]Any{}, []Any{}},
+		{[]Any{1}, []Any{1}},
+		{[]Any{1, 2}, []Any{2, 1}},
+		{[]Any{1, 2, 3}, []Any{3, 2, 1}},
+		{[]Any{1, 2, 3, 4}, []Any{4, 3, 2, 1}},
+	}
+
+	for _, tt := range testCases {
+		input := tt.input
+		result := reverse(input)
+
 		if !cmp.Equal(result, tt.expected) {
-			t.Errorf("for %v expected: %v (%T), got: %s (%T)", tt.input, tt.expected, tt.expected, result, result)
+			t.Errorf("expected: %v, got: %v", tt.expected, result)
+		}
+		if len(input) > 1 && cmp.Equal(result, input) {
+			t.Errorf("the input was mutated: %v", input)
 		}
 	}
 }

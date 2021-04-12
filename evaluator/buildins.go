@@ -205,6 +205,16 @@ var buildins = map[Symbol]Any{
 		// (concat <list>...)
 		concatFn,
 	},
+	"reverse": &singleArgFunction{
+		// (reverse <list>)
+		func(obj Any) (Any, error) {
+			l, ok := obj.(List)
+			if !ok {
+				return nil, &ErrWrongType{obj}
+			}
+			return List(reverse(l)), nil
+		},
+	},
 	"empty?": &singleArgFunction{
 		// (empty? <list>)
 		func(obj Any) (Any, error) {

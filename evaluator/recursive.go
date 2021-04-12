@@ -46,19 +46,16 @@ func (f *lambda) PartialEval(args []Any, env *environment.Env) (Any, *environmen
 	return last(f.expr), localEnv, err
 }
 
-func newLambda(args []Any, env *environment.Env) (*lambda, error) {
-	if len(args) < 2 {
-		return nil, &ErrNumArgs{len(args)}
-	}
-	argList, ok := args[0].(List)
+func newLambda(args Any, body []Any, env *environment.Env) (*lambda, error) {
+	argList, ok := args.(List)
 	if !ok {
-		return nil, &ErrWrongType{args[0]}
+		return nil, &ErrWrongType{args}
 	}
 	argNames, err := areSymbols(argList)
 	if err != nil {
 		return nil, err
 	}
-	return &lambda{env, argNames, args[1:]}, nil
+	return &lambda{env, argNames, body}, nil
 }
 
 func areSymbols(objs List) ([]Symbol, error) {
@@ -154,4 +151,28 @@ func exceptLast(objs []Any) []Any {
 		return objs[:len(objs)-1]
 	}
 	return nil
+}
+
+// odd entries are keys, even are the values
+func setVariables(args []Any, env *environment.Env) (Any, error) {
+	var val Any
+
+	n := len(args)
+	if (n % 2) != 0 {
+		return nil, fmt.Errorf("invalid variable bindings %v", args)
+	}
+
+	for i := 0; i < n; i += 2 {
+		name, ok := args[i].(Symbol)
+		if !ok {
+			return nil, &ErrWrongType{args[i]}
+		}
+		val, err := eval(args[i+1], env)
+		if err != nil {
+			return nil, err
+		}
+		env.Set(name, val)
+	}
+
+	return val, nil
 }

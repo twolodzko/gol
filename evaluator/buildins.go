@@ -14,11 +14,14 @@ var buildins = map[Symbol]Any{
 
 	// core functions
 	"def": &simpleFunction{
-		setVariables,
+		defFn,
 	},
 	"fn": &simpleFunction{
 		func(args []Any, env *environment.Env) (Any, error) {
-			return newLambda(args, env)
+			if len(args) < 2 {
+				return nil, &ErrNumArgs{len(args)}
+			}
+			return newLambda(args[0], args[1:], env)
 		},
 	},
 	"if": &tcoFunction{

@@ -17,8 +17,9 @@ by Peter Norvig.
  * Booleans are represented as `true` and `false`.
    [As in Clojure][clj-bool], and unlike Scheme, everything except `false` and `nil` is true.
  * Values can be assigned to symbols using: `(def x 42)`.
- * Anonymous, [first-class][first-class] functions use the syntax: `(fn (x y) (+ x y))`. They can be named
-   with `def`.
+ * Functions are [first-class][first-class] citizens. Anonymous functions use the syntax: `(fn (x y) (+ x y))`.
+   They can be named using `(def add1 (fn (x) (+ 1 x)))`, or the shorthand, Scheme-like syntax:
+   `(def (add1 x) (+ x 1))`.
  * Contexts handling with `let` uses [Clojure's syntax][clj-let]: `(let (x 2 y (+ x 1)) (/ x y))`.
  * `begin`, `apply`, `map` work as in [Scheme][scheme].
  * `if` and `cond` conditionals are available, e.g. `(cond (false "not this") (true "this!"))`.

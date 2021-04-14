@@ -225,6 +225,16 @@ var buildins = map[Symbol]Any{
 			return Bool(len(l) == 0), nil
 		},
 	},
+	"count": &singleArgFunction{
+		// (count <list>)
+		func(obj Any) (Any, error) {
+			l, ok := obj.(List)
+			if !ok {
+				return nil, &ErrWrongType{obj}
+			}
+			return Int(len(l)), nil
+		},
+	},
 
 	// type checks
 	"nil?": &singleArgFunction{

@@ -164,6 +164,9 @@ func TestCore(t *testing.T) {
 		{`(reverse '(1))`, List{Int(1)}},
 		{`(reverse '(1 2))`, List{Int(2), Int(1)}},
 		{`(reverse '(1 2 3))`, List{Int(3), Int(2), Int(1)}},
+		{`(count '())`, Int(0)},
+		{`(count '(1))`, Int(1)},
+		{`(count '(1 2 '() '(1 2 3 '())))`, Int(4)},
 	}
 
 	runTests(testCases, t)

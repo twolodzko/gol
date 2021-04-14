@@ -118,8 +118,8 @@ func gtFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, err
 	}
 
-	for _, second := range args[1:] {
-		second, err := eval(second, env)
+	for _, obj := range args[1:] {
+		second, err := eval(obj, env)
 		if err != nil {
 			return nil, err
 		}
@@ -170,7 +170,12 @@ func ltFn(args []Any, env *environment.Env) (Any, error) {
 		return nil, err
 	}
 
-	for _, second := range args[1:] {
+	for _, obj := range args[1:] {
+		second, err := eval(obj, env)
+		if err != nil {
+			return nil, err
+		}
+
 		switch first := first.(type) {
 		case Int:
 			switch second := second.(type) {

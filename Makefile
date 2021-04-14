@@ -1,4 +1,4 @@
-.PHONY: build test cov staticcheck vet cycl cogn fmt clean repl
+.PHONY: build test cov staticcheck vet cycl cogn benchmarks fmt clean repl
 
 build:
 	go build
@@ -24,6 +24,9 @@ cycl:
 cogn:
 	# go get github.com/uudashr/gocognit/cmd/gocognit
 	gocognit -top 10 .
+
+benchmarks: build
+	go test -bench=. ./...
 
 fmt:
 	go fmt ./...

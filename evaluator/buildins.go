@@ -340,7 +340,8 @@ var buildins = map[Symbol]Any{
 			}
 			var chars []Any
 			for _, r := range str {
-				chars = append(chars, String(string(r)).Quote())
+				ch := String(string(r)).Quote()
+				chars = append(chars, ch)
 			}
 			return List(chars), nil
 		},

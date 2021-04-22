@@ -39,10 +39,11 @@ var buildins = map[Symbol]Any{
 		// (let (<name> <expr>...) <expr>...)
 		letFn,
 	},
-	"begin": &multiArgFunction{
+	"begin": &tcoFunction{
 		// (begin <expr>...)
-		func(objs []Any) (Any, error) {
-			return last(objs), nil
+		func(args []Any, env *environment.Env) (Any, *environment.Env, error) {
+			_, err := evalAll(exceptLast(args), env)
+			return last(args), env, err
 		},
 	},
 	"apply": &simpleFunction{
